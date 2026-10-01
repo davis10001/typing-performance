@@ -1,0 +1,6 @@
+{
+  "benchmark": { "approved": false, "source": "", "version": "", "reviewer": "" },
+  "privacyAndDomain": { "approved": false, "domain": "", "privacyPolicy": "", "analyticsDecision": "", "reviewer": "" },
+  "testTextLicense": { "approved": false, "manifest": "", "reviewer": "" },
+  "verification": { "approved": false, "evidence": "", "reviewer": "" }
+}

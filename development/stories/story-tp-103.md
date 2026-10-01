@@ -1,6 +1,6 @@
 # TP-103 · TestShell 与定时入口
 
-**Epic**：E1 测试核心 · **状态**：ready-for-dev
+**Epic**：E1 测试核心 · **状态**：done（2026-10-01）
 
 ## 用户价值
 

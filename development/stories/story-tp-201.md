@@ -1,6 +1,6 @@
 # TP-201 · 结果、Benchmark Band 与本地历史
 
-**Epic**：E2 结果与 SEO 闭环 · **状态**：ready-for-dev
+**Epic**：E2 结果与 SEO 闭环 · **状态**：in-progress（band 来源待 OQ-01）
 
 ## 用户价值
 

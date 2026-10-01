@@ -1,6 +1,6 @@
 # TP-202 · Benchmark 内容与 SEO 入口
 
-**Epic**：E2 结果与 SEO 闭环 · **状态**：ready-for-dev
+**Epic**：E2 结果与 SEO 闭环 · **状态**：in-progress（数值内容待 OQ-01）
 
 ## 用户价值
 
