@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import LocalPaceStats from "@/components/home/LocalPaceStats";
 import { durationOptions } from "@/lib/content/test-pages";
 
 export const metadata: Metadata = {
@@ -27,15 +28,16 @@ export default function HomePage() {
         <div className="section-heading"><span className="eyebrow">CHOOSE YOUR SESSION</span><h2 id="choose-title"><strong>03</strong> WAYS TO TEST.</h2></div>
         <div className="home-duration-grid">
           {durationOptions.map((option, index) => (
-            <Link className={`home-duration-card card-${index + 1}`} href={option.href} key={option.seconds}>
+            <article className={`home-duration-card card-${index + 1}`} key={option.seconds}>
               <span>No.{index + 1}</span>
               <strong>{option.label}</strong>
-              <span>{option.seconds === 60 ? "A quick snapshot" : option.seconds === 180 ? "Find a steady rhythm" : "See how your pace holds"}</span>
-              <b aria-hidden="true">↗</b>
-            </Link>
+              <span className="home-duration-description">{option.seconds === 60 ? "A quick snapshot" : option.seconds === 180 ? "Find a steady rhythm" : "See how your pace holds"}</span>
+              <Link className="button home-duration-action" href={option.href}>START {option.label} TEST <span aria-hidden="true">↗</span></Link>
+            </article>
           ))}
         </div>
         <p className="home-tests-note">ONE ENGINE. THREE CLEAR WAYS TO CHECK YOUR PACE.</p>
+        <LocalPaceStats />
       </section>
 
       <section className="home-understand" aria-labelledby="understand-title">

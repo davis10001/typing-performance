@@ -17,16 +17,7 @@ export const metadata: Metadata = {
 function SiteHeader() {
   return (
     <header className="site-header">
-      <div className="nav-pill">
-        <Link className="wordmark" href="/" aria-label="TypingLevel home"><span className="wordmark-mark" aria-hidden="true">✳</span> TYPING<br />LEVEL</Link>
-        <nav aria-label="Main navigation" className="nav-links">
-          <Link href="/typing-test">THE TEST</Link>
-          <Link href="/average-wpm">WPM EXPLAINED</Link>
-          <Link href="/average-typing-speed">TYPING SPEED</Link>
-        </nav>
-        <Link className="nav-action" href="/1-minute-typing-test">START A TEST <span aria-hidden="true">↗</span></Link>
-      </div>
-      <div className="ticket-notches" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+      <Link className="wordmark header-wordmark" href="/" aria-label="TypingLevel home"><span className="wordmark-mark" aria-hidden="true">✳</span> TYPING<br />LEVEL</Link>
     </header>
   );
 }
@@ -40,8 +31,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <SiteHeader />
           {children}
           <footer className="site-footer">
-            <span>TYPINGLEVEL / TEST. UNDERSTAND. RETEST.</span>
-            <nav aria-label="Footer navigation"><Link href="/typing-test">TEST</Link><Link href="/average-wpm">WPM</Link><Link href="/average-typing-speed">SPEED</Link></nav>
+            <Link className="footer-brand" href="/">TYPINGLEVEL / TEST. UNDERSTAND. RETEST.</Link>
+            <nav aria-label="Footer navigation">
+              <Link href="/typing-test">THE TEST</Link>
+              <Link href="/average-wpm">WPM EXPLAINED</Link>
+              <Link href="/average-typing-speed">TYPING SPEED</Link>
+              <Link className="footer-action" href="/1-minute-typing-test">START A TEST <span aria-hidden="true">↗</span></Link>
+            </nav>
             <AnalyticsGate
               mode={process.env.NEXT_PUBLIC_ANALYTICS_MODE}
               gaId={process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID}

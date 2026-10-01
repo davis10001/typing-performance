@@ -31,12 +31,12 @@ export default async function TestPage({ params }: Props) {
   if (!isTestSlug(testSlug)) notFound();
   const config = testPages[testSlug];
   const prompt = buildTestPrompt();
+  const [firstTitleWord, ...otherTitleWords] = config.title.toUpperCase().split(" ");
 
   return (
     <main className="test-page">
       <section className="test-page-intro">
-        <span className="eyebrow">TYPE / MEASURE / UNDERSTAND</span>
-        <h1>{config.title.toUpperCase().split(" ").map((word, index) => <span key={`${word}-${index}`} className={index === 0 ? "heavy" : ""}>{word} </span>)}</h1>
+        <h1 aria-label={config.title.toUpperCase()}><span className="heavy">{firstTitleWord}</span>{" "}{otherTitleWords.join(" ")}</h1>
         <p>{config.intro}</p>
       </section>
       <TestShell durationSeconds={config.durationSeconds} prompt={prompt} entryPage={testSlug} />

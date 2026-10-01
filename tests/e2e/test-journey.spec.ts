@@ -7,6 +7,57 @@ const durations = [
   { slug: "5-minute-typing-test", seconds: 300, title: /5 minute typing test/i },
 ] as const;
 
+test("home uses a logo-only header, footer navigation, and duration-specific buttons", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".site-header a")).toHaveCount(1);
+  await expect(page.locator(".site-header").getByRole("link", { name: "TypingLevel home" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Footer navigation" }).getByRole("link")).toHaveCount(4);
+  await expect(page.getByText("No completed tests in this browser yet.", { exact: false })).toBeVisible();
+  for (const duration of durations) {
+    const card = page.locator(".home-duration-card").filter({ hasText: `${duration.seconds / 60} MIN` });
+    await expect(card.getByRole("link", { name: new RegExp(`START ${duration.seconds / 60} MIN TEST`) })).toHaveAttribute("href", `/${duration.slug}`);
+  }
+  const edges = await page.evaluate(() => {
+    const selectors = [".home-hero", ".home-duration-card:first-child", ".home-stats", ".home-understand"];
+    const lastCard = document.querySelector<HTMLElement>(".home-duration-card:last-child")!;
+    return [...selectors.map((selector) => {
+      const rect = document.querySelector<HTMLElement>(selector)!.getBoundingClientRect();
+      return { left: rect.left, right: rect.right };
+    }), { left: NaN, right: lastCard.getBoundingClientRect().right }];
+  });
+  for (const item of edges.slice(1, 4)) expect(Math.abs(item.left - edges[0].left)).toBeLessThanOrEqual(1);
+  for (const item of [edges[2], edges[3], edges[4]]) expect(Math.abs(item.right - edges[0].right)).toBeLessThanOrEqual(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test("home chart reports only local scored results with comparable bars", async ({ page }) => {
+  await page.addInitScript(() => {
+    const scores = [
+      [60, 20], [60, 30], [60, 100], [180, 40], [180, 60], [300, null],
+    ];
+    localStorage.setItem("typing-performance:results:v1", JSON.stringify(scores.map(([durationSeconds, wpm], index) => ({
+      schemaVersion: 1,
+      id: `attempt-${index}`,
+      completedAt: "2026-10-01T00:00:00.000Z",
+      durationSeconds,
+      wpm,
+      rawWpm: wpm,
+      accuracy: 100,
+      errors: 0,
+      anomalyFlags: [],
+    }))));
+  });
+  await page.goto("/");
+  await expect(page.locator(".home-stat-row")).toHaveCount(3);
+  await expect(page.locator(".home-stats-list-row").nth(0)).toContainText("1 MIN5030—3");
+  await expect(page.locator(".home-stats-list-row").nth(1)).toContainText("3 MIN5050—2");
+  await expect(page.locator(".home-stats-list-row").nth(2)).toContainText("5 MIN———0");
+  await expect(page.locator(".home-stats-axis")).toContainText("50 WPM");
+  await expect(page.getByText("Awaiting source review")).toBeVisible();
+  await expect(page.locator(".home-stat-row").nth(0).locator(".average")).toHaveAttribute("style", "width: 100%;");
+});
+
 for (const duration of durations) {
   test(`${duration.seconds / 60}-minute test completes, saves locally, and retests`, async ({ page }) => {
     await page.clock.install();
@@ -14,14 +65,20 @@ for (const duration of durations) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(duration.title);
     await expect(page.getByRole("link", { name: /how wpm works/i })).toBeVisible();
 
+    const input = page.getByRole("textbox", { name: "Type the passage here" });
+    await expect(page.locator(".typing-passage")).toBeVisible();
+    await expect(input).toBeVisible();
+    await expect(input).toHaveJSProperty("readOnly", true);
     const start = page.getByRole("button", { name: "START TYPING TEST" });
     await expect(start).toBeVisible();
     await start.click();
     await expect(page.getByRole("status")).toContainText("countdown");
+    await expect(input).toHaveJSProperty("readOnly", true);
     await page.clock.runFor(3000);
 
-    const input = page.getByRole("textbox", { name: "Type the passage here" });
     await expect(input).toBeFocused();
+    await expect(input).toHaveJSProperty("readOnly", false);
+    expect((await input.boundingBox())?.height).toBeGreaterThanOrEqual(110);
     await input.pressSequentially("hello");
     await expect(input).toHaveValue("hello");
 
@@ -104,6 +161,26 @@ test("primary route has no horizontal overflow or blocking accessibility violati
   await page.goto("/1-minute-typing-test");
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(horizontalOverflow).toBe(false);
+  const viewport = page.viewportSize();
+  const chamber = await page.locator(".typing-chamber").boundingBox();
+  expect(viewport).not.toBeNull();
+  expect(chamber).not.toBeNull();
+  expect(chamber!.y).toBeLessThan(viewport!.height / 2);
+  const alignment = await page.evaluate(() => {
+    const heading = document.querySelector<HTMLElement>(".test-page-intro h1")!;
+    const description = document.querySelector<HTMLElement>(".test-page-intro p")!;
+    const input = document.querySelector<HTMLElement>(".typing-input")!;
+    const history = document.querySelector<HTMLElement>(".history-section")!;
+    const historyStyle = getComputedStyle(history);
+    return {
+      descriptionBelowHeading: description.getBoundingClientRect().top >= heading.getBoundingClientRect().bottom,
+      leftGap: Math.abs(input.getBoundingClientRect().left - (history.getBoundingClientRect().left + parseFloat(historyStyle.paddingLeft))),
+      rightGap: Math.abs(input.getBoundingClientRect().right - (history.getBoundingClientRect().right - parseFloat(historyStyle.paddingRight))),
+    };
+  });
+  expect(alignment.descriptionBelowHeading).toBe(true);
+  expect(alignment.leftGap).toBeLessThanOrEqual(1);
+  expect(alignment.rightGap).toBeLessThanOrEqual(1);
   await expect(page.getByRole("button", { name: "START TYPING TEST" })).toBeVisible();
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);

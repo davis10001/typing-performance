@@ -23,8 +23,10 @@ function formatScore(value: number | null, suffix = ""): string {
 }
 
 function TextRenderer({ prompt, typed }: { prompt: string; typed: string }) {
-  const start = Math.max(0, Math.floor(typed.length / 80) * 80 - 40);
-  const visible = prompt.slice(start, start + 240);
+  const roughStart = Math.max(0, Math.floor(typed.length / 80) * 80 - 40);
+  const start = roughStart === 0 ? 0 : prompt.lastIndexOf(" ", roughStart) + 1;
+  const end = prompt.indexOf(" ", Math.max(start + 120, typed.length + 1));
+  const visible = prompt.slice(start, end < 0 ? undefined : end);
   return (
     <div className="typing-passage" role="text" aria-label={`Text to type: ${visible}`}>
       {Array.from(visible).map((character, relativeIndex) => {
@@ -196,13 +198,8 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
 
   return (
     <div className="test-shell" data-phase={session.phase}>
-      <div className="test-topline">
-        <span className="eyebrow">THE TEST</span>
-        <span className="test-duration">{durationSeconds / 60} MIN / ENGLISH</span>
-      </div>
-
       <div className="duration-cards" role="group" aria-label={isReady ? "Choose test duration" : "Test duration options, available after this attempt"} tabIndex={isReady ? undefined : 0}>
-        {durationOptions.map((option, index) => (
+        {durationOptions.map((option) => (
           <Link
             key={option.seconds}
             href={option.href}
@@ -217,59 +214,57 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
               }
             }}
           >
-            <span className="duration-index">No.{index + 1}</span>
             <strong>{option.label}</strong>
-            <small>{option.seconds === 60 ? "Quick check" : option.seconds === 180 ? "Find your rhythm" : "Stay consistent"}</small>
           </Link>
         ))}
       </div>
 
-      <div className="progress-track" role="progressbar" aria-label="Test progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
-        <span style={{ width: `${progress}%` }} />
-      </div>
-
       {session.phase !== "completed" ? (
         <section className="typing-chamber" aria-label="Typing test">
-          <div className="chamber-heading">
-            <div>
-              <span className="eyebrow dark">READY WHEN YOU ARE</span>
-              <h2>{isActive ? "Keep your rhythm." : session.phase === "countdown" ? "Get ready." : "Find your pace."}</h2>
+          <div className="test-status" role="group" aria-label="Test status">
+            <div className="chamber-heading">
+              <div>
+                <h2>{isActive ? "Keep your rhythm." : session.phase === "countdown" ? "Get ready." : "Find your pace."}</h2>
+              </div>
+              <span className="timer-display" aria-label={`${remainingSeconds} seconds remaining`} aria-live="off">
+                {session.phase === "countdown" ? countdown : `${Math.floor(remainingSeconds / 60).toString().padStart(2, "0")}:${(remainingSeconds % 60).toString().padStart(2, "0")}`}
+              </span>
             </div>
-            <span className="timer-display" aria-label={`${remainingSeconds} seconds remaining`} aria-live="off">
-              {session.phase === "countdown" ? countdown : `${Math.floor(remainingSeconds / 60).toString().padStart(2, "0")}:${(remainingSeconds % 60).toString().padStart(2, "0")}`}
-            </span>
+            <div className="progress-track" role="progressbar" aria-label="Test progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
+              <span style={{ width: `${progress}%` }} />
+            </div>
           </div>
 
-          {isActive ? (
-            <>
-              <TextRenderer prompt={session.prompt} typed={session.typed} />
-              <p id="typing-instructions" className="input-help">Type the passage above. Backspace is available; paste is disabled.</p>
-              <textarea
-                ref={inputRef}
-                className="typing-input"
-                aria-label="Type the passage here"
-                aria-describedby="typing-instructions"
-                autoComplete="off"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck={false}
-                value={session.typed}
-                onChange={(event) => onInput(event.target.value)}
-                onPaste={(event) => { event.preventDefault(); markAnomaly("paste", "Paste isn't available in a typing test."); }}
-                onDrop={(event) => { event.preventDefault(); markAnomaly("drop", "Drag and drop isn't available in a typing test."); }}
-                onBlur={() => commit(recordAnomaly(sessionRef.current, "blur"))}
-              />
-              {inputWarning && <p className="inline-warning" role="status">{inputWarning}</p>}
-              <button type="button" className="text-button" onClick={() => commit(abandonSession(sessionRef.current))}>End this attempt</button>
-            </>
-          ) : session.phase === "countdown" ? (
+          {session.phase === "countdown" ? (
             <p className="chamber-instruction" role="status">The test starts after the countdown. Place your hands on the keyboard.</p>
-          ) : (
-            <>
-              <p className="chamber-instruction">{session.phase === "abandoned" ? "This attempt ended without a result. You can start a new one." : "Start typing when the countdown ends. Your test is timed locally in this browser."}</p>
+          ) : !isActive ? (
+            <div className="test-ready-actions">
               <button type="button" className="button button-primary" onClick={() => startTest()}>{session.phase === "abandoned" ? "START A NEW TEST" : "START TYPING TEST"}<span aria-hidden="true">↗</span></button>
-            </>
-          )}
+              {session.phase === "abandoned" && <p className="chamber-instruction">This attempt ended without a result. You can start a new one.</p>}
+            </div>
+          ) : null}
+
+          <TextRenderer prompt={session.prompt} typed={session.typed} />
+          <p id="typing-instructions" className="input-help">{isActive ? "Type the passage above. Backspace is available; paste is disabled." : "The input unlocks after the countdown. Read the passage, then start when you're ready."}</p>
+          <textarea
+            ref={inputRef}
+            className="typing-input"
+            aria-label="Type the passage here"
+            aria-describedby="typing-instructions"
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            readOnly={!isActive}
+            placeholder={isActive ? undefined : "Start the test to type here"}
+            value={session.typed}
+            onChange={(event) => onInput(event.target.value)}
+            onPaste={(event) => { event.preventDefault(); if (isActive) markAnomaly("paste", "Paste isn't available in a typing test."); }}
+            onDrop={(event) => { event.preventDefault(); if (isActive) markAnomaly("drop", "Drag and drop isn't available in a typing test."); }}
+            onBlur={() => { if (isActive) commit(recordAnomaly(sessionRef.current, "blur")); }}
+          />
+          {inputWarning && <p className="inline-warning" role="status">{inputWarning}</p>}
+          {isActive && <button type="button" className="text-button" onClick={() => commit(abandonSession(sessionRef.current))}>End this attempt</button>}
         </section>
       ) : result?.wpm === null ? (
         <section className="result-card" aria-labelledby="empty-result-title">
