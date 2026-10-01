@@ -1,0 +1,35 @@
+generated: 2026-10-01T00:00:00Z
+last_updated: 2026-10-01T00:00:00Z
+project: typing-performance
+project_key: TP
+tracking_system: file-system
+story_location: development/stories
+
+development_status:
+  epic-1-testing-core: backlog
+  tp-101-project-skeleton-and-content-contract: ready-for-dev
+  tp-102-pure-typing-engine-and-scoring: backlog
+  tp-103-test-shell-and-timed-entry-points: backlog
+  epic-1-retrospective: optional
+  epic-2-results-and-seo-loop: backlog
+  tp-201-result-benchmark-band-and-local-history: backlog
+  tp-202-benchmark-content-and-seo-entry-points: backlog
+  epic-2-retrospective: optional
+  epic-3-release-quality: backlog
+  tp-301-anonymous-observability-privacy-and-guardrails: backlog
+  tp-302-accessibility-e2e-and-release-pipeline: backlog
+  epic-3-retrospective: optional
+
+action_items:
+  - epic: 2
+    action: Approve benchmark band sources and versioned production copy before release.
+    owner: product-content
+    status: open
+  - epic: 3
+    action: Choose analytics/error-monitoring providers and complete privacy/cookie review before production.
+    owner: product-operations
+    status: open
+  - epic: 1
+    action: Create a licensed initial English test-text manifest before production content is enabled.
+    owner: product-content
+    status: open
