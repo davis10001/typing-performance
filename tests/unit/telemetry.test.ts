@@ -8,6 +8,11 @@ describe("privacy-limited telemetry", () => {
     expect(eventSchema.safeParse({ name: "test_complete", duration: 60, wpm_bucket: "20-39", accuracy_bucket: "90-94", anomaly_flags: [], email: "name@example.com" }).success).toBe(false);
   });
 
+  it("accepts the added durations without changing the privacy-limited payload", () => {
+    expect(eventSchema.safeParse({ name: "test_start", duration: 120, entry_page: "2-minute-typing-test" }).success).toBe(true);
+    expect(eventSchema.safeParse({ name: "test_start", duration: 600, entry_page: "10-minute-typing-test" }).success).toBe(true);
+  });
+
   it("accepts only buckets and survives a broken provider", () => {
     const event = vi.fn(() => { throw new Error("offline"); });
     const telemetry = createTelemetry({ event, error: () => {}, vital: () => {} });

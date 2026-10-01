@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const duration = z.union([z.literal(60), z.literal(180), z.literal(300)]);
-const page = z.enum(["typing-test", "1-minute-typing-test", "3-minute-typing-test", "5-minute-typing-test"]);
+const duration = z.union([z.literal(60), z.literal(120), z.literal(180), z.literal(300), z.literal(600)]);
+const page = z.enum(["typing-test", "1-minute-typing-test", "2-minute-typing-test", "3-minute-typing-test", "5-minute-typing-test", "10-minute-typing-test"]);
 const anomaly = z.enum(["paste", "drop", "blur", "hidden", "composition"]);
 
 export const eventSchema = z.discriminatedUnion("name", [

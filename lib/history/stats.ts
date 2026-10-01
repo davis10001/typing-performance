@@ -1,6 +1,6 @@
 import type { StoredResultSummary } from "@/lib/history/repository";
 
-export const TEST_DURATIONS = [60, 180, 300] as const;
+export const TEST_DURATIONS = [60, 120, 180, 300, 600] as const;
 
 export type DurationWpmStats = {
   durationSeconds: (typeof TEST_DURATIONS)[number];

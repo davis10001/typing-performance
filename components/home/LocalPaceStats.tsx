@@ -5,7 +5,7 @@ import { loadHistory, type StoredResultSummary } from "@/lib/history/repository"
 import { summarizeWpmByDuration } from "@/lib/history/stats";
 
 // External values stay empty until duration, population, WPM definition, and source are approved.
-const reviewedPublicMedianWpm: Record<number, number | null> = { 60: null, 180: null, 300: null };
+const reviewedPublicMedianWpm: Record<number, number | null> = { 60: null, 120: null, 180: null, 300: null, 600: null };
 
 function displayWpm(value: number | null): string {
   if (value === null) return "—";

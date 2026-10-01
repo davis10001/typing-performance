@@ -1,6 +1,6 @@
 export type TestPageConfig = {
   slug: string;
-  durationSeconds: 60 | 180 | 300;
+  durationSeconds: 60 | 120 | 180 | 300 | 600;
   title: string;
   description: string;
   intro: string;
@@ -13,9 +13,9 @@ export const testPages = {
     slug: "typing-test",
     durationSeconds: 60,
     title: "Typing Test",
-    description: "Test your typing speed in one, three, or five minutes. See WPM, accuracy, and a clear explanation of your result.",
+    description: "Test your typing speed in one, two, three, five, or ten minutes. See WPM, accuracy, and a clear explanation of your result.",
     intro: "A straightforward typing test that starts without an account. Choose a duration, type the passage, and see how you did.",
-    guidance: "Start with one minute for a quick check. Choose three or five minutes when you want a longer look at your pace and accuracy.",
+    guidance: "Start with one minute for a quick check. Choose a longer session when you want to see how your pace and accuracy hold up.",
     faq: [
       { question: "What does this typing test measure?", answer: "It reports correct words per minute, raw words per minute, accuracy, and mistakes. A word is counted as five characters for speed calculations." },
       { question: "Do I need an account?", answer: "No. You can take the test anonymously, and recent completed results stay in this browser." },
@@ -31,6 +31,18 @@ export const testPages = {
     faq: [
       { question: "Is a one-minute result reliable?", answer: "It is useful for a quick check, but a single short attempt can vary. Try a longer test for a steadier view of your pace." },
       { question: "Can I retake the test?", answer: "Yes. Your next attempt starts a fresh session, and completed attempts can be viewed in this browser." },
+    ],
+  },
+  "2-minute-typing-test": {
+    slug: "2-minute-typing-test",
+    durationSeconds: 120,
+    title: "2 Minute Typing Test",
+    description: "Take a two-minute typing test and see your WPM, accuracy, mistakes, and result summary.",
+    intro: "Two minutes gives you a little more time to settle in while keeping the test quick to repeat.",
+    guidance: "Use the same duration when comparing attempts. Your result reflects the full two minutes, not just your fastest stretch.",
+    faq: [
+      { question: "Why choose two minutes?", answer: "It gives you a longer look at your pace than a one-minute check without committing to a longer session." },
+      { question: "Can I compare this with another duration?", answer: "You can view both results, but repeat the same duration when you want a closer comparison." },
     ],
   },
   "3-minute-typing-test": {
@@ -57,12 +69,26 @@ export const testPages = {
       { question: "Can I stop early?", answer: "Yes. Ending early abandons the attempt and does not create a completed result." },
     ],
   },
+  "10-minute-typing-test": {
+    slug: "10-minute-typing-test",
+    durationSeconds: 600,
+    title: "10 Minute Typing Test",
+    description: "Take a ten-minute typing test to see your WPM and accuracy over a sustained session.",
+    intro: "Ten minutes gives you a sustained session to see how your pace and accuracy hold up over time.",
+    guidance: "Keep a comfortable rhythm and take the full session at your own pace. The result includes pauses and corrections during the ten minutes.",
+    faq: [
+      { question: "What does a ten-minute test show?", answer: "It measures your speed and accuracy across a longer continuous attempt, including any changes in pace." },
+      { question: "Can I stop before ten minutes?", answer: "Yes. Ending early abandons the attempt and does not create a completed result." },
+    ],
+  },
 } satisfies Record<string, TestPageConfig>;
 
 export type TestPageSlug = keyof typeof testPages;
 
 export const durationOptions = [
   { seconds: 60, label: "1 MIN", href: "/1-minute-typing-test" },
+  { seconds: 120, label: "2 MIN", href: "/2-minute-typing-test" },
   { seconds: 180, label: "3 MIN", href: "/3-minute-typing-test" },
   { seconds: 300, label: "5 MIN", href: "/5-minute-typing-test" },
+  { seconds: 600, label: "10 MIN", href: "/10-minute-typing-test" },
 ] as const;

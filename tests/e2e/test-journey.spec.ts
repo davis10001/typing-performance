@@ -3,8 +3,10 @@ import { expect, test } from "@playwright/test";
 
 const durations = [
   { slug: "1-minute-typing-test", seconds: 60, title: /1 minute typing test/i },
+  { slug: "2-minute-typing-test", seconds: 120, title: /2 minute typing test/i },
   { slug: "3-minute-typing-test", seconds: 180, title: /3 minute typing test/i },
   { slug: "5-minute-typing-test", seconds: 300, title: /5 minute typing test/i },
+  { slug: "10-minute-typing-test", seconds: 600, title: /10 minute typing test/i },
 ] as const;
 
 test("home uses a logo-only header, footer navigation, and duration-specific buttons", async ({ page }) => {
@@ -17,16 +19,39 @@ test("home uses a logo-only header, footer navigation, and duration-specific but
     const card = page.locator(".home-duration-card").filter({ hasText: `${duration.seconds / 60} MIN` });
     await expect(card.getByRole("link", { name: new RegExp(`START ${duration.seconds / 60} MIN TEST`) })).toHaveAttribute("href", `/${duration.slug}`);
   }
-  const edges = await page.evaluate(() => {
-    const selectors = [".home-hero", ".home-duration-card:first-child", ".home-stats", ".home-understand"];
-    const lastCard = document.querySelector<HTMLElement>(".home-duration-card:last-child")!;
-    return [...selectors.map((selector) => {
+  await expect(page.getByRole("heading", { name: "05 WAYS TO TEST." })).toBeVisible();
+  await expect(page.locator(".home-duration-card")).toHaveCount(5);
+  const topTreatment = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>(".home-hero")!;
+    const divider = document.querySelector<HTMLElement>(".marquee-strip")!;
+    return {
+      heroBackground: getComputedStyle(hero).backgroundColor,
+      heroHeight: hero.getBoundingClientRect().height,
+      dividerTransform: getComputedStyle(divider).transform,
+    };
+  });
+  expect(topTreatment.heroBackground).toBe("rgba(0, 0, 0, 0)");
+  expect(topTreatment.heroHeight).toBeLessThan(480);
+  expect(topTreatment.dividerTransform).toBe("none");
+  const geometry = await page.evaluate(() => {
+    const selectors = [".home-hero", ".home-duration-grid", ".home-stats", ".home-understand"];
+    const sections = selectors.map((selector) => {
       const rect = document.querySelector<HTMLElement>(selector)!.getBoundingClientRect();
       return { left: rect.left, right: rect.right };
-    }), { left: NaN, right: lastCard.getBoundingClientRect().right }];
+    });
+    const cards = Array.from(document.querySelectorAll<HTMLElement>(".home-duration-card"), (card) => card.getBoundingClientRect());
+    return {
+      sections,
+      cardWidths: cards.map((card) => card.width),
+      cardsWithinGrid: cards.every((card) => card.left >= sections[1].left - 1 && card.right <= sections[1].right + 1),
+    };
   });
-  for (const item of edges.slice(1, 4)) expect(Math.abs(item.left - edges[0].left)).toBeLessThanOrEqual(1);
-  for (const item of [edges[2], edges[3], edges[4]]) expect(Math.abs(item.right - edges[0].right)).toBeLessThanOrEqual(1);
+  for (const item of geometry.sections.slice(1)) {
+    expect(Math.abs(item.left - geometry.sections[0].left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(item.right - geometry.sections[0].right)).toBeLessThanOrEqual(1);
+  }
+  expect(geometry.cardsWithinGrid).toBe(true);
+  for (const width of geometry.cardWidths) expect(Math.abs(width - geometry.cardWidths[0])).toBeLessThanOrEqual(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
@@ -34,7 +59,7 @@ test("home uses a logo-only header, footer navigation, and duration-specific but
 test("home chart reports only local scored results with comparable bars", async ({ page }) => {
   await page.addInitScript(() => {
     const scores = [
-      [60, 20], [60, 30], [60, 100], [180, 40], [180, 60], [300, null],
+      [60, 20], [60, 30], [60, 100], [120, 36], [180, 40], [180, 60], [300, null], [600, 45], [600, 55],
     ];
     localStorage.setItem("typing-performance:results:v1", JSON.stringify(scores.map(([durationSeconds, wpm], index) => ({
       schemaVersion: 1,
@@ -49,10 +74,12 @@ test("home chart reports only local scored results with comparable bars", async 
     }))));
   });
   await page.goto("/");
-  await expect(page.locator(".home-stat-row")).toHaveCount(3);
+  await expect(page.locator(".home-stat-row")).toHaveCount(5);
   await expect(page.locator(".home-stats-list-row").nth(0)).toContainText("1 MIN5030—3");
-  await expect(page.locator(".home-stats-list-row").nth(1)).toContainText("3 MIN5050—2");
-  await expect(page.locator(".home-stats-list-row").nth(2)).toContainText("5 MIN———0");
+  await expect(page.locator(".home-stats-list-row").nth(1)).toContainText("2 MIN3636—1");
+  await expect(page.locator(".home-stats-list-row").nth(2)).toContainText("3 MIN5050—2");
+  await expect(page.locator(".home-stats-list-row").nth(3)).toContainText("5 MIN———0");
+  await expect(page.locator(".home-stats-list-row").nth(4)).toContainText("10 MIN5050—2");
   await expect(page.locator(".home-stats-axis")).toContainText("50 WPM");
   await expect(page.getByText("Awaiting source review")).toBeVisible();
   await expect(page.locator(".home-stat-row").nth(0).locator(".average")).toHaveAttribute("style", "width: 100%;");
@@ -132,7 +159,8 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
   }
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.ok()).toBe(true);
-  expect(await sitemap.text()).toContain("/5-minute-typing-test");
+  expect(await sitemap.text()).toContain("/2-minute-typing-test");
+  expect(await sitemap.text()).toContain("/10-minute-typing-test");
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBe(true);
   expect(await robots.text()).toContain("Sitemap:");

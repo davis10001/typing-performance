@@ -3,9 +3,17 @@ import Link from "next/link";
 import LocalPaceStats from "@/components/home/LocalPaceStats";
 import { durationOptions } from "@/lib/content/test-pages";
 
+const durationDescriptions = {
+  60: "A quick snapshot",
+  120: "Settle into a rhythm",
+  180: "Find a steady rhythm",
+  300: "See how your pace holds",
+  600: "Stay consistent for longer",
+} as const;
+
 export const metadata: Metadata = {
   title: "TypingLevel — Test and understand your typing",
-  description: "Take a free one, three, or five minute typing test. See your WPM, accuracy, and a clear next step.",
+  description: "Take a free one, two, three, five, or ten minute typing test. See your WPM, accuracy, and a clear next step.",
   alternates: { canonical: "/" },
 };
 
@@ -22,21 +30,21 @@ export default function HomePage() {
         <div className="hero-key-art" aria-hidden="true"><div className="hero-key-shadow" /><div className="hero-keycap"><span>A</span></div><span className="hero-art-caption">YOUR NEXT KEY<br />IS WAITING.</span></div>
       </section>
 
-      <div className="marquee-strip" aria-hidden="true"><span>TEST YOUR PACE&nbsp;&nbsp;·&nbsp;&nbsp;FIND YOUR RHYTHM&nbsp;&nbsp;·&nbsp;&nbsp;TEST YOUR PACE&nbsp;&nbsp;·&nbsp;&nbsp;FIND YOUR RHYTHM&nbsp;&nbsp;·&nbsp;&nbsp;</span></div>
+      <div className="marquee-strip" aria-hidden="true"><span>TEST YOUR PACE&nbsp;&nbsp;·&nbsp;&nbsp;FIND YOUR RHYTHM</span></div>
 
       <section className="home-tests" aria-labelledby="choose-title">
-        <div className="section-heading"><span className="eyebrow">CHOOSE YOUR SESSION</span><h2 id="choose-title"><strong>03</strong> WAYS TO TEST.</h2></div>
+        <div className="section-heading"><span className="eyebrow">CHOOSE YOUR SESSION</span><h2 id="choose-title"><strong>05</strong> WAYS TO TEST.</h2></div>
         <div className="home-duration-grid">
           {durationOptions.map((option, index) => (
             <article className={`home-duration-card card-${index + 1}`} key={option.seconds}>
               <span>No.{index + 1}</span>
               <strong>{option.label}</strong>
-              <span className="home-duration-description">{option.seconds === 60 ? "A quick snapshot" : option.seconds === 180 ? "Find a steady rhythm" : "See how your pace holds"}</span>
+              <span className="home-duration-description">{durationDescriptions[option.seconds]}</span>
               <Link className="button home-duration-action" href={option.href}>START {option.label} TEST <span aria-hidden="true">↗</span></Link>
             </article>
           ))}
         </div>
-        <p className="home-tests-note">ONE ENGINE. THREE CLEAR WAYS TO CHECK YOUR PACE.</p>
+        <p className="home-tests-note">ONE ENGINE. FIVE CLEAR WAYS TO CHECK YOUR PACE.</p>
         <LocalPaceStats />
       </section>
 

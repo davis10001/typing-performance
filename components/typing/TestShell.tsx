@@ -13,7 +13,7 @@ import {
 import type { AnomalyFlag, TestResult, TestSession } from "@/lib/typing-engine/types";
 
 type Props = {
-  durationSeconds: 60 | 180 | 300;
+  durationSeconds: 60 | 120 | 180 | 300 | 600;
   prompt: string;
   entryPage: TestPageSlug;
 };
