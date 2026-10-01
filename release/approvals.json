@@ -1,6 +1,6 @@
 {
-  "benchmark": { "approved": false, "source": "", "version": "", "reviewer": "" },
+  "benchmark": { "approved": false, "source": "", "version": "", "definition": "", "reviewer": "" },
   "privacyAndDomain": { "approved": false, "domain": "", "privacyPolicy": "", "analyticsDecision": "", "reviewer": "" },
-  "testTextLicense": { "approved": false, "manifest": "", "reviewer": "" },
+  "testTextLicense": { "approved": false, "manifest": "content/test-texts/launch-copy-v1.md", "reviewer": "" },
   "verification": { "approved": false, "evidence": "", "reviewer": "" }
 }

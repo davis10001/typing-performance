@@ -8,6 +8,9 @@
 | PD-02 | P0 匿名、本地优先 | 降低第一次测试摩擦，避免为核心路径引入后端依赖 |
 | PD-03 | P0 不展示 percentile 或 verified 成绩 | 没有真实样本与证书可信度模型时不能做此宣称 |
 | PD-04 | P0 不做课程、竞速或社交 | 它们不服务当前验证目标且显著扩大范围 |
+| PD-05 | 首发品牌为 TypingLevel；首选域名 typinglevel.com | 域名注册与基本商标冲突核查尚未完成，不能视为已取得 |
+| PD-06 | 观测栈为 Google Search Console + GA4 + Vercel Analytics / Speed Insights | 不传原始测试文本或逐键内容；正式分析需隐私审校与访客同意 |
+| PD-07 | 当前两段原创英文文本列为 Launch Copy V1 送审 | 不包含 factual benchmark claims 或 numeric performance statements 的批准 |
 
 ## 假设与验证
 
@@ -20,7 +23,7 @@
 
 | ID | 问题 | Owner | 截止/关闭条件 | 阻塞性 |
 |---|---|---|---|---|
-| OQ-01 | Benchmark band 的具体文案、来源、版本 | 产品/内容 | 内容审校并在页面可引用 | 阻塞发布，不阻塞基础开发 |
-| OQ-02 | 品牌名、域名、隐私政策与 Cookie/分析供应商 | 产品/运营 | 发布前确认 | 阻塞生产发布 |
-| OQ-03 | 初始测试文本许可清单 | 内容/产品 | 每个文本有 sourceType/sourceRef | 阻塞使用该文本上线 |
+| OQ-01 | Benchmark band 的具体文案、来源、版本；由中心方提供并审校，团队不自行定义 | 产品/内容 | 内容审校并在页面可引用 | 阻塞发布，不阻塞基础开发 |
+| OQ-02 | typinglevel.com 的注册/基本商标冲突核查、隐私政策与同意方案；工具栈已选定 | 产品/运营 | 发布前确认域名权属、政策和配置 | 阻塞生产发布 |
+| OQ-03 | Launch Copy V1 两段原文的最终版本与发布审校 | 内容/产品 | Manifest 已建立；最终文本/责任人确认 | 阻塞使用该文本上线 |
 | OQ-04 | P1 Certificate 的最低可信度规则 | 产品 | 进入 P1 前形成独立决策 | 不阻塞 P0 |

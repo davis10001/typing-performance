@@ -39,6 +39,14 @@ button { cursor: pointer; }
 .ticket-notches i { display: block; width: clamp(24px, 5vw, 56px); height: 13px; background: var(--tp-stage); border-radius: 99px; }
 .site-footer { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid oklch(0.42 0 0); padding: 24px 28px 30px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
 .site-footer nav { display: flex; gap: 24px; }
+.analytics-settings { padding: 0; border: 0; background: transparent; color: var(--tp-text-on-dark); font-size: 11px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.analytics-consent { position: fixed; z-index: 20; right: 22px; bottom: 22px; display: flex; flex-direction: column; align-items: stretch; gap: 18px; width: min(430px, calc(100% - 28px)); padding: 22px 24px; border: 2px solid var(--tp-stage); border-radius: 20px; background: var(--tp-chamber); color: var(--tp-ink); box-shadow: 0 18px 50px oklch(0 0 0 / 0.24); }
+.analytics-consent strong { font-size: 20px; font-weight: 900; }
+.analytics-consent p { max-width: 48ch; margin: 7px 0 0; font-size: 14px; line-height: 1.4; }
+.analytics-consent a { font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.analytics-consent-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.analytics-consent-actions .button { flex: 1; min-height: 42px; justify-content: center; }
+.analytics-consent-actions .text-button { margin: 4px auto 0; }
 .eyebrow { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.09em; color: var(--tp-text-muted-on-dark); }
 .eyebrow.dark { color: var(--tp-text-muted-on-light); }
 .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 28px; border: 0; border-radius: 99px; min-height: 48px; padding: 12px 22px; font-size: 13px; font-weight: 900; letter-spacing: 0.01em; line-height: 1.15; transition: transform 180ms ease, filter 180ms ease, background 180ms ease; }
@@ -190,6 +198,7 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 680px) {
+  .analytics-consent { right: 10px; bottom: 10px; max-height: calc(100vh - 20px); overflow-y: auto; padding: 20px; }
   .site-shell { width: calc(100% - 20px); margin: 10px auto; border-radius: 16px; }
   .site-header { padding: 12px 12px 0; }
   .nav-pill { min-height: 56px; padding: 8px 13px; gap: 8px; }

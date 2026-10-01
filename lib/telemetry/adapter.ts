@@ -47,8 +47,17 @@ export function createTelemetry(transport: TelemetryTransport = noOpTransport) {
   };
 }
 
-// OQ-02: no production provider or cookie policy is approved yet.
-export const telemetry = createTelemetry();
+let currentTelemetry = createTelemetry();
+
+export const telemetry = {
+  event(value: TelemetryEvent): void { currentTelemetry.event(value); },
+  error(code: OperationalErrorCode): void { currentTelemetry.error(code); },
+  vital(name: WebVitalName, value: number, pathname: string): void { currentTelemetry.vital(name, value, pathname); },
+};
+
+export function setTelemetryTransport(transport: TelemetryTransport | null): void {
+  currentTelemetry = createTelemetry(transport ?? noOpTransport);
+}
 
 export function wpmBucket(value: number | null): Extract<TelemetryEvent, { name: "test_complete" }>["wpm_bucket"] {
   if (value === null) return "none";

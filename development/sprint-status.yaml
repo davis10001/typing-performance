@@ -26,10 +26,10 @@ action_items:
     owner: product-content
     status: open
   - epic: 3
-    action: Choose analytics/error-monitoring providers and complete privacy/cookie review before production.
+    action: Verify typinglevel.com availability/trademark, supply GA4 ID and reviewed privacy notice, enable Vercel project features, and complete consent review before production.
     owner: product-operations
     status: open
   - epic: 1
-    action: Create a licensed initial English test-text manifest before production content is enabled.
+    action: Final-review Launch Copy V1 manifest and record the responsible reviewer before production content is enabled.
     owner: product-content
     status: open

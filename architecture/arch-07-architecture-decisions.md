@@ -8,6 +8,6 @@
 | AD-04 | P0 结果以本机、有限、可清除摘要保存 | Local history schema/version | 账号/云端历史、原始键入持久化 | storage 仅含 `StoredResultSummary` 白名单字段 |
 | AD-05 | 没有真实样本不做 percentile/verified | Result UI、benchmark 文案 | 虚假统计或认证 | UI/内容检查不得出现 percentiles/verified 宣称 |
 | AD-06 | 内容文本须有许可元数据与版本 | content schema/build validation | 未知版权来源 | 每个发布文本均有 sourceType/sourceRef/version |
-| AD-07 | 可选外部分析经 adapter 和字段白名单 | telemetry module | 供应商 SDK 直接散落页面 | 事件类型/属性通过 adapter 类型检查 |
+| AD-07 | 可选外部分析经 adapter 和字段白名单；GA4/Vercel 脚本仅在配置齐备且访客明确同意后加载 | telemetry module、AnalyticsGate | 供应商 SDK 直接散落测试组件、未经同意自动加载 | 事件类型/属性通过 adapter 类型检查；默认构建无外部分析脚本；拒绝不影响测试 |
 
 任何偏离需新增 AD 或更新本表，并在 Epic/Story 中引用；不得仅在代码注释中改变决定。

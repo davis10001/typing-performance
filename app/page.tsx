@@ -3,7 +3,7 @@ import Link from "next/link";
 import { durationOptions } from "@/lib/content/test-pages";
 
 export const metadata: Metadata = {
-  title: "Typing Performance — Test and understand your typing",
+  title: "TypingLevel — Test and understand your typing",
   description: "Take a free one, three, or five minute typing test. See your WPM, accuracy, and a clear next step.",
   alternates: { canonical: "/" },
 };

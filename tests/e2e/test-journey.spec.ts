@@ -70,6 +70,7 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
     await page.goto(`/${slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${slug}$`));
+    await expect(page).toHaveTitle(/TypingLevel/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   }
   const sitemap = await request.get("/sitemap.xml");
@@ -78,6 +79,12 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBe(true);
   expect(await robots.text()).toContain("Sitemap:");
+});
+
+test("analytics vendors are absent while opt-in mode is disabled", async ({ page }) => {
+  await page.goto("/1-minute-typing-test");
+  await expect(page.locator('script[src*="googletagmanager.com"], script[src*="/_vercel/"]')).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Analytics choices" })).toHaveCount(0);
 });
 
 test("SEO explanation remains readable without JavaScript", async ({ browser }) => {
