@@ -201,7 +201,7 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
         <span className="test-duration">{durationSeconds / 60} MIN / ENGLISH</span>
       </div>
 
-      <div className="duration-cards" aria-label="Choose test duration">
+      <div className="duration-cards" role="group" aria-label={isReady ? "Choose test duration" : "Test duration options, available after this attempt"} tabIndex={isReady ? undefined : 0}>
         {durationOptions.map((option, index) => (
           <Link
             key={option.seconds}

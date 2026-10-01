@@ -43,4 +43,12 @@ describe("typing engine", () => {
     expect(marked.anomalyFlags).toEqual(["paste"]);
     expect(applyCharacter(marked, "a", 60_001)).toMatchObject({ phase: "completed", typed: "" });
   });
+
+  it("ignores backspace on an empty buffer or with an invalid timestamp", () => {
+    const running = beginRunning(beginCountdown(createSession("test-5", 60, "abc")), 0);
+    expect(applyBackspace(running, 100)).toBe(running);
+    const typed = applyCharacter(running, "a", 100);
+    expect(applyBackspace(typed, Number.NaN)).toBe(typed);
+    expect(applyBackspace(typed, 60_001)).toMatchObject({ phase: "completed", typed: "a" });
+  });
 });

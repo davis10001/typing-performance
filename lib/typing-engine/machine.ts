@@ -69,7 +69,9 @@ export function applyCharacter(session: TestSession, character: string, now: num
 
 export function applyBackspace(session: TestSession, now: number): TestSession {
   if (session.phase !== "running" || session.startedAt === null) return session;
+  if (!Number.isFinite(now)) return session;
   if (now >= deadline(session)!) return completeSession(session, now);
+  if (session.typed.length === 0) return session;
   return {
     ...session,
     typed: session.typed.slice(0, -1),
