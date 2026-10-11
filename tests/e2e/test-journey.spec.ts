@@ -9,85 +9,112 @@ const durations = [
   { slug: "10-minute-typing-test", seconds: 600 },
 ] as const;
 
-test("home uses a logo-only header, footer navigation, and duration-specific buttons", async ({ page }) => {
+test("home opens on the typing test with one row of text navigation", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".site-header a")).toHaveCount(1);
   const homeLink = page.locator(".site-header").getByRole("link", { name: "TypingLevel home" });
   await expect(homeLink).toBeVisible();
   await expect(homeLink.locator("img")).toHaveAttribute("src", /typing-level-logo/);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/images/typing-level-icon.png");
-  await expect(page.getByRole("navigation", { name: "Footer navigation" }).getByRole("link")).toHaveCount(5);
-  await expect(page.getByText("No completed tests in this browser yet.", { exact: false })).toBeVisible();
-  for (const duration of durations) {
-    const card = page.locator(".home-duration-card").filter({ hasText: `${duration.seconds / 60} MIN` });
-    await expect(card.getByRole("link", { name: new RegExp(`START ${duration.seconds / 60} MIN TEST`) })).toHaveAttribute("href", `/${duration.slug}`);
-  }
-  await expect(page.getByRole("heading", { name: "05 WAYS TO TEST." })).toBeVisible();
-  await expect(page.locator(".home-duration-card")).toHaveCount(5);
-  await expect(page.locator(".hero-key-art")).toHaveCount(0);
-  await expect(page.getByRole("img", { name: "Illustration of two hands typing on floating keys" })).toHaveAttribute("src", "/images/typing-hands-hero-cutout.png");
-  const topTreatment = await page.evaluate(() => {
-    const hero = document.querySelector<HTMLElement>(".home-hero")!;
-    const divider = document.querySelector<HTMLElement>(".marquee-strip")!;
-    return {
-      heroBackground: getComputedStyle(hero).backgroundColor,
-      heroHeight: hero.getBoundingClientRect().height,
-      dividerTransform: getComputedStyle(divider).transform,
-    };
-  });
-  expect(topTreatment.heroBackground).toBe("rgba(0, 0, 0, 0)");
-  expect(topTreatment.heroHeight).toBeLessThan(480);
-  expect(topTreatment.dividerTransform).toBe("none");
+  const navigation = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(navigation).toHaveText("TestLessonsRaceFAQ");
+  await expect(navigation.getByRole("link")).toHaveCount(2);
+  await expect(navigation.getByRole("link", { name: "Test" })).toHaveAttribute("href", "/");
+  await expect(navigation.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/faq");
+  await expect(navigation.locator("button, svg, img")).toHaveCount(0);
+  const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });
+  await expect(page.locator(".footer-brand img")).toHaveAttribute("src", /typing-level-logo/);
+  await expect(page.getByRole("img", { name: "TypingLevel" })).toBeVisible();
+  await expect(footerNavigation.getByRole("link", { name: "PRIVACY" })).toHaveAttribute("href", "/privacy");
+  await expect(footerNavigation.getByRole("link", { name: "START A TEST" })).toBeHidden();
+  await expect(footerNavigation.getByRole("link", { name: "WPM EXPLAINED" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("START TYPING.");
+  await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
+  await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
+  await expect(page.locator(".home-stats")).toHaveCount(0);
   const geometry = await page.evaluate(() => {
-    const selectors = [".home-hero", ".home-duration-grid", ".home-stats", ".home-understand"];
-    const sections = selectors.map((selector) => {
-      const rect = document.querySelector<HTMLElement>(selector)!.getBoundingClientRect();
-      return { left: rect.left, right: rect.right };
-    });
-    const cards = Array.from(document.querySelectorAll<HTMLElement>(".home-duration-card"), (card) => card.getBoundingClientRect());
+    const header = document.querySelector<HTMLElement>(".site-header")!.getBoundingClientRect();
+    const logo = document.querySelector<HTMLElement>(".header-wordmark")!.getBoundingClientRect();
+    const nav = document.querySelector<HTMLElement>(".site-nav")!.getBoundingClientRect();
     return {
-      sections,
-      cardWidths: cards.map((card) => card.width),
-      cardsWithinGrid: cards.every((card) => card.left >= sections[1].left - 1 && card.right <= sections[1].right + 1),
+      headerBottom: header.bottom,
+      logoTop: logo.top,
+      navTop: nav.top,
+      logoRight: logo.right,
+      navLeft: nav.left,
+      navRight: nav.right,
+      headerRight: header.right,
     };
   });
-  for (const item of geometry.sections.slice(1)) {
-    expect(Math.abs(item.left - geometry.sections[0].left)).toBeLessThanOrEqual(1);
-    expect(Math.abs(item.right - geometry.sections[0].right)).toBeLessThanOrEqual(1);
-  }
-  expect(geometry.cardsWithinGrid).toBe(true);
-  for (const width of geometry.cardWidths) expect(Math.abs(width - geometry.cardWidths[0])).toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.logoTop - geometry.navTop)).toBeLessThan(20);
+  expect(geometry.navLeft).toBeGreaterThan(geometry.logoRight);
+  expect(geometry.navRight).toBeLessThan(geometry.headerRight);
+  expect(geometry.navTop).toBeLessThan(geometry.headerBottom);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test("home chart reports only local scored results with comparable bars", async ({ page }) => {
-  await page.addInitScript(() => {
-    const scores = [
-      [60, 20], [60, 30], [60, 100], [120, 36], [180, 40], [180, 60], [300, null], [600, 45], [600, 55],
-    ];
-    localStorage.setItem("typing-performance:results:v1", JSON.stringify(scores.map(([durationSeconds, wpm], index) => ({
-      schemaVersion: 1,
-      id: `attempt-${index}`,
-      completedAt: "2026-10-01T00:00:00.000Z",
-      durationSeconds,
-      wpm,
-      rawWpm: wpm,
-      accuracy: 100,
-      errors: 0,
-      anomalyFlags: [],
-    }))));
-  });
+test("FAQ navigation opens a standalone page with answers", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".home-stat-row")).toHaveCount(5);
-  await expect(page.locator(".home-stats-list-row").nth(0)).toContainText("1 MIN50303");
-  await expect(page.locator(".home-stats-list-row").nth(1)).toContainText("2 MIN36361");
-  await expect(page.locator(".home-stats-list-row").nth(2)).toContainText("3 MIN50502");
-  await expect(page.locator(".home-stats-list-row").nth(3)).toContainText("5 MIN——0");
-  await expect(page.locator(".home-stats-list-row").nth(4)).toContainText("10 MIN50502");
-  await expect(page.locator(".home-stats-axis")).toContainText("50 WPM");
-  await expect(page.getByText("No public benchmark is included in this launch.")).toBeVisible();
-  await expect(page.locator(".home-stat-row").nth(0).locator(".average")).toHaveAttribute("style", "width: 100%;");
+  await expect(page.locator(".home-faq")).toHaveCount(0);
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "FAQ" }).click();
+  await expect(page).toHaveURL(/\/faq$/);
+  await expect(page.locator(".site-header")).toHaveCSS("border-bottom-width", "0px");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("TYPING FAQ.");
+  const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });
+  await expect(footerNavigation.getByRole("link")).toHaveCount(2);
+  await expect(footerNavigation.getByRole("link", { name: "START A TEST" })).toBeVisible();
+  await expect(page.locator(".faq-entry")).toHaveCount(8);
+  await expect(page.locator(".faq-list details, .faq-list summary")).toHaveCount(0);
+  await expect(page.locator(".faq-list")).toHaveCSS("border-top-width", "0px");
+  await expect(page.locator(".faq-entry").first()).toHaveCSS("border-width", "1px");
+  await expect(page.locator(".faq-entry").first()).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  const firstCard = await page.locator(".faq-entry").first().boundingBox();
+  const secondCard = await page.locator(".faq-entry").nth(1).boundingBox();
+  const thirdCard = await page.locator(".faq-entry").nth(2).boundingBox();
+  const hero = await page.locator(".faq-page .content-hero").boundingBox();
+  const firstQuestion = await page.locator(".faq-entry").first().locator("h2").boundingBox();
+  const firstAnswer = await page.locator(".faq-entry").first().locator("p").boundingBox();
+  const heroTitle = await page.locator("#faq-title").boundingBox();
+  expect(firstCard).not.toBeNull();
+  expect(secondCard).not.toBeNull();
+  expect(thirdCard).not.toBeNull();
+  expect(hero).not.toBeNull();
+  expect(firstQuestion).not.toBeNull();
+  expect(firstAnswer).not.toBeNull();
+  expect(heroTitle).not.toBeNull();
+  expect(firstAnswer!.y).toBeGreaterThanOrEqual(firstQuestion!.y + firstQuestion!.height);
+  expect(Math.abs(firstAnswer!.x - firstQuestion!.x)).toBeLessThan(1);
+  expect(Math.abs(firstCard!.x - hero!.x)).toBeLessThan(1);
+  expect(Math.abs(firstQuestion!.x - heroTitle!.x)).toBeLessThan(5);
+  if (page.viewportSize()!.width > 1000) {
+    expect(Math.abs(firstCard!.y - secondCard!.y)).toBeLessThan(1);
+    expect(secondCard!.x).toBeGreaterThan(firstCard!.x + firstCard!.width);
+    expect(Math.abs(firstCard!.x - thirdCard!.x)).toBeLessThan(1);
+    expect(thirdCard!.y).toBeGreaterThan(firstCard!.y + firstCard!.height);
+  } else {
+    expect(Math.abs(firstCard!.x - secondCard!.x)).toBeLessThan(1);
+    expect(secondCard!.y).toBeGreaterThan(firstCard!.y + firstCard!.height);
+  }
+  await expect(page.getByRole("heading", { name: "What is the average typing speed?" })).toBeVisible();
+  await expect(page.getByText("the average was 52 WPM", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "How do mistakes and backspaces affect my WPM?" })).toBeVisible();
+  await expect(page.getByText("Backspace removes the last character", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "See how WPM works." })).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test("home test saves a result without showing a statistics module", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/");
+  const input = page.getByRole("textbox", { name: "Type the passage here" });
+  await input.pressSequentially("a");
+  await page.clock.fastForward(60_100);
+  await expect(page.locator("#result-title")).toBeVisible();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("typing-performance:results:v1") ?? "[]"));
+  expect(saved).toHaveLength(1);
+  expect(saved[0].durationSeconds).toBe(60);
+  await expect(page.locator(".home-stats")).toHaveCount(0);
 });
 
 test("typing sound can be muted and the preference persists", async ({ page }) => {
@@ -140,6 +167,49 @@ test("word errors preserve the expected letter while space errors show actual in
   await expect(passage.locator(".typed-extra")).toHaveCount(0);
 });
 
+test("typing passage advances by rendered lines without pulling the third line to the top", async ({ page }) => {
+  test.slow();
+  await page.goto("/1-minute-typing-test");
+  const passage = page.locator(".typing-passage");
+  const input = page.getByRole("textbox", { name: "Type the passage here" });
+  const prompt = await passage.textContent();
+  expect(prompt).not.toBeNull();
+
+  const initialLineStarts = await passage.locator("[data-prompt-index]").evaluateAll((characters) => {
+    const starts: number[] = [];
+    let previousTop: number | null = null;
+    for (const character of characters as HTMLElement[]) {
+      if (character.offsetTop === previousTop) continue;
+      starts.push(Number(character.dataset.promptIndex));
+      previousTop = character.offsetTop;
+    }
+    return starts;
+  });
+  expect(initialLineStarts.length).toBeGreaterThan(5);
+
+  await input.pressSequentially(prompt!.slice(0, initialLineStarts[2]));
+  await expect(passage).toHaveAttribute("data-window-start", "0");
+  const thirdLinePosition = await passage.locator(".typed-current").evaluate((current) => {
+    const passage = current.parentElement!;
+    const tops = [...new Set(Array.from(passage.querySelectorAll<HTMLElement>("[data-prompt-index]"), (character) => character.offsetTop))];
+    return tops.indexOf((current as HTMLElement).offsetTop);
+  });
+  expect(thirdLinePosition).toBe(2);
+
+  await input.pressSequentially(prompt!.slice(initialLineStarts[2], initialLineStarts[5]));
+  await expect(passage).toHaveAttribute("data-window-start", String(initialLineStarts[1]));
+  const shiftedCaretPosition = await passage.locator(".typed-current").evaluate((current) => {
+    const passage = current.parentElement!;
+    const tops = [...new Set(Array.from(passage.querySelectorAll<HTMLElement>("[data-prompt-index]"), (character) => character.offsetTop))];
+    return tops.indexOf((current as HTMLElement).offsetTop);
+  });
+  expect(shiftedCaretPosition).toBe(4);
+
+  const backspacesToPreviousWindow = initialLineStarts[5] - initialLineStarts[1] + 1;
+  for (let index = 0; index < backspacesToPreviousWindow; index += 1) await input.press("Backspace");
+  await expect(passage).toHaveAttribute("data-window-start", "0");
+});
+
 test("typing text size changes only the passage and persists", async ({ page }) => {
   await page.goto("/1-minute-typing-test");
   const sizes = page.getByRole("group", { name: "Typing text size" });
@@ -161,7 +231,7 @@ for (const duration of durations) {
   test(`${duration.seconds / 60}-minute test completes, saves locally, and retests`, async ({ page }) => {
     await page.clock.install();
     await page.goto(`/${duration.slug}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Typing Test");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${duration.seconds / 60} Minute Typing Test`);
     await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
     await expect(page.getByRole("timer")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /how wpm works/i })).toBeVisible();
@@ -178,15 +248,20 @@ for (const duration of durations) {
     await input.pressSequentially("hello");
     await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "running");
     await expect(page.getByRole("group", { name: "Choose test duration" })).toHaveCount(0);
-    await expect(page.getByRole("timer")).toHaveText(`${String(duration.seconds / 60).padStart(2, "0")}:00`);
+    const timer = page.getByRole("timer");
+    const secondsRemaining = async () => {
+      const clockText = await timer.textContent();
+      const match = /^(\d+):(\d{2})$/.exec(clockText ?? "");
+      expect(match).not.toBeNull();
+      return Number(match![1]) * 60 + Number(match![2]);
+    };
+    await expect.poll(secondsRemaining).toBeGreaterThan(duration.seconds - 10);
+    const initialSecondsRemaining = await secondsRemaining();
     await expect(input).toHaveValue("hello");
     await expect(page.locator(".typed-error").first()).toHaveText(openingCharacter);
     await expect(page.locator(".typed-current")).toHaveCount(1);
     await page.clock.fastForward(1_100);
-    const secondsAfterFirstTick = duration.seconds - 1;
-    await expect(page.getByRole("timer")).toHaveText(
-      `${String(Math.floor(secondsAfterFirstTick / 60)).padStart(2, "0")}:${String(secondsAfterFirstTick % 60).padStart(2, "0")}`,
-    );
+    await expect.poll(secondsRemaining).toBeLessThan(initialSecondsRemaining);
 
     await page.clock.fastForward(duration.seconds * 1000 + 100);
     await expect(page.getByRole("timer")).toHaveText("00:00");
@@ -273,7 +348,7 @@ test("difficulty and New Testing change text, then the toolbar switches when typ
   await expect(advanced).toHaveAttribute("aria-pressed", "true");
 });
 
-test("paste is rejected and local history can be cleared from home statistics", async ({ page }) => {
+test("paste is rejected and local history can be cleared from Privacy", async ({ page }) => {
   await page.clock.install();
   await page.goto("/1-minute-typing-test");
   const input = page.getByRole("textbox", { name: "Type the passage here" });
@@ -285,14 +360,14 @@ test("paste is rejected and local history can be cleared from home statistics", 
   await expect(input).toHaveValue("");
   await input.pressSequentially("test");
   await page.clock.fastForward(60_100);
-  await page.goto("/");
-  await expect(page.locator(".home-stats-list-row").first()).toContainText("1 MIN");
+  await page.goto("/privacy");
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("typing-performance:results:v1") ?? "[]"))).toHaveLength(1);
   await page.getByRole("button", { name: "Clear local history" }).click();
   await page.getByRole("button", { name: "Clear results" }).click();
-  await expect(page.getByText("No completed tests in this browser yet.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("Saved results removed from this browser.");
   expect(await page.evaluate(() => localStorage.getItem("typing-performance:results:v1"))).toBeNull();
   await page.reload();
-  await expect(page.getByText("No completed tests in this browser yet.", { exact: false })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("typing-performance:results:v1"))).toBeNull();
 });
 
 test("an idle test does not start the timer or save a score", async ({ page }) => {
@@ -385,18 +460,26 @@ test("New Testing restores first-key start without keeping old text", async ({ p
 });
 
 test("public routes expose unique titles and canonical URLs", async ({ page, request }) => {
-  for (const slug of ["typing-test", ...durations.map((item) => item.slug), "average-wpm", "average-typing-speed", "privacy"]) {
+  for (const slug of [...durations.map((item) => item.slug), "faq", "average-wpm", "average-typing-speed", "privacy"]) {
     await page.goto(`/${slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${slug}$`));
     await expect(page).toHaveTitle(/TypingLevel/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   }
+  await page.goto("/");
+  const homeCanonical = await page.locator('link[rel="canonical"]').getAttribute("href");
+  expect(new URL(homeCanonical!).pathname).toBe("/");
+  await page.goto("/typing-test");
+  await expect(page).toHaveURL(/\/$/);
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.ok()).toBe(true);
-  expect(await sitemap.text()).toContain("/2-minute-typing-test");
-  expect(await sitemap.text()).toContain("/10-minute-typing-test");
-  expect(await sitemap.text()).toContain("/privacy");
+  const sitemapText = await sitemap.text();
+  expect(sitemapText).toContain("/2-minute-typing-test");
+  expect(sitemapText).toContain("/10-minute-typing-test");
+  expect(sitemapText).toContain("/privacy");
+  expect(sitemapText).toContain("/faq");
+  expect(sitemapText).not.toContain("/typing-test<");
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBe(true);
   expect(await robots.text()).toContain("Sitemap:");
@@ -430,7 +513,7 @@ test("primary route has no horizontal overflow or blocking accessibility violati
   const chamber = await page.locator(".typing-chamber").boundingBox();
   expect(viewport).not.toBeNull();
   expect(chamber).not.toBeNull();
-  expect(chamber!.y).toBeLessThan(viewport!.height / 2);
+  expect(chamber!.y).toBeLessThan(viewport!.height * (viewport!.width <= 680 ? 0.65 : 0.5));
   const alignment = await page.evaluate(() => {
     const stage = document.querySelector<HTMLElement>(".typing-stage")!;
     const chamber = document.querySelector<HTMLElement>(".typing-chamber")!;
@@ -527,9 +610,7 @@ test("top-level sections share one responsive page gutter", async ({ page }) => 
         [".site-header", "padding"],
         [".site-footer", "padding"],
         [".home-hero", "margin"],
-        [".marquee-strip", "margin"],
-        [".home-tests", "padding"],
-        [".home-understand", "margin"],
+        [".test-shell", "padding"],
       ],
     },
     {

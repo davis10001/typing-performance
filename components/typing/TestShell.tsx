@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
 import { composeTestPrompt, nextTextIndex, type Difficulty, type PromptText } from "@/lib/content/prompt-selection";
 import { durationOptions, type TestPageSlug } from "@/lib/content/test-pages";
@@ -40,6 +40,7 @@ const fontSizeOptions: { value: TypingFontSize; label: string; shortLabel: strin
   { value: "large", label: "Large", shortLabel: "L" },
 ];
 const visiblePromptCharacters = 520;
+const visiblePromptLines = 5;
 
 function formatScore(value: number | null, suffix = ""): string {
   return value === null ? "—" : `${Number.isInteger(value) ? value : value.toFixed(1)}${suffix}`;
@@ -93,12 +94,47 @@ function KeyboardIcon({ enabled }: { enabled: boolean }) {
 
 function TextRenderer({ prompt, typed, active }: { prompt: string; typed: string; active: boolean }) {
   const { cursorIndex, characterStates, extraCharacters } = alignTypingInput(prompt, typed);
-  const roughStart = Math.max(0, Math.floor(cursorIndex / 80) * 80 - 40);
-  const start = roughStart === 0 ? 0 : prompt.lastIndexOf(" ", roughStart) + 1;
+  const passageRef = useRef<HTMLDivElement>(null);
+  const startHistoryRef = useRef([0]);
+  const [windowStart, setWindowStart] = useState(0);
+  const start = windowStart;
   const end = prompt.indexOf(" ", Math.max(start + visiblePromptCharacters, cursorIndex + 1));
   const visible = prompt.slice(start, end < 0 ? undefined : end);
+
+  useLayoutEffect(() => {
+    if (cursorIndex < start) {
+      const previousStart = startHistoryRef.current.findLast((candidate) => candidate <= cursorIndex) ?? 0;
+      startHistoryRef.current = startHistoryRef.current.filter((candidate) => candidate <= previousStart);
+      setWindowStart(previousStart);
+      return;
+    }
+
+    const passage = passageRef.current;
+    const current = passage?.querySelector<HTMLElement>(`[data-prompt-index="${cursorIndex}"]`);
+    if (!passage || !current) return;
+
+    const characters = Array.from(passage.querySelectorAll<HTMLElement>("[data-prompt-index]"));
+    const lineTops = [...new Set(characters.map((character) => character.offsetTop))];
+    const currentLine = lineTops.indexOf(current.offsetTop);
+    if (currentLine < visiblePromptLines) return;
+
+    const nextTop = lineTops[currentLine - visiblePromptLines + 1];
+    const nextLineStart = characters.find((character) => character.offsetTop === nextTop);
+    const nextStart = Number(nextLineStart?.dataset.promptIndex);
+    if (!Number.isFinite(nextStart) || nextStart <= start) return;
+
+    startHistoryRef.current = [...startHistoryRef.current, nextStart];
+    setWindowStart(nextStart);
+  }, [cursorIndex, prompt, start, visible]);
+
   return (
-    <div className="typing-passage" role="text" aria-label={`Text to type: ${visible}`}>
+    <div
+      ref={passageRef}
+      className="typing-passage"
+      role="text"
+      aria-label={`Text to type: ${visible}`}
+      data-window-start={start}
+    >
       {Array.from(visible).map((character, relativeIndex) => {
         const index = start + relativeIndex;
         const state = characterStates.get(index);
@@ -111,7 +147,7 @@ function TextRenderer({ prompt, typed, active }: { prompt: string; typed: string
         return (
           <Fragment key={index}>
             {extras && <span className="typed-extra" aria-hidden="true">{extras}</span>}
-            <span className={className} aria-hidden="true">{character}</span>
+            <span className={className} data-prompt-index={index} aria-hidden="true">{character}</span>
           </Fragment>
         );
       })}
@@ -270,6 +306,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
       if (nextResult.wpm === null) return;
       try {
         if (!saveHistory(window.localStorage, nextResult, new Date())) { setStorageWarning(true); telemetry.error("storage_write"); }
+        else window.dispatchEvent(new Event("typing-level:history-updated"));
       } catch { setStorageWarning(true); telemetry.error("storage_write"); }
     }
   }, [durationSeconds]);
@@ -460,7 +497,6 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
       <div className="test-toolbar">
         {isReady ? (
           <div className="test-toolbar-config">
-            <h1 className="sr-only">Typing Test</h1>
             <div className="duration-cards" role="group" aria-label="Choose test duration">
               <span className="test-control-icon" aria-hidden="true"><TimeIcon /></span>
               {durationOptions.map((option) => (
@@ -469,7 +505,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
                   href={option.href}
                   scroll={false}
                   className={`duration-card ${option.seconds === durationSeconds ? "selected" : ""}`}
-                  aria-current={option.seconds === durationSeconds ? "page" : undefined}
+                  aria-current={entryPage !== "typing-test" && option.seconds === durationSeconds ? "page" : undefined}
                   onNavigate={preservePromptForDurationChange}
                 >
                   {option.label}
@@ -509,7 +545,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           </div>
         ) : (
           <div className="test-toolbar-status">
-            <h1><span className="heavy">Typing</span>{" "}Test</h1>
+            <span className="test-toolbar-title"><span className="heavy">Typing</span>{" "}Test</span>
             <time
               className="test-page-countdown"
               role="timer"
@@ -560,7 +596,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           <span id="typing-instructions" className="sr-only">{inputHelp}</span>
           <label className="typing-stage">
             <span className="sr-only">Type the passage shown below</span>
-            <TextRenderer prompt={session.prompt} typed={session.typed} active={isReady || isActive} />
+            <TextRenderer key={session.prompt} prompt={session.prompt} typed={session.typed} active={isReady || isActive} />
             <textarea
               ref={inputRef}
               className="typing-capture-input"
@@ -584,6 +620,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
               }}
             />
           </label>
+          {isReady && <div className="typing-divider" aria-hidden="true" />}
           {fingerGuideEnabled && (
             <KeyboardGuide nextCharacter={session.prompt[nextPromptIndex] ?? null} />
           )}

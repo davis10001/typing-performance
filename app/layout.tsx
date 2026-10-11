@@ -33,6 +33,12 @@ function SiteHeader() {
           priority
         />
       </Link>
+      <nav className="site-nav" aria-label="Main navigation">
+        <Link href="/">Test</Link>
+        <span>Lessons</span>
+        <span>Race</span>
+        <Link href="/faq">FAQ</Link>
+      </nav>
     </header>
   );
 }
@@ -46,13 +52,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <SiteHeader />
           {children}
           <footer className="site-footer">
-            <Link className="footer-brand" href="/">TYPINGLEVEL / TEST. UNDERSTAND. RETEST.</Link>
+            <span className="footer-brand">
+              <Image className="footer-logo" src="/images/typing-level-logo.png" alt="TypingLevel" width={2030} height={775} />
+            </span>
             <nav aria-label="Footer navigation">
-              <Link href="/typing-test">THE TEST</Link>
-              <Link href="/average-wpm">WPM EXPLAINED</Link>
-              <Link href="/average-typing-speed">TYPING SPEED</Link>
               <Link href="/privacy">PRIVACY</Link>
-              <Link className="footer-action" href="/1-minute-typing-test">START A TEST <span aria-hidden="true">↗</span></Link>
+              <Link className="footer-action" href="/">START A TEST <span aria-hidden="true">↗</span></Link>
             </nav>
             <AnalyticsGate
               mode={process.env.NEXT_PUBLIC_ANALYTICS_MODE}

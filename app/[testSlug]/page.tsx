@@ -32,6 +32,10 @@ export default async function TestPage({ params }: Props) {
   const config = testPages[testSlug];
   return (
     <main className="test-page">
+      <section className="test-intro" aria-labelledby="test-title">
+        <div><span className="eyebrow">TIMED TEST</span><h1 id="test-title">{config.title}</h1></div>
+        <p>{config.intro}</p>
+      </section>
       <TestShell durationSeconds={config.durationSeconds} texts={testTexts.map(({ id, difficulty, text }) => ({ id, difficulty, text }))} entryPage={testSlug} />
       <section className="test-explainer" aria-labelledby="test-explainer-title">
         <div><span className="eyebrow dark">ABOUT THIS TEST</span><h2 id="test-explainer-title">MEASURE WITH<br /><strong>CONTEXT.</strong></h2></div>
