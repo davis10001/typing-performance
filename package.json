@@ -12,7 +12,10 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build",
-    "release:check": "node scripts/check-release.mjs"
+    "release:check": "node scripts/check-release.mjs",
+    "learning:audit": "node scripts/audit-learning-sources.mjs",
+    "learning:build-course": "node scripts/build-learning-course.mjs",
+    "learning:verify-vendor": "node scripts/verify-learning-vendor.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter-tight": "5.3.0",

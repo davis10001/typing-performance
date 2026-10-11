@@ -1,6 +1,6 @@
 # PRD 索引 · Typing Performance
 
-**版本**：1.0 · **状态**：BASELINE-READY · **权威上游**：[Product Brief](../product-brief.md)。术语：WPM=每分钟正确字符/5；Raw WPM=总输入字符/5/分钟；Accuracy=正确击键/总击键；Timed Test=固定时长的英文文本测试；Benchmark Band=非 percentile 的说明性成绩区间。
+**版本**：1.2 · **状态**：P0 BASELINE-READY / Learning V1 FUNCTIONALLY COMPLETE, RELEASE GATED · **权威上游**：[Product Brief](../product-brief.md)。术语：WPM=每分钟正确字符/5；Raw WPM=总输入字符/5/分钟；Accuracy=正确击键/总击键；Timed Test=固定时长的英文文本测试；Benchmark Band=非 percentile 的说明性成绩区间。学习模式的表现与进阶以各原方案定义为准，不直接复用测速口径。
 
 追踪 ID：用户旅程 `UJ-*`，功能需求 `FR-*`，非功能需求 `NFR-*`，产品决策 `PD-*`；完整映射在各主题文档和架构索引中。
 
@@ -39,3 +39,7 @@
 ## 09 决策与开放问题
 
 记录已接受决策、假设和上线前必须关闭的问题。详见：[prd-09-decisions-and-open-questions.md](./prd-09-decisions-and-open-questions.md)。
+
+## 10 学习模块
+
+定义已确认的两个学习入口、FR-L01–12、UJ-06–08、原方案规则、数据恢复、来源审查与开放项。详见：[prd-10-learning.md](./prd-10-learning.md)。配套：[来源审查](../research/learning-source-audit-2026-10-11.md)、[实施方案](../../development/learning-implementation-plan.md)。

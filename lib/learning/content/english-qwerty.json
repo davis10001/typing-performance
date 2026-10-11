@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "ktouch-en-gb-letters",
+  "title": "English QWERTY",
+  "description": "KTouch training file generated Sun Mar 11 09:59:58 2007\nPerl Script written by Steinar Theigmann and Håvard Frøiland.",
+  "sourceLayout": "gb",
+  "source": {
+    "repository": "https://invent.kde.org/education/ktouch",
+    "revision": "a3f57d03e6c14956378af1176eef3404430c773e",
+    "path": "data/courses/gb.xml",
+    "sha256": "54441dfcc0be7fe11bde1e9b6f74f7b3bc7c6134acbeae5369ef8e0a632df20f"
+  },
+  "contentRevision": "f78dad8bb0d0a53a6abebbe90c3d5b4641ebbb9a1ab16a6ac4930b41c2e10b38",
+  "repairs": [
+    {
+      "lessonId": "caps1",
+      "reason": "Declared new characters Q, X, and Y were absent from the lesson text.",
+      "originalTextSha256": "c6a7c46c57322607cf7ebccf73300348c49555ea6f9763bdf143e367e7e7c387",
+      "append": "Q X Y"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "jf1",
+      "title": "j and f",
+      "newCharacters": "jf",
+      "text": "fj j f j f f fj f fj fj ffj f fjf f f jj f fj jf jf fj jfj fjf\nffj ffj fj ff f f ff fj fj ffjj jjjf j f jj fj jj jfj ff f ff ff\nfj ffj ff jfj jf jff ffj f ff ffj f fjf j fj ffj fj jj ffj jj f\njfj jff j ffj ffjj ff j f fjf ffj jff ffj jf ffj jff fj fj f f f\nf fj jff ffj fjf f j j jf jf j jfj fjf fj ff fj jfj jfj fj jff\nfj f ffjj f fjf ffj jfj ff j ff jf jjjf jf j jff jfj j f jj f jfj\nfj j jff jfj jfj jff jf fj jj j j fjf j fj j fj j f j f ff j ffjj\nj jfj ffjj jfj f jfj f fj f f f jfj j jf jfj fj j jf f fjf fjf\njf ff ff fjf fjf fjf jfj jjjf j f jf jfj f jjjf f ff ff jf f fj\nffj fj fj jf f ff jf f j j jfj f jff fj j f fjf f jfj jf f jfj jjjf"
+    },
+    {
+      "id": "kd1",
+      "title": "k and d",
+      "newCharacters": "kd",
+      "text": "djd k djd k fdj k fdj k k jdd dd k kf dd k k dd k d fdfk k k kf\nd kf fdfk k fdj k df jk jdd jkjd jjkk d k k d d d d k k d kf d\nd dd k d jjd d d dkk jkjd k k k djd dkk kf fdj k fdfk k k fdj\nk dkk d d df df df k k djd dd k d d d dd jdd d kf fdj k k d jkjd\nk k k djd k d dd d jdd jjd d d d jdd d k k dd fdfk jjkk k fdfk\nk d d fdfk jjkk kfd k k dd k k dkk jjd jjkk k kfd df kfd d d d\nfdj df jdd k d jdd k d k k k jjkk dd d d k jk df k jjkk d k k k\njjkk d fdfk fdfk fdj d k d jjkk djd k k k k djd k d d d df k k djd\nk kfd df k k k d k dd kfd df d kfd k k k kfd djd k k jk dd dd\ndf d d jk k kf jjd kf kf k df d k jkjd kf k jjd fdfk k k kfd d"
+    },
+    {
+      "id": "ls1",
+      "title": "l and s",
+      "newCharacters": "ls",
+      "text": "s sl s fl skl s sl fl skl sfj l sk s sk ss s sfj jss l fs ss fs\nsk jss sk s fl s l fs s fl jss sfj l s sk l sk s fs s ss l fl l\nsf fl lll skl sfj sk dsk sk sfj ss sf l fl jssj fl l l jss sfj\nsk sk s fl fl s jss s s s l fl jssj sl l l s fl sl l fs ss l fs\njss s dsk s jssj sk fs l l skl l fl l s l s s sl skl fl s s l skl\nl fl s skl sk s l l jssj s sk s jss jss sfj sf sl sk s lll jssj\nsl s s fl l lll fl l sk fl ss dsk fl fl fjjs l fl s s s l s jss\nskl jss sfj l fl l sfj sfj skl l fl l sk fl fl sk ss l fs l sk l\nsl fl skl l l sl s fl fjjs fjjs l fjjs l fl ss fl l sk s l l l\ns s fjjs lll sk ss skl jssj skl fl l l skl fl l s dsk s s sl fl"
+    },
+    {
+      "id": "ca1",
+      "title": "c and a",
+      "newCharacters": "ca",
+      "text": "sca clac asa cascad sa al sca ass clac slac cak da fla c la fa ja\nfa salad ca daf addl fa scal slak facad al flask lass ac sass lack\nsac a c sla sca addl saf c aa fla fad salsa ad fla ad a ladl als\nc facad da fla call scal fla sac c al daff flas as ca all ak ac\nsadl cas ala c sak c jackas ca af caff aa aa ja sa afa sla lac ca\nfla fadd fa ja la faff sca sal alkal fals lac fla sass cas slas\nal fa clack af flak flas fla as af ass ass fad alack c sadl ass\nsack sca add sa c ja al lack cas cla cas add c las sa ac jacka sass\ncla sca cla ja c sak alack slak slas dadd slack alkal la la ak jc\nass sa sas scal cas fa salaa las fad lack a dad c a sca ad la sla"
+    },
+    {
+      "id": "nt1",
+      "title": "n and t",
+      "newCharacters": "nt",
+      "text": "snaffl dan attack fann na scant fast snack taff ank sna att snac candl\ntattl tan tac na lan snaf jat staccat na t can fact an fann catcall\nta tattl sta nast task cast tan cantata can n lankl slan tall sanda\nsna flank fact tank cat catcall t cantat latt landfal tal can stanc\nna snak knac ta annal attac t san canca stall san caftan ta ct\nt scandal flank last dankl nat cattl stat skat stal stak cact\ncandl fat ana ta flatlan t tal tatt scant flatca dandl staf slat castl\nfan scantl sna snatc talk sna sna flank cast dandl n task tak lastl\nalt fan landlad tal ta stan lank flan tal tast sand sta landfall\nknac landfal cat ants landlad na sata salt caftan anall nat can lastl"
+    },
+    {
+      "id": "iv1",
+      "title": "i and v",
+      "newCharacters": "iv",
+      "text": "cassi sic laddi affin canin flint inclinin vivain icil ni satinin\nci in cit divan finalis tankin sli instatin kil clinicall dis vill\nvi lil caddis snifflin fit assail nif lanai kil addic lis ick dia\ninfantil satani kind nift jadin visitin stil idl littl si clinicia validat\nninn ti fil cavalcad sanit slackin catfis dinin astatin dadaist killin\nfil sift vial sniffin fantasti lividl li invalid flick satinin di\naffiancin dia finn inkin acidl final vannin tin itc italic instancin inla\ninsistin slavin vindictiv nai distall affianc ni stick ki sniff tid tilt\ntacitl clannis jiltin failin ki stasi sanit fiddl savanna atil acclai\nfiv satanicall lackadaisicall fascia ti sandin valis ai dids didacticall"
+    },
+    {
+      "id": "me1",
+      "title": "m and e",
+      "newCharacters": "me",
+      "text": "dividend lite salesladie vie decam dissect skie enema cancel feminist\ninsentienc decedent fiesta saltcella demiste title steadines scammin fancie\nenvie fee descent se incivilitie amide site demitass lesse animatedl\nselect latencie naive mantle milkmaid fiftie distinctivel seventeent\nmainmas finickies distinctivel filme jestin assesse insiste slate skillet\nlacke manana inte ma falsett mate dietetic entitlemen vesicle stales\ndivvie cleanin enlivenin seeke titte tendenc mistil mi lifelin accidental\nsteak skimme fantasie divest sveltes devianc mistines sassie jade\nfinenes titte dismantle mentalis inadvisedl fannie installe disinfectan\nmidden divisivenes acclaim mf settee svelt animatedl teatime devastate"
+    },
+    {
+      "id": "hr1",
+      "title": "h and r",
+      "newCharacters": "hr",
+      "text": "dare testifier eradicate terminat trafficke hadin inferenc franti\nreservedl chef lathere marr atria trait distres hearse trance varnis chattin\nfifer irise intern merite clicker hesitanc rhiniti crackhead dishe\nsaddler rancidit mandrak rattl threade cardinall larc trisectin intrinsi\nrecreatin stridde ester carcas thirst rifte rascal thres drinke indiscriminatel\nclarete iridescenc refile resen reelectin airlift tetherin invert resale\nfeathere enfranchisemen rehea earthie fetche thick firecracker interlinke\nredelive ethnicall tidemar indiscreetl cracklin menhade mishandlin catche\nransack headline crest inerran teare cradle sincerit hater firt dinner\nrent snickerin recklessnes sharer thatche relinin refac heatin reinstatemen"
+    },
+    {
+      "id": "go1",
+      "title": "g and o",
+      "newCharacters": "go",
+      "text": "overcook rotat comi reconfirmatio reregistratio nomad management forklift\nstorme socialisti shoestring conma iodide lading incontinentl fervo\nsag gentl mo legitimatin sociologicall dominanc font regicid gallantl\nmigh elongatio nonsmokin integran demoni maroo comicalit toccata\nfag infliction shatteringl coalfield cloc almight remoldin tanglin\nfago gonorrhea evocatio dialing solderin ciggie collide monarchie\ncorrectiona conciliatio hok roilin integrate cosmologie demonstrate throttle\nglister avitaminosi noddle odditie chiffo mg solstice steroida conge\ntheor ammoni microcos histologica notifier favor chromaticall chromosoma\nsongste negotiator diagnostic nova glande hornie concavit interconnection"
+    },
+    {
+      "id": "bp1",
+      "title": "b and p",
+      "newCharacters": "bp",
+      "text": "archbishop parliamentar calibe respel tiebac bon semipro retrospectiv transpir\nparen snappil absconde nobodie grosbeak podiatr precooke misinterpretatio\nparad establishin oppos liprea abrasiv dabbl seraph precookin kissabl\nembarkin breadth airdroppin permeabilit plainsme aberran bonnies gallbladder\nphaeto beepe packhors deciphermen plastere bloodthirstie cachepo vibration\nsandblas preme soppie dispos preppe bookmarke neighbore heptagona toboggane\ndespondenc grabber blearil birdbath boast hellebor phonic blint escapemen\nhorrible topographicall portende replier seborrhe peste debark composin\ntrombonis ben bootblac resistibl rebor pikin barnacle pentacle trespasse\nsparre photocopie dolphin plantin pictographi brittl bipartit potat"
+    },
+    {
+      "id": "qu1",
+      "title": "q and u",
+      "newCharacters": "qu",
+      "text": "thoroughnes recrudescin tunefulnes rigorousnes imprimatu rounde capsule\nbreakou reintroduce contentiousnes bullfinche biennium augmenter nurse\nbusb curse quipste munificen beautifie thankfu instruct tranquill\nstoup inundation undeservin fluf quarto purloinin quaho unheate cherub\nguffa sufficien ridicule unequivocall redistribute fulsomel herculea\nportentousnes shogun dangerou gutties samurai knuckl racquetbal babushka emolumen\ncuboi epilogue frui puddl auctio aqueou quot squint velu abuse pluckil\ntherapeuticall renucleate turnoff busties accusa gustil pluckines neutral nonintellectua\nuncannil outcropping custodian rutties guardednes platitude grubb mus\nskunk impugn nonplussin nuptial untrouble flounc unchronicle bushe"
+    },
+    {
+      "id": "wn1",
+      "title": "w and n",
+      "newCharacters": "wn",
+      "text": "weed rotundin kidnap compartment retakin enlighten adjurin sharin\npropositione driftne entitlemen debunk peasantr canvas insurgenc nullifie\nhalfpennie middleweigh licensin outdistance sunburst whelmin supplicatin\nbrinines opalescen chardonna aw salutatorian envelo futon outpatien indulgentl\nfascination blundere constitutionalist reedines endure wavie allianc rustines\nnumskul refrigeratin repartitionin bookworm snowie annihilate noisom\nunbiassedl widemouthe phrenologica grandniec manipulation contorte airines\ninstitutionall accompanist ranke precedenc tackin squanderin sanitarie conjunctiv\neastboun downwar monste inkblot sarong nattere cinematographe punchbag\nretransmittin sawhorse engineer counterpoise wigwa wakefu genr brainstorm"
+    },
+    {
+      "id": "cx1",
+      "title": "c and x",
+      "newCharacters": "cx",
+      "text": "cull continu spectroscopi captionin complete pronounce accumulatio\nseraphicall misconstruin conservativenes scrabblin cosmeticia deficiencie\ncopiousl chican dissociativel pronouncin congenitall extende cementer\npoleax attachment recombine compatibilitie colorles obscenes spamblock\ncinchin agrochemica nonreciproca cleare coastlin crumblines insurrectio\ndiscounte preconditionin relocke complexion destructibl crawlin corrode\ndecommissione sec percusse discograph beneficia couple pixel officialis affixe\nlurchin rapprochemen raccoon incom nic doctorin ratche falsificatio\nethnicall obsolesce unpunctualit effulgenc lunchroo chaoticall sackful\nshucke microelectroni watchtowe occurrin processe electrocardiograph"
+    },
+    {
+      "id": "yz1",
+      "title": "y and z",
+      "newCharacters": "yz",
+      "text": "skylight syllabicatin secularize pygm amazo fizze overemphasize summariz\nheavyse appetize metaphysicall fraye psychoanalyticall economizer bricklayer\nmestizo yashmak yukk hygromete glamorizatio synthesi dillydall yup wheezil\npsychedelic burglariz phyl polytheis ethy nylon delaye psychosomatic highboy\npolynomiall hysteresi polymerase pyrimidine bowdleriz sterilize gazetteere\nplaytim initializatio haphazar legitimatiz buzzard plasticizin sizzle\nemblazone zoolog anglicize rhyme dyestuff credenz ray squeezebo swiz stargaze\nbaptiz mobilize throwaway oversizin dynast harmonize sublaye metalize\nhumanizatio buckeye overspecialize graybeard magazine clearway yellow enjoyment\nlayere flywa mizzen baptize capsiz styluse glaz synonymou bellyach"
+    },
+    {
+      "id": "caps1",
+      "title": "Capitalisation",
+      "newCharacters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "text": "I U Frann Iss V Sophe Ma Blanch Janissar Karl Equuleu Jech Dia\nMariejeann Filofa Shoshann Cheeve Ludvi Stoicism Alabam Fo Belmon Al Peshawa\nEpiscopalia Tammi Huc Castill McDowel Sabrin Izanam Salina Soav Gerar Margarett\nBlondell Austin Menande Vandal Winnifre Daun Porsch Thomis Noel TELNE\nRow Ber Fraue Kenya Trix Pissar Bake Vandal Wale Jua Benghaz Ronal\nBabylonia Jacobit Guamania Zebede Hagiograph Stou AWO Dustbuste Shani\nEdgard Rigolett Danic Carr Donn Rosco Jazmi Ermini BB Coloradoa Hebrais\nStockhause Tolyatt Marshal VG Haga Kamek Gall Pilcomay Ballar Morto Renascenc\nHebride Tup Hoebar Tunisia El Crysta Cheyenn SD Mad SU Silvai Johnn\nVis Ramb Luge Demetriu Collie Nettl Dicken Joelyn Conservativ Fonzi\nQ X Y"
+    }
+  ]
+}

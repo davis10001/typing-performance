@@ -9,13 +9,29 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./*"] }
+    "paths": {
+      "@/*": ["./*"],
+      "@keybr/binary": ["./vendor/keybr/entries/binary.ts"],
+      "@keybr/code": ["./vendor/keybr/entries/code.ts"],
+      "@keybr/content": ["./vendor/keybr/entries/content.ts"],
+      "@keybr/keyboard": ["./vendor/keybr/entries/keyboard.ts"],
+      "@keybr/lang": ["./vendor/keybr/entries/lang.ts"],
+      "@keybr/math": ["./vendor/keybr/entries/math.ts"],
+      "@keybr/phonetic-model": ["./vendor/keybr/entries/phonetic-model.ts"],
+      "@keybr/rand": ["./vendor/keybr/entries/rand.ts"],
+      "@keybr/result": ["./vendor/keybr/entries/result.ts"],
+      "@keybr/settings": ["./vendor/keybr/entries/settings.ts"],
+      "@keybr/textinput": ["./vendor/keybr/entries/textinput.ts"],
+      "@keybr/themes": ["./vendor/keybr/entries/themes.ts"],
+      "@keybr/unicode": ["./vendor/keybr/entries/unicode.ts"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "vendor"]
 }

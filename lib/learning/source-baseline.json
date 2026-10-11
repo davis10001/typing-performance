@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-11",
+  "keybr": {
+    "repository": "https://github.com/aradzie/keybr.com",
+    "revision": "05a37bc5265f65ff538c59c613db29442f345d51",
+    "settingsPath": "packages/keybr-lesson/lib/settings.ts",
+    "licensePath": "LICENSE",
+    "integrationDecision": "reuse-with-open-source-obligations-accepted",
+    "algorithmParity": "not-verified"
+  },
+  "ktouch": {
+    "repository": "https://github.com/KDE/ktouch",
+    "revision": "a3f57d03e6c14956378af1176eef3404430c773e",
+    "candidateCoursePaths": ["data/courses/us.xml", "data/courses/gb.xml"],
+    "selectedCoursePath": null,
+    "contentLicenseReview": "pending",
+    "contentValidation": "candidate-issues-found"
+  }
+}

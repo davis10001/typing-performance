@@ -1,5 +1,5 @@
 generated: 2026-10-01T00:00:00Z
-last_updated: 2026-10-01T00:00:00Z
+last_updated: 2026-10-12T00:00:00+08:00
 project: typing-performance
 project_key: TP
 tracking_system: file-system
@@ -19,8 +19,23 @@ development_status:
   tp-301-anonymous-observability-privacy-and-guardrails: in-progress
   tp-302-accessibility-e2e-and-release-pipeline: in-progress
   epic-3-retrospective: optional
+  epic-4-learning: in-progress
+  tp-401-learning-source-baseline: in-progress
+  tp-402-learning-data-and-content-contract: done
+  tp-403-guided-upstream-integration: done
+  tp-404-fixed-courses: done-functional-release-gated
+  tp-405-learning-interface: done
+  tp-406-learning-parity-and-source-delivery: in-progress
 
 action_items:
+  - epic: 4
+    action: Confirm the file-level license mapping for the attributed KTouch GB course; source selection and the Q/X/Y minimum repair are complete.
+    owner: engineering-content
+    status: open
+  - epic: 4
+    action: Deliver corresponding deployed source and build instructions before exposing learning in production; no repository publication is authorized yet.
+    owner: engineering
+    status: open
   - epic: 2
     action: Approve benchmark band sources and versioned production copy before release.
     owner: product-content

@@ -16,9 +16,10 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(homeLink.locator("img")).toHaveAttribute("src", /typing-level-logo/);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/images/typing-level-icon.png");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
-  await expect(navigation).toHaveText("TestLessonsRaceFAQ");
-  await expect(navigation.getByRole("link")).toHaveCount(2);
+  await expect(navigation).toHaveText("TestLearnRaceFAQ");
+  await expect(navigation.getByRole("link")).toHaveCount(3);
   await expect(navigation.getByRole("link", { name: "Test" })).toHaveAttribute("href", "/");
+  await expect(navigation.getByRole("link", { name: "Learn" })).toHaveAttribute("href", "/learn");
   await expect(navigation.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/faq");
   await expect(navigation.locator("button, svg, img")).toHaveCount(0);
   const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });

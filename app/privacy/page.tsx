@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ClearLocalResults from "@/components/privacy/ClearLocalResults";
+import ClearLearningProgress from "@/components/privacy/ClearLearningProgress";
 
 export const metadata: Metadata = {
   title: "Privacy — TypingLevel",
@@ -19,9 +20,10 @@ export default function PrivacyPage() {
         <div className="content-index">01 / YOUR BROWSER</div>
         <div>
           <h2>RESULTS STAY LOCAL.</h2>
-          <p>Your browser can store up to 20 completed result summaries, including the test duration, score, accuracy, errors, and completion time. It also stores preferences such as text difficulty and the finger guide setting. The application does not upload the passage you typed or your individual keystrokes.</p>
-          <p>You can remove saved results here. You can remove preferences and other site storage through your browser settings.</p>
+          <p>Your browser can store up to 20 completed result summaries, including the test duration, score, accuracy, errors, and completion time. It also stores preferences such as text difficulty and the finger guide setting. Learning stores separate Keybr result summaries and fixed-course progress. The application does not upload the passage you typed or your individual keystrokes.</p>
+          <p>Test history and learning progress have separate controls. You can remove preferences and other site storage through your browser settings.</p>
           <ClearLocalResults />
+          <ClearLearningProgress />
         </div>
       </section>
       <section className="content-article">

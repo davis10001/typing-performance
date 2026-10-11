@@ -35,7 +35,7 @@ function SiteHeader() {
       </Link>
       <nav className="site-nav" aria-label="Main navigation">
         <Link href="/">Test</Link>
-        <span>Lessons</span>
+        <Link href="/learn">Learn</Link>
         <span>Race</span>
         <Link href="/faq">FAQ</Link>
       </nav>
@@ -56,6 +56,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Image className="footer-logo" src="/images/typing-level-logo.png" alt="TypingLevel" width={2030} height={775} />
             </span>
             <nav aria-label="Footer navigation">
+              <Link href="/learn">LEARN</Link>
               <Link href="/privacy">PRIVACY</Link>
               <Link className="footer-action" href="/">START A TEST <span aria-hidden="true">↗</span></Link>
             </nav>

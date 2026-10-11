@@ -1,0 +1,43 @@
+import { Language, Layout, loadKeyboard } from "@keybr/keyboard";
+import { makePhoneticModel, type PhoneticModel } from "@keybr/phonetic-model";
+import type { RNGStream } from "@keybr/rand";
+import { makeKeyStatsMap, type Result } from "@keybr/result";
+import { Settings } from "@keybr/settings";
+import words from "@/vendor/keybr/packages/keybr-content-words/lib/data/words-en.json";
+import { GuidedLesson } from "@/vendor/keybr/packages/keybr-lesson/lib/guided";
+import { Lesson } from "@/vendor/keybr/packages/keybr-lesson/lib/lesson";
+
+export const KEYBR_MODEL_URL = "/learning/keybr/model-en.data";
+
+export type GuidedRound = {
+  text: string;
+  availableCharacters: string[];
+  focusCharacter: string | null;
+};
+
+export function createEnglishGuidedLesson(modelData: Uint8Array): GuidedLesson {
+  const model: PhoneticModel = makePhoneticModel(Language.EN, modelData);
+  return new GuidedLesson(new Settings(), loadKeyboard(Layout.EN_US), model, words);
+}
+
+export async function loadEnglishGuidedLesson(
+  fetchModel: (url: string) => Promise<Response> = fetch,
+): Promise<GuidedLesson> {
+  const response = await fetchModel(KEYBR_MODEL_URL);
+  if (!response.ok) throw new Error(`Unable to load the Keybr English model (${response.status})`);
+  return createEnglishGuidedLesson(new Uint8Array(await response.arrayBuffer()));
+}
+
+export function createGuidedRound(
+  lesson: GuidedLesson,
+  results: readonly Result[],
+  rng: RNGStream = Lesson.rng,
+): GuidedRound {
+  const lessonKeys = lesson.update(makeKeyStatsMap(lesson.letters, lesson.filter(results)));
+  const focusedKey = lessonKeys.findFocusedKey();
+  return {
+    text: lesson.generate(lessonKeys, rng),
+    availableCharacters: lessonKeys.findIncludedKeys().map(({ letter }) => String.fromCodePoint(letter.codePoint)),
+    focusCharacter: focusedKey == null ? null : String.fromCodePoint(focusedKey.letter.codePoint),
+  };
+}

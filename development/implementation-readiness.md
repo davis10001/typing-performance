@@ -1,5 +1,9 @@
 # Typing Performance · Implementation Readiness
 
+## Learning V1 增量检查 · 2026-10-11
+
+结论：**Learning 功能实现与自测完成；生产发布尚未就绪**。FR-L01–10/12 的本地功能已接入；Keybr 原核心与 KTouch 固定课程保持独立验收。剩余门禁是 KTouch 课文的文件级许可映射，以及 AGPL 对应部署源码的公开获取位置和实际发布。下面保留原 P0 检查作为历史记录。
+
 **检查日期**：2026-10-01 · **结论**：`READY`（可进入 P0 开发）；**生产发布状态**：`NOT READY`，需关闭列出的发布门禁。
 
 ## 1. 输入基线
