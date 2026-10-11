@@ -1,10 +1,10 @@
 # Production release gate
 
-This folder is deliberately **not approved** yet. `npm run release:check` must fail until the product owner records reviewed evidence in `approvals.json` and sets a real HTTPS `NEXT_PUBLIC_SITE_URL`.
+`npm run release:check` verifies the recorded product approvals and requires a real HTTPS `NEXT_PUBLIC_SITE_URL` before production deployment. The current launch approvals and evidence are recorded in `approvals.json` and `verification-2026-10-11.md`.
 
-- `benchmark`: OQ-01 — centrally provided, reviewed band definition file, source, version and reviewer. Do not publish a numeric average, percentile, ranking, or “verified” claim without source review. `content/benchmark/README.md` documents the empty handoff contract.
-- `privacyAndDomain`: OQ-02 — TypingLevel is the confirmed launch brand; `typinglevel.com` is preferred but still requires registrar and basic trademark review. The selected stack is Search Console + GA4 + Vercel Analytics/Speed Insights. A reviewed privacy notice, real GA4 ID, Vercel project enablement and an opt-in decision are still required. Until then `NEXT_PUBLIC_ANALYTICS_MODE=off` and no vendor script loads.
-- `testTextLicense`: OQ-03 — the two original passages are listed in `content/test-texts/launch-copy-v1.md` as approved **for Launch Copy V1 review**. Record final text/version and reviewer before enabling a production release.
+- `benchmark`: OQ-01 — the product owner chose **no public benchmark in the first launch** on 2026-10-11. A later release may change `mode` to `published` only with a centrally reviewed source, version and definition. Do not publish numeric averages, percentiles, rankings, or “verified” claims without source review.
+- `privacyAndDomain`: OQ-02 — TypingLevel remains the launch brand and `how-type.com` is the selected domain. GA4 and Vercel Analytics/Speed Insights are **off for the first launch** by product-owner decision on 2026-10-11. A reviewed privacy notice and domain/launch sign-off remain required; do not turn analytics on without a separate reviewed release.
+- `testTextLicense`: OQ-03 — the product owner confirmed the current 67 passages for launch on 2026-10-11. The text set and decision are recorded in `content/test-texts/launch-copy-v1.md`.
 - `verification`: link or path to CI evidence plus manual keyboard, screen reader, target-browser, performance, SEO and privacy checks.
 
 No automated production deployment is configured. Add one only after the target host and release authority are chosen. The PR/main CI workflow verifies quality but does not bypass these release gates.

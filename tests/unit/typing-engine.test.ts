@@ -6,6 +6,14 @@ import {
 import { calculateResult } from "@/lib/scoring/calculate";
 
 describe("typing engine", () => {
+  it("starts on the first character and includes that character in the attempt", () => {
+    const ready = createSession("first-key", 60, "abc");
+    const started = beginRunning(ready, 1_000);
+    const typed = applyCharacter(started, "a", 1_000);
+    expect(typed).toMatchObject({ phase: "running", startedAt: 1_000, typed: "a", totalInputChars: 1, correctKeystrokes: 1 });
+    expect(beginRunning(typed, 2_000)).toBe(typed);
+  });
+
   it("follows one-way test states and freezes a completed result", () => {
     const ready = createSession("test-1", 60, "abc");
     const running = beginRunning(beginCountdown(ready), 1000);
@@ -50,5 +58,16 @@ describe("typing engine", () => {
     const typed = applyCharacter(running, "a", 100);
     expect(applyBackspace(typed, Number.NaN)).toBe(typed);
     expect(applyBackspace(typed, 60_001)).toMatchObject({ phase: "completed", typed: "a" });
+  });
+
+  it("does not advance past a space until the user types the space", () => {
+    let session = beginRunning(createSession("space-errors", 60, "a b"), 0);
+    for (const [index, character] of Array.from("axyz b").entries()) {
+      session = applyCharacter(session, character, index + 1);
+    }
+
+    expect(session.typed).toBe("axyz b");
+    expect(session.correctKeystrokes).toBe(3);
+    expect(session.errors).toBe(3);
   });
 });

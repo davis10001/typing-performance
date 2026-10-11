@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import LocalPaceStats from "@/components/home/LocalPaceStats";
 import { durationOptions } from "@/lib/content/test-pages";
@@ -27,7 +28,7 @@ export default function HomePage() {
           <p>Take a timed test, see your speed and accuracy, then choose what to do next. No account needed.</p>
           <Link className="button button-lilac" href="/1-minute-typing-test">TAKE THE 1 MINUTE TEST <span aria-hidden="true">↗</span></Link>
         </div>
-        <div className="hero-key-art" aria-hidden="true"><div className="hero-key-shadow" /><div className="hero-keycap"><span>A</span></div><span className="hero-art-caption">YOUR NEXT KEY<br />IS WAITING.</span></div>
+        <Image className="hero-typing-art" src="/images/typing-hands-hero-cutout.png" alt="Illustration of two hands typing on floating keys" width={1672} height={941} priority unoptimized />
       </section>
 
       <div className="marquee-strip" aria-hidden="true"><span>TEST YOUR PACE&nbsp;&nbsp;·&nbsp;&nbsp;FIND YOUR RHYTHM</span></div>
@@ -37,10 +38,9 @@ export default function HomePage() {
         <div className="home-duration-grid">
           {durationOptions.map((option, index) => (
             <article className={`home-duration-card card-${index + 1}`} key={option.seconds}>
-              <span>No.{index + 1}</span>
               <strong>{option.label}</strong>
               <span className="home-duration-description">{durationDescriptions[option.seconds]}</span>
-              <Link className="button home-duration-action" href={option.href}>START {option.label} TEST <span aria-hidden="true">↗</span></Link>
+              <Link className="button home-duration-action" href={option.href} aria-label={`START ${option.seconds / 60} MIN TEST`}>START TEST <span aria-hidden="true">↗</span></Link>
             </article>
           ))}
         </div>

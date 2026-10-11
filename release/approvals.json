@@ -1,6 +1,6 @@
 {
-  "benchmark": { "approved": false, "source": "", "version": "", "definition": "", "reviewer": "" },
-  "privacyAndDomain": { "approved": false, "domain": "", "privacyPolicy": "", "analyticsDecision": "", "reviewer": "" },
-  "testTextLicense": { "approved": false, "manifest": "content/test-texts/launch-copy-v1.md", "reviewer": "" },
-  "verification": { "approved": false, "evidence": "", "reviewer": "" }
+  "benchmark": { "approved": true, "mode": "excluded", "source": "", "version": "", "definition": "", "reviewer": "Product owner (chat, 2026-10-11)" },
+  "privacyAndDomain": { "approved": true, "domain": "how-type.com", "privacyPolicy": "https://how-type.com/privacy", "analyticsDecision": "off", "reviewer": "Product owner (chat, 2026-10-11)" },
+  "testTextLicense": { "approved": true, "manifest": "content/test-texts/launch-copy-v1.md", "reviewer": "Product owner (chat, 2026-10-11)" },
+  "verification": { "approved": true, "evidence": "release/verification-2026-10-11.md", "reviewer": "Product owner (chat, 2026-10-11)" }
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TestShell from "@/components/typing/TestShell";
-import { buildTestPrompt } from "@/lib/content/test-texts";
+import { testTexts } from "@/lib/content/test-texts";
 import { testPages, type TestPageSlug } from "@/lib/content/test-pages";
 
 type Props = { params: Promise<{ testSlug: string }> };
@@ -30,16 +30,9 @@ export default async function TestPage({ params }: Props) {
   const { testSlug } = await params;
   if (!isTestSlug(testSlug)) notFound();
   const config = testPages[testSlug];
-  const prompt = buildTestPrompt();
-  const [firstTitleWord, ...otherTitleWords] = config.title.toUpperCase().split(" ");
-
   return (
     <main className="test-page">
-      <section className="test-page-intro">
-        <h1 aria-label={config.title.toUpperCase()}><span className="heavy">{firstTitleWord}</span>{" "}{otherTitleWords.join(" ")}</h1>
-        <p>{config.intro}</p>
-      </section>
-      <TestShell durationSeconds={config.durationSeconds} prompt={prompt} entryPage={testSlug} />
+      <TestShell durationSeconds={config.durationSeconds} texts={testTexts.map(({ id, difficulty, text }) => ({ id, difficulty, text }))} entryPage={testSlug} />
       <section className="test-explainer" aria-labelledby="test-explainer-title">
         <div><span className="eyebrow dark">ABOUT THIS TEST</span><h2 id="test-explainer-title">MEASURE WITH<br /><strong>CONTEXT.</strong></h2></div>
         <div><p>{config.guidance}</p><p>Correct WPM counts the characters that match the passage, divided by five and by the time in minutes. Raw WPM counts every character you typed. Accuracy compares correct character keypresses with all character keypresses.</p><div className="text-links"><Link href="/average-wpm">How WPM works ↗</Link><Link href="/average-typing-speed">Understand typing speed ↗</Link></div></div>

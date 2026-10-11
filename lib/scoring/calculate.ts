@@ -1,4 +1,5 @@
 import type { TestResult, TestSession } from "@/lib/typing-engine/types";
+import { alignTypingInput } from "@/lib/typing-engine/alignment";
 
 function rounded(value: number): number {
   return Math.round(value * 10) / 10;
@@ -8,10 +9,7 @@ export function calculateResult(session: TestSession): TestResult | null {
   if (session.phase !== "completed" || session.startedAt === null || session.endedAt === null) return null;
 
   const elapsedSeconds = Math.max(0, (session.endedAt - session.startedAt) / 1000);
-  let correctChars = 0;
-  for (let index = 0; index < session.typed.length; index += 1) {
-    if (session.typed[index] === session.prompt[index]) correctChars += 1;
-  }
+  const { correctCharacters: correctChars } = alignTypingInput(session.prompt, session.typed);
 
   const elapsedMinutes = elapsedSeconds / 60;
   const hasUsableInput = session.totalInputChars > 0 && elapsedMinutes > 0;

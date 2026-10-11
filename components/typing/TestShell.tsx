@@ -1,96 +1,263 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import KeyboardGuide from "@/components/typing/KeyboardGuide";
+import { composeTestPrompt, nextTextIndex, type Difficulty, type PromptText } from "@/lib/content/prompt-selection";
 import { durationOptions, type TestPageSlug } from "@/lib/content/test-pages";
-import { clearHistory, loadHistory, saveHistory, type StoredResultSummary } from "@/lib/history/repository";
+import { saveHistory } from "@/lib/history/repository";
 import { calculateResult } from "@/lib/scoring/calculate";
-import { accuracyBucket, countBucket, telemetry, wpmBucket } from "@/lib/telemetry/adapter";
+import { accuracyBucket, telemetry, wpmBucket } from "@/lib/telemetry/adapter";
 import {
-  abandonSession, applyBackspace, applyCharacter, beginCountdown, beginRunning,
+  applyBackspace, applyCharacter, beginRunning,
   completeSession, createSession, deadline, recordAnomaly,
 } from "@/lib/typing-engine/machine";
+import { alignTypingInput } from "@/lib/typing-engine/alignment";
 import type { AnomalyFlag, TestResult, TestSession } from "@/lib/typing-engine/types";
 
 type Props = {
   durationSeconds: 60 | 120 | 180 | 300 | 600;
-  prompt: string;
+  texts: PromptText[];
   entryPage: TestPageSlug;
 };
+
+type TypingFontSize = "small" | "medium" | "large";
+
+const fingerGuideStorageKey = "typing-level:finger-guide:v1";
+const typingSoundStorageKey = "typing-level:typing-sound:v1";
+const recentTextsStorageKey = "typing-level:recent-texts:v1";
+const difficultyStorageKey = "typing-level:difficulty:v1";
+const fontSizeStorageKey = "typing-level:font-size:v1";
+const durationHandoffStorageKey = "typing-level:duration-handoff:v1";
+const difficultyOptions: { value: Difficulty; label: string }[] = [
+  { value: "easy", label: "Easy" },
+  { value: "standard", label: "Standard" },
+  { value: "advanced", label: "Advanced" },
+];
+const fontSizeOptions: { value: TypingFontSize; label: string; shortLabel: string }[] = [
+  { value: "small", label: "Small", shortLabel: "S" },
+  { value: "medium", label: "Medium", shortLabel: "M" },
+  { value: "large", label: "Large", shortLabel: "L" },
+];
+const visiblePromptCharacters = 520;
 
 function formatScore(value: number | null, suffix = ""): string {
   return value === null ? "—" : `${Number.isInteger(value) ? value : value.toFixed(1)}${suffix}`;
 }
 
-function TextRenderer({ prompt, typed }: { prompt: string; typed: string }) {
-  const roughStart = Math.max(0, Math.floor(typed.length / 80) * 80 - 40);
+function formatCountdown(milliseconds: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function TimeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5v5l3.5 2" />
+    </svg>
+  );
+}
+
+function DifficultyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 7h14M5 12h14M5 17h14" />
+      <circle cx="9" cy="7" r="1.7" />
+      <circle cx="15" cy="12" r="1.7" />
+      <circle cx="11" cy="17" r="1.7" />
+    </svg>
+  );
+}
+
+function SoundIcon({ enabled }: { enabled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+      {enabled ? <><path d="M16 9a4 4 0 0 1 0 6" /><path d="M19 6a8 8 0 0 1 0 12" /></> : <path d="M4 20 20 4" />}
+    </svg>
+  );
+}
+
+function KeyboardIcon({ enabled }: { enabled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2.5" y="5" width="19" height="14" rx="2" />
+      <path d="M6 9h1m3 0h1m3 0h1m3 0h1M6 12h1m3 0h1m3 0h1m3 0h1M7 16h10" />
+      {!enabled && <path d="M3 21 21 3" />}
+    </svg>
+  );
+}
+
+function TextRenderer({ prompt, typed, active }: { prompt: string; typed: string; active: boolean }) {
+  const { cursorIndex, characterStates, extraCharacters } = alignTypingInput(prompt, typed);
+  const roughStart = Math.max(0, Math.floor(cursorIndex / 80) * 80 - 40);
   const start = roughStart === 0 ? 0 : prompt.lastIndexOf(" ", roughStart) + 1;
-  const end = prompt.indexOf(" ", Math.max(start + 120, typed.length + 1));
+  const end = prompt.indexOf(" ", Math.max(start + visiblePromptCharacters, cursorIndex + 1));
   const visible = prompt.slice(start, end < 0 ? undefined : end);
   return (
     <div className="typing-passage" role="text" aria-label={`Text to type: ${visible}`}>
       {Array.from(visible).map((character, relativeIndex) => {
         const index = start + relativeIndex;
-        const className = index < typed.length
-          ? (typed[index] === character ? "typed-correct" : "typed-error")
-          : (index === typed.length ? "typed-current" : "");
-        return <span className={className} aria-hidden="true" key={index}>{character}</span>;
+        const state = characterStates.get(index);
+        const className = state === "correct"
+          ? "typed-correct"
+          : state === "error"
+            ? "typed-error"
+            : (active && index === cursorIndex ? "typed-current" : "");
+        const extras = extraCharacters.get(index);
+        return (
+          <Fragment key={index}>
+            {extras && <span className="typed-extra" aria-hidden="true">{extras}</span>}
+            <span className={className} aria-hidden="true">{character}</span>
+          </Fragment>
+        );
       })}
     </div>
   );
 }
 
-function HistoryList({
-  items, onClear,
-}: {
-  items: StoredResultSummary[];
-  onClear: () => boolean;
-}) {
-  const [confirming, setConfirming] = useState(false);
-  const [clearError, setClearError] = useState(false);
-  if (items.length === 0) return (
-    <p className="history-empty">Your completed tests in this browser will appear here.</p>
-  );
-  return (
-    <div className="history-content">
-      <ul className="history-list">
-        {items.slice(0, 5).map((item) => (
-          <li key={item.id} className="history-item">
-            <span className="history-date">{new Date(item.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-            <strong>{formatScore(item.wpm)} <small>WPM</small></strong>
-            <span>{item.durationSeconds / 60} min · {formatScore(item.accuracy, "%")}</span>
-          </li>
-        ))}
-      </ul>
-      {confirming ? (
-        <div className="clear-confirm" role="group" aria-label="Clear recent results">
-          <span>Remove every saved result from this browser? This cannot be undone.</span>
-          <button type="button" onClick={() => { setClearError(!onClear()); setConfirming(false); }}>Clear results</button>
-          <button type="button" onClick={() => setConfirming(false)}>Cancel</button>
-        </div>
-      ) : (
-        <button type="button" className="text-button" onClick={() => setConfirming(true)}>Clear local history</button>
-      )}
-      {clearError && <p className="inline-warning" role="status">This browser could not clear the saved results.</p>}
-    </div>
-  );
-}
-
-export default function TestShell({ durationSeconds, prompt, entryPage }: Props) {
-  const [session, setSession] = useState<TestSession>(() => createSession("unstarted", durationSeconds, prompt));
+export default function TestShell({ durationSeconds, texts, entryPage }: Props) {
+  const [session, setSession] = useState<TestSession>(() => createSession("unstarted", durationSeconds, composeTestPrompt(texts.filter((item) => item.difficulty === "standard"), 0)));
+  const [difficulty, setDifficulty] = useState<Difficulty>("standard");
+  const [fontSize, setFontSize] = useState<TypingFontSize>("medium");
+  const [remainingMs, setRemainingMs] = useState(durationSeconds * 1000);
   const sessionRef = useRef(session);
+  const promptInitializedRef = useRef(false);
+  const recentTextIdsRef = useRef<string[]>([texts.find((item) => item.difficulty === "standard")!.id]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [countdown, setCountdown] = useState(3);
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(durationSeconds);
   const [result, setResult] = useState<TestResult | null>(null);
-  const [history, setHistory] = useState<StoredResultSummary[]>([]);
   const [storageWarning, setStorageWarning] = useState(false);
   const [inputWarning, setInputWarning] = useState("");
+  const [fingerGuideEnabled, setFingerGuideEnabled] = useState(true);
+  const [typingSoundEnabled, setTypingSoundEnabled] = useState(true);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const clickBufferRef = useRef<AudioBuffer | null>(null);
+
+  const choosePrompt = useCallback((level: Difficulty) => {
+    const options = texts.filter((item) => item.difficulty === level);
+    if (options.every((item) => recentTextIdsRef.current.includes(item.id))) {
+      const used = new Set(options.map((item) => item.id));
+      recentTextIdsRef.current = recentTextIdsRef.current.filter((id) => !used.has(id));
+    }
+    const index = nextTextIndex(options, recentTextIdsRef.current);
+    recentTextIdsRef.current = [...recentTextIdsRef.current, options[index].id].slice(-texts.length);
+    try {
+      window.localStorage.setItem(recentTextsStorageKey, JSON.stringify(recentTextIdsRef.current));
+    } catch {
+      // Text rotation still works for the current visit when storage is unavailable.
+    }
+    return composeTestPrompt(options, index);
+  }, [texts]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (promptInitializedRef.current) return;
+      promptInitializedRef.current = true;
+      if (sessionRef.current.id !== "unstarted" || sessionRef.current.phase !== "ready") return;
+      try {
+        const rawHandoff = window.sessionStorage.getItem(durationHandoffStorageKey);
+        window.sessionStorage.removeItem(durationHandoffStorageKey);
+        if (rawHandoff) {
+          const handoff: unknown = JSON.parse(rawHandoff);
+          if (
+            typeof handoff === "object" && handoff !== null
+            && "prompt" in handoff && typeof handoff.prompt === "string" && handoff.prompt.length > 0
+            && "difficulty" in handoff
+            && (handoff.difficulty === "easy" || handoff.difficulty === "standard" || handoff.difficulty === "advanced")
+          ) {
+            setDifficulty(handoff.difficulty);
+            const next = createSession("unstarted", durationSeconds, handoff.prompt);
+            sessionRef.current = next;
+            setSession(next);
+            return;
+          }
+        }
+      } catch {
+        // A duration change can still complete when session storage is unavailable.
+      }
+      try {
+        const stored: unknown = JSON.parse(window.localStorage.getItem(recentTextsStorageKey) ?? "[]");
+        if (Array.isArray(stored)) recentTextIdsRef.current = stored.filter((id): id is string => typeof id === "string").slice(-texts.length);
+      } catch {
+        recentTextIdsRef.current = [];
+      }
+      let level: Difficulty = "standard";
+      try {
+        const stored = window.localStorage.getItem(difficultyStorageKey);
+        if (stored === "easy" || stored === "standard" || stored === "advanced") level = stored;
+      } catch {
+        // The default difficulty remains available without browser storage.
+      }
+      setDifficulty(level);
+      const next = createSession("unstarted", durationSeconds, choosePrompt(level));
+      sessionRef.current = next;
+      setSession(next);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [choosePrompt, durationSeconds, texts.length]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const storedPreference = window.localStorage.getItem(fingerGuideStorageKey);
+        if (storedPreference !== null) {
+          setFingerGuideEnabled(storedPreference === "on");
+          return;
+        }
+        const compactPointer = window.matchMedia("(max-width: 720px), (pointer: coarse)").matches;
+        setFingerGuideEnabled(!compactPointer);
+      } catch {
+        setFingerGuideEnabled(true);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const stored = window.localStorage.getItem(fontSizeStorageKey);
+        if (stored === "small" || stored === "medium" || stored === "large") setFontSize(stored);
+      } catch {
+        // The default text size remains available without browser storage.
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        setTypingSoundEnabled(window.localStorage.getItem(typingSoundStorageKey) !== "off");
+      } catch {
+        // Sound remains available when storage is unavailable.
+      }
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (audioContextRef.current) void audioContextRef.current.close();
+      audioContextRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const current = sessionRef.current;
+    if (current.phase !== "ready" || current.durationSeconds === durationSeconds) return;
+    const next = createSession(current.id, durationSeconds, current.prompt);
+    sessionRef.current = next;
+    setSession(next);
+    setRemainingMs(durationSeconds * 1000);
+    inputRef.current?.focus();
+  }, [durationSeconds]);
 
   const commit = useCallback((next: TestSession) => {
     const previous = sessionRef.current;
     sessionRef.current = next;
     setSession(next);
+    if (next.phase === "completed") setRemainingMs(0);
     if (next.phase === "completed" && previous.phase !== "completed") {
       const nextResult = calculateResult(next);
       setResult(nextResult);
@@ -102,44 +269,31 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
       });
       if (nextResult.wpm === null) return;
       try {
-        if (saveHistory(window.localStorage, nextResult, new Date())) setHistory(loadHistory(window.localStorage));
-        else { setStorageWarning(true); telemetry.error("storage_write"); }
+        if (!saveHistory(window.localStorage, nextResult, new Date())) { setStorageWarning(true); telemetry.error("storage_write"); }
       } catch { setStorageWarning(true); telemetry.error("storage_write"); }
     }
   }, [durationSeconds]);
 
   useEffect(() => {
     telemetry.event({ name: "test_view", page: entryPage, configured_duration: durationSeconds });
-    const frame = window.requestAnimationFrame(() => {
-      try { setHistory(loadHistory(window.localStorage)); } catch { setStorageWarning(true); telemetry.error("storage_read"); }
-    });
-    return () => window.cancelAnimationFrame(frame);
   }, [entryPage, durationSeconds]);
 
   useEffect(() => {
-    if (session.phase !== "countdown") return;
-    let nextCount = 3;
-    const interval = window.setInterval(() => {
-      nextCount -= 1;
-      if (nextCount <= 0) {
-        window.clearInterval(interval);
-        commit(beginRunning(sessionRef.current, performance.now()));
-      } else setCountdown(nextCount);
-    }, 1000);
-    return () => window.clearInterval(interval);
-  }, [session.phase, commit]);
+    if (session.phase === "ready" || session.phase === "running") inputRef.current?.focus();
+  }, [session.phase]);
 
   useEffect(() => {
     if (session.phase !== "running") return;
-    inputRef.current?.focus();
-    const interval = window.setInterval(() => {
+    const updateCountdown = () => {
       const current = sessionRef.current;
       const end = deadline(current);
       if (end === null) return;
       const left = Math.max(0, end - performance.now());
-      setRemainingSeconds(Math.ceil(left / 1000));
+      setRemainingMs(left);
       if (left <= 0) commit(completeSession(current, performance.now()));
-    }, 100);
+    };
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 100);
     return () => window.clearInterval(interval);
   }, [session.phase, commit]);
 
@@ -152,15 +306,47 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, [session.phase, commit]);
 
-  function startTest(isRetest = false) {
+  function prepareTest(isRetest = false) {
     if (isRetest) telemetry.event({ name: "result_retest", from_duration: durationSeconds, to_duration: durationSeconds });
-    telemetry.event({ name: "test_start", duration: durationSeconds, entry_page: entryPage });
-    const next = beginCountdown(createSession(crypto.randomUUID(), durationSeconds, prompt));
     setResult(null);
     setInputWarning("");
-    setCountdown(3);
-    setRemainingSeconds(durationSeconds);
-    commit(next);
+    setRemainingMs(durationSeconds * 1000);
+    commit(createSession(crypto.randomUUID(), durationSeconds, choosePrompt(difficulty)));
+    inputRef.current?.focus();
+  }
+
+  function changeDifficulty(level: Difficulty) {
+    if (sessionRef.current.phase !== "ready" || level === difficulty) return;
+    setDifficulty(level);
+    try {
+      window.localStorage.setItem(difficultyStorageKey, level);
+    } catch {
+      // The selection still works for this visit when storage is unavailable.
+    }
+    setInputWarning("");
+    commit(createSession(crypto.randomUUID(), durationSeconds, choosePrompt(level)));
+    inputRef.current?.focus();
+  }
+
+  function changeFontSize(size: TypingFontSize) {
+    setFontSize(size);
+    try {
+      window.localStorage.setItem(fontSizeStorageKey, size);
+    } catch {
+      // The selected size still works for this visit when storage is unavailable.
+    }
+    restoreTypingFocus();
+  }
+
+  function preservePromptForDurationChange() {
+    try {
+      window.sessionStorage.setItem(durationHandoffStorageKey, JSON.stringify({
+        difficulty,
+        prompt: sessionRef.current.prompt,
+      }));
+    } catch {
+      // Navigation still works if the current prompt cannot be handed off.
+    }
   }
 
   function markAnomaly(flag: AnomalyFlag, message: string) {
@@ -168,110 +354,247 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
     setInputWarning(message);
   }
 
+  function toggleFingerGuide() {
+    setFingerGuideEnabled((enabled) => {
+      const next = !enabled;
+      try {
+        window.localStorage.setItem(fingerGuideStorageKey, next ? "on" : "off");
+      } catch {
+        // The guide still works for this visit when storage is unavailable.
+      }
+      return next;
+    });
+  }
+
+  function toggleTypingSound() {
+    setTypingSoundEnabled((enabled) => {
+      const next = !enabled;
+      try {
+        window.localStorage.setItem(typingSoundStorageKey, next ? "on" : "off");
+      } catch {
+        // The sound control still works for this visit when storage is unavailable.
+      }
+      return next;
+    });
+  }
+
+  function restoreTypingFocus() {
+    window.requestAnimationFrame(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  }
+
+  function playTypingClick(backspace = false) {
+    if (!typingSoundEnabled || !window.AudioContext) return;
+    try {
+      const audio = audioContextRef.current ?? new window.AudioContext();
+      audioContextRef.current = audio;
+      if (audio.state === "suspended") void audio.resume();
+      if (!clickBufferRef.current) {
+        const length = Math.ceil(audio.sampleRate * 0.035);
+        const buffer = audio.createBuffer(1, length, audio.sampleRate);
+        const samples = buffer.getChannelData(0);
+        for (let index = 0; index < length; index += 1) {
+          samples[index] = (Math.random() * 2 - 1) * Math.pow(1 - index / length, 1.5);
+        }
+        clickBufferRef.current = buffer;
+      }
+      const source = audio.createBufferSource();
+      const tone = audio.createBiquadFilter();
+      const volume = audio.createGain();
+      const now = audio.currentTime;
+      source.buffer = clickBufferRef.current;
+      source.playbackRate.value = (backspace ? 0.77 : 0.95) + Math.random() * 0.12;
+      tone.type = "bandpass";
+      tone.frequency.value = backspace ? 1150 : 1850;
+      tone.Q.value = 0.7;
+      volume.gain.setValueAtTime(0.22, now);
+      volume.gain.exponentialRampToValueAtTime(0.004, now + 0.032);
+      source.connect(tone).connect(volume).connect(audio.destination);
+      source.start(now);
+    } catch {
+      // Audio is optional; typing must work even when the browser blocks it.
+    }
+  }
+
   function onInput(value: string) {
     const current = sessionRef.current;
-    if (current.phase !== "running") return;
     const now = performance.now();
+    if (current.phase === "ready") {
+      if (value.length !== 1) {
+        if (value) setInputWarning("Use the keyboard to type one character at a time.");
+        return;
+      }
+      const fresh = current.id === "unstarted" ? createSession(crypto.randomUUID(), durationSeconds, current.prompt) : current;
+      telemetry.event({ name: "test_start", duration: durationSeconds, entry_page: entryPage });
+      setInputWarning("");
+      commit(applyCharacter(beginRunning(fresh, now), value, now));
+      playTypingClick();
+      return;
+    }
+    if (current.phase !== "running") return;
     if (value.length === current.typed.length + 1 && value.startsWith(current.typed)) {
       commit(applyCharacter(current, value.slice(-1), now));
+      playTypingClick();
     } else if (value.length === current.typed.length - 1 && current.typed.startsWith(value)) {
       commit(applyBackspace(current, now));
+      playTypingClick(true);
     } else if (value !== current.typed) {
       markAnomaly("composition", "Use the keyboard to type one character at a time.");
     }
   }
 
-  function clearSavedResults(): boolean {
-    try {
-      const cleared = clearHistory(window.localStorage);
-      if (cleared) {
-        telemetry.event({ name: "history_clear", count_bucket: countBucket(history.length) });
-        setHistory([]);
-      } else telemetry.error("storage_clear");
-      return cleared;
-    } catch { telemetry.error("storage_clear"); return false; }
-  }
-
   const isActive = session.phase === "running";
-  const isReady = session.phase === "ready" || session.phase === "abandoned" || session.phase === "completed";
-  const progress = isActive ? ((durationSeconds - remainingSeconds) / durationSeconds) * 100 : session.phase === "completed" ? 100 : 0;
+  const isReady = session.phase === "ready";
+  const inputHelp = isActive
+    ? "Type the passage. Backspace is available; paste is disabled."
+    : "The timer starts with your first typed character. Type the passage to begin.";
+  const countdownSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const nextPromptIndex = alignTypingInput(session.prompt, session.typed).cursorIndex;
 
   return (
-    <div className="test-shell" data-phase={session.phase}>
-      <div className="duration-cards" role="group" aria-label={isReady ? "Choose test duration" : "Test duration options, available after this attempt"} tabIndex={isReady ? undefined : 0}>
-        {durationOptions.map((option) => (
-          <Link
-            key={option.seconds}
-            href={option.href}
-            className={`duration-card ${option.seconds === durationSeconds ? "selected" : ""}`}
-            aria-current={option.seconds === durationSeconds ? "page" : undefined}
-            aria-disabled={!isReady}
-            tabIndex={isReady ? 0 : -1}
-            onClick={(event) => {
-              if (!isReady) event.preventDefault();
-              else if (session.phase === "completed" && option.seconds !== durationSeconds) {
-                telemetry.event({ name: "result_retest", from_duration: durationSeconds, to_duration: option.seconds });
-              }
+    <div className="test-shell" data-phase={session.phase} data-font-size={fontSize}>
+      <div className="test-toolbar">
+        {isReady ? (
+          <div className="test-toolbar-config">
+            <h1 className="sr-only">Typing Test</h1>
+            <div className="duration-cards" role="group" aria-label="Choose test duration">
+              <span className="test-control-icon" aria-hidden="true"><TimeIcon /></span>
+              {durationOptions.map((option) => (
+                <Link
+                  key={option.seconds}
+                  href={option.href}
+                  scroll={false}
+                  className={`duration-card ${option.seconds === durationSeconds ? "selected" : ""}`}
+                  aria-current={option.seconds === durationSeconds ? "page" : undefined}
+                  onNavigate={preservePromptForDurationChange}
+                >
+                  {option.label}
+                </Link>
+              ))}
+            </div>
+            <div className="difficulty-group" role="group" aria-label="Text difficulty">
+              <span className="test-control-icon" aria-hidden="true"><DifficultyIcon /></span>
+              {difficultyOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className="difficulty-option"
+                  aria-pressed={difficulty === option.value}
+                  onClick={() => changeDifficulty(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="font-size-group" role="group" aria-label="Typing text size">
+              <span className="test-control-icon font-size-icon" aria-hidden="true">Aa</span>
+              {fontSizeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className="font-size-option"
+                  aria-label={`${option.label} text size`}
+                  aria-pressed={fontSize === option.value}
+                  onClick={() => changeFontSize(option.value)}
+                >
+                  <span className="font-size-label">{option.label}</span>
+                  <span className="font-size-short-label" aria-hidden="true">{option.shortLabel}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="test-toolbar-status">
+            <h1><span className="heavy">Typing</span>{" "}Test</h1>
+            <time
+              className="test-page-countdown"
+              role="timer"
+              aria-label={`${formatCountdown(remainingMs)} remaining`}
+              dateTime={`PT${countdownSeconds}S`}
+            >
+              {formatCountdown(remainingMs)}
+            </time>
+          </div>
+        )}
+        <div className="test-toolbar-actions">
+          <button
+            type="button"
+            className="test-feature-toggle typing-sound-toggle"
+            role="switch"
+            aria-checked={typingSoundEnabled}
+            aria-label="Typing sound"
+            title={typingSoundEnabled ? "Turn typing sound off" : "Turn typing sound on"}
+            onClick={() => {
+              toggleTypingSound();
+              restoreTypingFocus();
             }}
           >
-            <strong>{option.label}</strong>
-          </Link>
-        ))}
+            <SoundIcon enabled={typingSoundEnabled} />
+          </button>
+          <button
+            type="button"
+            className="test-feature-toggle keyboard-guide-toggle"
+            role="switch"
+            aria-checked={fingerGuideEnabled}
+            aria-label="Show finger guide"
+            title={fingerGuideEnabled ? "Hide finger guide" : "Show finger guide"}
+            onClick={() => {
+              toggleFingerGuide();
+              restoreTypingFocus();
+            }}
+          >
+            <KeyboardIcon enabled={fingerGuideEnabled} />
+          </button>
+          <button type="button" className="new-testing" onClick={() => prepareTest(session.phase === "completed")}>
+            <span aria-hidden="true">↻</span> New Testing
+          </button>
+        </div>
       </div>
 
       {session.phase !== "completed" ? (
-        <section className="typing-chamber" aria-label="Typing test">
-          <div className="test-status" role="group" aria-label="Test status">
-            <div className="chamber-heading">
-              <div>
-                <h2>{isActive ? "Keep your rhythm." : session.phase === "countdown" ? "Get ready." : "Find your pace."}</h2>
-              </div>
-              <span className="timer-display" aria-label={`${remainingSeconds} seconds remaining`} aria-live="off">
-                {session.phase === "countdown" ? countdown : `${Math.floor(remainingSeconds / 60).toString().padStart(2, "0")}:${(remainingSeconds % 60).toString().padStart(2, "0")}`}
-              </span>
-            </div>
-            <div className="progress-track" role="progressbar" aria-label="Test progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
-              <span style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-
-          {session.phase === "countdown" ? (
-            <p className="chamber-instruction" role="status">The test starts after the countdown. Place your hands on the keyboard.</p>
-          ) : !isActive ? (
-            <div className="test-ready-actions">
-              <button type="button" className="button button-primary" onClick={() => startTest()}>{session.phase === "abandoned" ? "START A NEW TEST" : "START TYPING TEST"}<span aria-hidden="true">↗</span></button>
-              {session.phase === "abandoned" && <p className="chamber-instruction">This attempt ended without a result. You can start a new one.</p>}
-            </div>
-          ) : null}
-
-          <TextRenderer prompt={session.prompt} typed={session.typed} />
-          <p id="typing-instructions" className="input-help">{isActive ? "Type the passage above. Backspace is available; paste is disabled." : "The input unlocks after the countdown. Read the passage, then start when you're ready."}</p>
-          <textarea
-            ref={inputRef}
-            className="typing-input"
-            aria-label="Type the passage here"
-            aria-describedby="typing-instructions"
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            readOnly={!isActive}
-            placeholder={isActive ? undefined : "Start the test to type here"}
-            value={session.typed}
-            onChange={(event) => onInput(event.target.value)}
-            onPaste={(event) => { event.preventDefault(); if (isActive) markAnomaly("paste", "Paste isn't available in a typing test."); }}
-            onDrop={(event) => { event.preventDefault(); if (isActive) markAnomaly("drop", "Drag and drop isn't available in a typing test."); }}
-            onBlur={() => { if (isActive) commit(recordAnomaly(sessionRef.current, "blur")); }}
-          />
+        <section className={`typing-chamber ${fingerGuideEnabled ? "has-keyboard-guide" : ""}`} aria-label="Typing test">
+          <span id="typing-instructions" className="sr-only">{inputHelp}</span>
+          <label className="typing-stage">
+            <span className="sr-only">Type the passage shown below</span>
+            <TextRenderer prompt={session.prompt} typed={session.typed} active={isReady || isActive} />
+            <textarea
+              ref={inputRef}
+              className="typing-capture-input"
+              aria-label="Type the passage here"
+              aria-describedby="typing-instructions"
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              readOnly={!isReady && !isActive}
+              tabIndex={isReady || isActive ? 0 : -1}
+              value={session.typed}
+              onChange={(event) => onInput(event.target.value)}
+              onPaste={(event) => { event.preventDefault(); if (isActive) markAnomaly("paste", "Paste isn't available in a typing test."); else setInputWarning("Paste isn't available in a typing test."); }}
+              onDrop={(event) => { event.preventDefault(); if (isActive) markAnomaly("drop", "Drag and drop isn't available in a typing test."); else setInputWarning("Drag and drop isn't available in a typing test."); }}
+              onBlur={(event) => {
+                const nextTarget = event.relatedTarget;
+                const movingToToolbarToggle = nextTarget instanceof HTMLElement
+                  && (nextTarget.classList.contains("keyboard-guide-toggle") || nextTarget.classList.contains("typing-sound-toggle"));
+                if (isActive && !movingToToolbarToggle) commit(recordAnomaly(sessionRef.current, "blur"));
+              }}
+            />
+          </label>
+          {fingerGuideEnabled && (
+            <KeyboardGuide nextCharacter={session.prompt[nextPromptIndex] ?? null} />
+          )}
           {inputWarning && <p className="inline-warning" role="status">{inputWarning}</p>}
-          {isActive && <button type="button" className="text-button" onClick={() => commit(abandonSession(sessionRef.current))}>End this attempt</button>}
         </section>
       ) : result?.wpm === null ? (
         <section className="result-card" aria-labelledby="empty-result-title">
           <span className="eyebrow dark">TEST COMPLETE</span>
           <h2 id="empty-result-title" className="empty-result-heading">No score recorded.</h2>
           <p>You did not type during this attempt, so there is no WPM or accuracy to save. Start a fresh test when you are ready.</p>
-          <button type="button" className="button button-primary" onClick={() => startTest(true)}>RETEST {durationSeconds / 60} MIN <span aria-hidden="true">↗</span></button>
+          <button type="button" className="button button-primary" onClick={() => prepareTest(true)}>RETEST {durationSeconds / 60} MIN <span aria-hidden="true">↗</span></button>
         </section>
       ) : result ? (
         <section className="result-card" aria-labelledby="result-title">
@@ -287,9 +610,9 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
             <div><strong>{result.errors}</strong><span>Errors</span></div>
             <div><strong>{result.durationSeconds / 60} min</strong><span>Duration</span></div>
           </div>
-          <p className="benchmark-note">Benchmark comparison is awaiting source review. <Link href="/average-wpm" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-wpm" })}>Learn what WPM measures</Link>.</p>
+          <p className="benchmark-note">No public benchmark is included in this launch. <Link href="/average-wpm" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-wpm" })}>Learn what WPM measures</Link>.</p>
           <div className="result-actions">
-            <button type="button" className="button button-primary" onClick={() => startTest(true)}>RETEST {durationSeconds / 60} MIN <span aria-hidden="true">↗</span></button>
+            <button type="button" className="button button-primary" onClick={() => prepareTest(true)}>RETEST {durationSeconds / 60} MIN <span aria-hidden="true">↗</span></button>
             <Link className="button button-secondary" href="/average-typing-speed" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-typing-speed" })}>UNDERSTAND YOUR RESULT</Link>
           </div>
         </section>
@@ -297,10 +620,6 @@ export default function TestShell({ durationSeconds, prompt, entryPage }: Props)
 
       {storageWarning && <p className="storage-warning" role="status">Recent results could not be saved in this browser. You can still take tests and view this result.</p>}
 
-      <section className="history-section" aria-labelledby="history-title">
-        <div><span className="eyebrow">YOUR BROWSER</span><h2 id="history-title">RECENT <strong>RESULTS</strong></h2></div>
-        <HistoryList items={history} onClear={clearSavedResults} />
-      </section>
     </div>
   );
 }

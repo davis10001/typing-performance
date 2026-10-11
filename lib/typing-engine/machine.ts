@@ -1,4 +1,5 @@
 import type { AnomalyFlag, TestSession } from "./types";
+import { alignTypingInput } from "./alignment";
 
 export function createSession(id: string, durationSeconds: number, prompt: string): TestSession {
   if (!id || !Number.isFinite(durationSeconds) || durationSeconds <= 0 || !prompt) {
@@ -25,7 +26,7 @@ export function beginCountdown(session: TestSession): TestSession {
 }
 
 export function beginRunning(session: TestSession, now: number): TestSession {
-  if (session.phase !== "countdown" || !Number.isFinite(now)) return session;
+  if ((session.phase !== "ready" && session.phase !== "countdown") || !Number.isFinite(now)) return session;
   return { ...session, phase: "running", startedAt: now };
 }
 
@@ -55,9 +56,10 @@ export function applyCharacter(session: TestSession, character: string, now: num
   if (session.phase !== "running" || session.startedAt === null) return session;
   if (!Number.isFinite(now)) return session;
   if (now >= deadline(session)!) return completeSession(session, now);
-  if (character.length !== 1 || session.typed.length >= session.prompt.length) return session;
+  const { cursorIndex } = alignTypingInput(session.prompt, session.typed);
+  if (character.length !== 1 || cursorIndex >= session.prompt.length) return session;
 
-  const isCorrect = character === session.prompt[session.typed.length];
+  const isCorrect = character === session.prompt[cursorIndex];
   return {
     ...session,
     typed: session.typed + character,

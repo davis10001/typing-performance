@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TypingLevel — 测试区布局草图</title>
+  <style>
+    :root{--canvas:oklch(.727 .115 283);--stage:oklch(.231 0 0);--surface:oklch(.317 0 0);--white:oklch(.982 0 0);--muted:oklch(.73 0 0);--signal:oklch(.844 .223 144)}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--canvas);color:var(--stage);font-family:"Inter Tight Variable","Avenir Next",sans-serif}
+    .board{width:1600px;height:920px;padding:50px 58px 54px}
+    .board-heading{display:flex;align-items:end;justify-content:space-between;margin-bottom:28px}
+    .kicker{margin:0 0 7px;font-size:12px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+    h1{margin:0;font-size:35px;letter-spacing:-.055em;line-height:1}
+    .board-note{margin:0 0 3px;color:#322d3a;font-size:14px;font-weight:650}
+    .views{display:flex;align-items:start;gap:30px}
+    .view-label{display:flex;justify-content:space-between;align-items:center;margin:0 0 11px;font-size:13px;font-weight:800;letter-spacing:.03em}
+    .view-label span:last-child{opacity:.68;font-weight:650}
+    .desktop-wrap{width:1055px}
+    .mobile-wrap{width:390px}
+    .app{background:var(--stage);color:var(--white);box-shadow:0 22px 55px #37304030;overflow:hidden}
+    .desktop{height:710px;border-radius:22px;padding:33px 43px}
+    .mobile{height:710px;border-radius:27px;padding:22px 19px}
+    .brand{display:block;width:142px;height:54px;object-fit:contain;object-position:left center}
+    .mobile .brand{width:102px;height:37px}
+    .page-head{display:flex;justify-content:space-between;align-items:baseline;margin-top:27px}
+    .page-head h2{margin:0;font-size:36px;font-weight:450;letter-spacing:-.055em}
+    .page-head strong{font-weight:900}
+    .timer{font-family:SFMono-Regular,Consolas,monospace;font-size:31px;letter-spacing:-.05em}
+    .settings{display:flex;align-items:center;gap:20px;margin-top:30px;padding:10px 13px;background:#292929;border:1px solid #454545;border-radius:12px}
+    .control-group{display:flex;align-items:center;gap:4px}
+    .control-label{margin-right:7px;color:#aaa;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+    .choice{display:grid;place-items:center;min-width:40px;height:34px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:#aaa;font-size:13px;font-weight:750;white-space:nowrap}
+    .choice.selected{background:#f7f7f7;color:#202020}
+    .divider{width:1px;height:25px;background:#515151}
+    .new-text{display:flex;align-items:center;gap:8px;margin-left:auto;border:0;background:transparent;color:#e8e8e8;font-size:13px;font-weight:800;white-space:nowrap}
+    .new-text .icon{font-family:Arial,sans-serif;font-size:20px;font-weight:400;line-height:1}
+    .passage{margin-top:84px;max-width:900px;font-family:SFMono-Regular,Consolas,monospace;font-size:28px;line-height:1.58;letter-spacing:-.035em;color:#8d8d8d}
+    .caret{border-left:3px solid var(--signal)}
+    .bottom{display:flex;align-items:center;justify-content:space-between;margin-top:132px;padding-top:19px;border-top:1px solid #4b4b4b;color:#bbb;font-size:13px;font-weight:700}
+    .guide{display:flex;align-items:center;gap:10px;color:#e2e2e2}
+    .guide-dot{width:11px;height:11px;border-radius:50%;border:2px solid #888}
+    .hint{font-family:SFMono-Regular,Consolas,monospace;color:#8b8b8b;font-size:12px;font-weight:450}
+    .mobile .page-head{margin-top:30px}
+    .mobile .page-head h2{font-size:28px}
+    .mobile .timer{font-size:25px}
+    .mobile .settings{display:block;margin-top:25px;padding:9px 10px}
+    .mobile .control-group{justify-content:space-between}
+    .mobile .control-label{display:none}
+    .mobile .choice{min-width:0;flex:1;height:40px;padding:0 5px;font-size:11px}
+    .mobile .control-group + .control-group{display:inline-flex;width:245px;border-top:1px solid #4a4a4a;margin-top:7px;padding-top:7px}
+    .mobile .divider{display:none}
+    .mobile .new-text{display:inline-flex;justify-content:center;width:78px;height:41px;margin:7px 0 0 4px;border-top:1px solid #4a4a4a;padding-top:7px;vertical-align:top;font-size:11px}
+    .mobile .new-text .icon{font-size:18px}
+    .mobile .passage{margin-top:43px;font-size:21px;line-height:1.54;letter-spacing:-.04em}
+    .mobile .bottom{margin-top:55px;padding-top:15px}
+    .mobile .hint{display:none}
+    .mobile .guide{font-size:12px}
+    .mobile .mini-hint{color:#8b8b8b;font-family:SFMono-Regular,Consolas,monospace;font-size:11px;font-weight:450}
+  </style>
+</head>
+<body>
+  <div class="board">
+    <div class="board-heading"><div><p class="kicker">TypingLevel · layout study</p><h1>把控件收拢，让文章成为中心</h1></div><p class="board-note">测试前状态示意 · 不增加功能层级</p></div>
+    <div class="views">
+      <div class="desktop-wrap"><div class="view-label"><span>桌面端</span><span>统一设置区 / 文章 / 辅助操作</span></div>
+        <main class="app desktop">
+          <img class="brand" src="../public/images/typing-level-logo.png" alt="TypingLevel">
+          <div class="page-head"><h2><strong>Typing</strong> Test</h2><div class="timer">01:00</div></div>
+          <div class="settings"><div class="control-group"><span class="control-label">Time</span><button class="choice selected">1 min</button><button class="choice">2 min</button><button class="choice">3 min</button><button class="choice">5 min</button><button class="choice">10 min</button></div><div class="divider"></div><div class="control-group"><span class="control-label">Difficulty</span><button class="choice">Easy</button><button class="choice selected">Standard</button><button class="choice">Advanced</button></div><button class="new-text"><span class="icon">↻</span> New text</button></div>
+          <div class="passage"><span class="caret">A</span> clear morning gives the city a different rhythm. The first train arrives, a shop opens its doors, and a few people cross the square.</div>
+          <div class="bottom"><div class="guide"><span class="guide-dot"></span> Show finger guide</div><span class="hint">Start typing to begin</span></div>
+        </main>
+      </div>
+      <div class="mobile-wrap"><div class="view-label"><span>手机端</span><span>选项保持可见</span></div>
+        <main class="app mobile">
+          <img class="brand" src="../public/images/typing-level-logo.png" alt="TypingLevel">
+          <div class="page-head"><h2><strong>Typing</strong> Test</h2><div class="timer">01:00</div></div>
+          <div class="settings"><div class="control-group"><button class="choice selected">1 min</button><button class="choice">2 min</button><button class="choice">3 min</button><button class="choice">5 min</button><button class="choice">10 min</button></div><div class="control-group"><button class="choice">Easy</button><button class="choice selected">Standard</button><button class="choice">Advanced</button></div><button class="new-text"><span class="icon">↻</span> New text</button></div>
+          <div class="passage"><span class="caret">A</span> clear morning gives the city a different rhythm. The first train arrives, a shop opens its doors, and a few people cross the square.</div>
+          <div class="bottom"><div class="guide"><span class="guide-dot"></span> Finger guide</div><span class="mini-hint">OFF</span></div>
+        </main>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
