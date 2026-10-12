@@ -3,16 +3,39 @@ import Image from "next/image";
 import Link from "next/link";
 import WebVitals from "@/components/observability/WebVitals";
 import AnalyticsGate from "@/components/observability/AnalyticsGate";
+import JsonLd from "@/components/seo/JsonLd";
+import { siteDescription, siteName, siteUrl, socialImage } from "@/lib/seo";
 import "@fontsource-variable/inter-tight";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "TypingLevel", template: "%s | TypingLevel" },
-  description: "Take a clear, no-account typing test and understand your speed and accuracy.",
-  robots: { index: true, follow: true },
+  applicationName: siteName,
+  title: { default: "Free Typing Test | TypingLevel", template: `%s | ${siteName}` },
+  description: siteDescription,
+  creator: siteName,
+  publisher: siteName,
+  referrer: "origin-when-cross-origin",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName,
+    title: "Free Typing Test | TypingLevel",
+    description: siteDescription,
+    images: [{ url: socialImage, width: 1672, height: 941, alt: "TypingLevel typing test" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free Typing Test | TypingLevel",
+    description: siteDescription,
+    images: [socialImage],
+  },
   icons: {
     icon: "/images/typing-level-icon.png",
     shortcut: "/images/typing-level-icon.png",
@@ -44,9 +67,20 @@ function SiteHeader() {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    url: siteUrl,
+    name: siteName,
+    description: siteDescription,
+    inLanguage: "en",
+  };
+
   return (
     <html lang="en">
       <body>
+        <JsonLd data={websiteJsonLd} />
         <WebVitals />
         <div className="site-shell">
           <SiteHeader />
@@ -57,6 +91,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </span>
             <nav aria-label="Footer navigation">
               <Link href="/learn">LEARN</Link>
+              <Link href="/average-typing-speed">TYPING SPEED</Link>
+              <Link href="/faq">FAQ</Link>
               <Link href="/privacy">PRIVACY</Link>
               <Link className="footer-action" href="/">START A TEST <span aria-hidden="true">↗</span></Link>
             </nav>

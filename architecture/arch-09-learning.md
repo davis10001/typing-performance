@@ -28,7 +28,7 @@ Timed Test → existing typing-engine / scoring / test history (separate)
 | `vendor/ktouch/` | 原 GB 课程、仓库许可证文本与未关闭的文件级许可说明 |
 | `lib/learning/guided-*.ts` | 原核心、原输入与状态的薄适配层 |
 | `lib/learning/course-*.ts` | 确定性内容转换、KTouch 输入/计分/访问和状态 |
-| `components/learning/` / `app/learn/` | 两入口、目录、练习、结果和本机恢复 |
+| `components/learning/` / `app/learn/` | 单页默认练习、全课可选目录、结果、说明和本机恢复 |
 
 源码与课程直接复用前保留各自来源、许可、内容哈希；版本更新显式进行。不同引擎的 JSON 状态由对应验证器解析；存储层不推断其业务含义。禁止将上下文中的源码例子或旧帮助文字当成完整算法。
 
@@ -44,4 +44,4 @@ Timed Test → existing typing-engine / scoring / test history (separate)
 
 ## 验证
 
-学习核心以原测试和固定轨迹对照为主，项目测试覆盖数据隔离、内容约束、错误恢复、重复完成及输入边界。浏览器旅程覆盖两个入口、粘贴拒绝、有效结果只存一次、逐课解锁、移动端无溢出和清除隔离。既有测速回归继续运行。
+学习核心以原测试和固定轨迹对照为主，项目测试覆盖数据隔离、内容约束、错误恢复、重复完成及输入边界。浏览器旅程覆盖 Learn 默认练习、粘贴拒绝、有效结果只存一次、任意课次可访问、移动端无溢出和清除隔离。既有测速回归继续运行。

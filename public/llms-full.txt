@@ -1,0 +1,47 @@
+# TypingLevel: full site overview
+
+TypingLevel is a free web application for measuring and improving English typing performance. It serves anonymous users who want a quick typing-speed check, a longer sustained test, or structured touch-typing practice.
+
+## Typing tests
+
+TypingLevel offers 1, 2, 3, 5, and 10 minute tests. Each completed test reports:
+
+- Correct WPM: matching characters divided by five and by elapsed minutes.
+- Raw WPM: all typed characters divided by five and by elapsed minutes.
+- Accuracy: correct character keypresses divided by all character keypresses.
+- Mistakes: incorrect character keypresses recorded during the attempt.
+
+A one-minute test is useful for a quick check. Longer tests show whether pace and accuracy remain steady. Fair comparisons use the same duration and difficulty and consider accuracy beside WPM.
+
+Start at https://how-type.com/ or choose a duration:
+
+- https://how-type.com/1-minute-typing-test
+- https://how-type.com/2-minute-typing-test
+- https://how-type.com/3-minute-typing-test
+- https://how-type.com/5-minute-typing-test
+- https://how-type.com/10-minute-typing-test
+
+## Average typing speed
+
+An Aalto University study of about 168,000 online volunteers reported an average of 52 WPM, with most participants between 30 and 60 WPM. Because participants chose to take an online typing test, the result describes that sample and is not a universal target.
+
+Source: https://www.aalto.fi/en/news/the-traits-of-fast-typists-discovered-by-analysing-136-million-keystrokes
+
+Detailed explanations:
+
+- https://how-type.com/average-wpm
+- https://how-type.com/average-typing-speed
+- https://how-type.com/faq
+
+## Touch-typing practice
+
+TypingLevel provides two learning paths:
+
+1. Continuous practice uses a pinned Keybr Guided engine that selects focus keys from per-key performance.
+2. Fixed courses use a reviewed 15-lesson English QWERTY sequence based on KTouch, with sequential unlocks and visible pass thresholds.
+
+Learning starts at https://how-type.com/learn.
+
+## Privacy and storage
+
+TypingLevel requires no account. Completed test results, preferences, and learning progress are stored locally in the browser. The application does not upload the passage a user typed or their individual keystrokes. The current privacy notice is at https://how-type.com/privacy.

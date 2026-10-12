@@ -4,7 +4,7 @@
 |---|---|---|---|
 | 登录与云端历史 | P0 验证匿名闭环后，存在明确跨设备需求 | 产品/工程 | Deferred P2 |
 | percentile | 有足够、合规、代表性的真实匿名样本及统计方法后 | 产品/数据 | Deferred P2 |
-| Adaptive Practice | 弱键数据和用户练习价值被验证后 | 产品 | Deferred P2 |
+| Learning V1 | 用户已确认 Guided + Courses，按原方案推进 | 产品/工程 | Implementing；arch-09 / PRD 10 |
 | 证书持久化和公开验证 | P1 有可信度规则、滥用模型和数据保留规则后 | 产品/工程 | Deferred P1 |
 | Benchmark 内容来源 | 发布前审校并版本化 | 内容/产品 | OQ-01，发布阻塞 |
 | 框架与供应商精确版本 | 项目初始化时在锁文件中钉住并通过 CI | 工程 | OQ-05，不阻塞脚手架 |

@@ -1,20 +1,25 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Average Typing Speed — put your result in context",
-  description: "Understand the limits of average typing speed comparisons and see how repeat tests can reveal your own progress.",
-  alternates: { canonical: "/average-typing-speed" },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Average Typing Speed: What the Research Shows",
+  description: "See a sourced average typing speed, understand who was measured, and learn how test length and accuracy affect comparisons with your own WPM.",
+  path: "/average-typing-speed",
+});
 
 export default function AverageTypingSpeedPage() {
   return (
     <main className="content-page">
       <section className="content-hero"><span className="eyebrow dark">SPEED / CONTEXT</span><h1>HOW FAST IS<br /><strong>FAST ENOUGH?</strong></h1><p>Average typing speed is useful only when the source, test length, and accuracy rule are clear. Your own repeat tests can tell you more about how your pace is changing.</p><Link className="button button-lilac" href="/3-minute-typing-test">CHECK YOUR PACE <span aria-hidden="true">↗</span></Link></section>
       <section className="content-article">
+        <div className="content-index">01 / A SOURCED AVERAGE</div>
+        <div><h2>WHAT IS THE AVERAGE TYPING SPEED?</h2><p>An <a href="https://www.aalto.fi/en/news/the-traits-of-fast-typists-discovered-by-analysing-136-million-keystrokes">Aalto University study</a> of about 168,000 online volunteers reported an average of 52 WPM, with most participants between 30 and 60 WPM. Because volunteers chose to take the online test, use 52 WPM as context for that sample, not as a universal target.</p></div>
+      </section>
+      <section className="content-article">
         <div className="content-article-rail">
-          <div className="content-index">01 / COMPARE FAIRLY</div>
+          <div className="content-index">02 / COMPARE FAIRLY</div>
           <div className="content-line-art content-line-art-conditions" aria-hidden="true">
             <Image src="/images/typing-conditions-line-art.png" alt="" fill sizes="(max-width: 900px) 24vw, 280px" unoptimized />
           </div>
@@ -23,7 +28,7 @@ export default function AverageTypingSpeedPage() {
       </section>
       <section className="content-article">
         <div className="content-article-rail">
-          <div className="content-index">02 / MAKE IT USEFUL</div>
+          <div className="content-index">03 / MAKE IT USEFUL</div>
           <div className="content-line-art content-line-art-progress" aria-hidden="true">
             <Image src="/images/typing-progress-line-art.png" alt="" fill sizes="(max-width: 900px) 24vw, 280px" unoptimized />
           </div>

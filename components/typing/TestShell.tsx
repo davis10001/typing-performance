@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import ResetIcon from "@/components/ResetIcon";
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
+import ResultPaceChart, { type PaceSample } from "@/components/typing/ResultPaceChart";
 import { composeTestPrompt, nextTextIndex, type Difficulty, type PromptText } from "@/lib/content/prompt-selection";
 import { durationOptions, type TestPageSlug } from "@/lib/content/test-pages";
 import { saveHistory } from "@/lib/history/repository";
@@ -51,6 +53,17 @@ function formatCountdown(milliseconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function appendPaceSample(samples: PaceSample[], session: TestSession, elapsedSeconds: number): PaceSample[] {
+  const seconds = Math.min(session.durationSeconds, elapsedSeconds);
+  if (seconds <= 0 || seconds <= (samples.at(-1)?.elapsedSeconds ?? 0)) return samples;
+  const { correctCharacters } = alignTypingInput(session.prompt, session.typed);
+  return [...samples, {
+    elapsedSeconds: seconds,
+    correctWpm: Math.round(correctCharacters * 120 / seconds) / 10,
+    rawWpm: Math.round(session.totalInputChars * 120 / seconds) / 10,
+  }];
 }
 
 function TimeIcon() {
@@ -165,6 +178,8 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
   const recentTextIdsRef = useRef<string[]>([texts.find((item) => item.difficulty === "standard")!.id]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [result, setResult] = useState<TestResult | null>(null);
+  const [paceSamples, setPaceSamples] = useState<PaceSample[]>([]);
+  const paceSamplesRef = useRef<PaceSample[]>([]);
   const [storageWarning, setStorageWarning] = useState(false);
   const [inputWarning, setInputWarning] = useState("");
   const [fingerGuideEnabled, setFingerGuideEnabled] = useState(true);
@@ -295,6 +310,8 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
     setSession(next);
     if (next.phase === "completed") setRemainingMs(0);
     if (next.phase === "completed" && previous.phase !== "completed") {
+      paceSamplesRef.current = appendPaceSample(paceSamplesRef.current, next, (next.endedAt! - next.startedAt!) / 1000);
+      setPaceSamples(paceSamplesRef.current);
       const nextResult = calculateResult(next);
       setResult(nextResult);
       if (!nextResult) { telemetry.error("scoring"); return; }
@@ -327,12 +344,14 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
       if (end === null) return;
       const left = Math.max(0, end - performance.now());
       setRemainingMs(left);
+      const elapsedWholeSeconds = Math.floor((durationSeconds * 1000 - left) / 1000);
+      if (elapsedWholeSeconds > 0) paceSamplesRef.current = appendPaceSample(paceSamplesRef.current, current, elapsedWholeSeconds);
       if (left <= 0) commit(completeSession(current, performance.now()));
     };
     updateCountdown();
     const interval = window.setInterval(updateCountdown, 100);
     return () => window.clearInterval(interval);
-  }, [session.phase, commit]);
+  }, [session.phase, commit, durationSeconds]);
 
   useEffect(() => {
     if (session.phase !== "running") return;
@@ -346,6 +365,8 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
   function prepareTest(isRetest = false) {
     if (isRetest) telemetry.event({ name: "result_retest", from_duration: durationSeconds, to_duration: durationSeconds });
     setResult(null);
+    paceSamplesRef.current = [];
+    setPaceSamples([]);
     setInputWarning("");
     setRemainingMs(durationSeconds * 1000);
     commit(createSession(crypto.randomUUID(), durationSeconds, choosePrompt(difficulty)));
@@ -490,7 +511,11 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
     ? "Type the passage. Backspace is available; paste is disabled."
     : "The timer starts with your first typed character. Type the passage to begin.";
   const countdownSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
-  const nextPromptIndex = alignTypingInput(session.prompt, session.typed).cursorIndex;
+  const { cursorIndex: nextPromptIndex, correctCharacters } = alignTypingInput(session.prompt, session.typed);
+  const elapsedMs = Math.max(0, durationSeconds * 1000 - remainingMs);
+  const liveWpm = session.phase === "completed"
+    ? result?.wpm ?? 0
+    : elapsedMs >= 1000 ? Math.round(correctCharacters * 12_000 / elapsedMs) : 0;
 
   return (
     <div className="test-shell" data-phase={session.phase} data-font-size={fontSize}>
@@ -545,7 +570,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           </div>
         ) : (
           <div className="test-toolbar-status">
-            <span className="test-toolbar-title"><span className="heavy">Typing</span>{" "}Test</span>
+            <span className="test-toolbar-title">Typing Test</span>
             <time
               className="test-page-countdown"
               role="timer"
@@ -554,9 +579,11 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
             >
               {formatCountdown(remainingMs)}
             </time>
+            <span className="test-toolbar-separator" aria-hidden="true">·</span>
+            <span className="test-page-wpm">{liveWpm} WPM</span>
           </div>
         )}
-        <div className="test-toolbar-actions">
+        {session.phase !== "completed" && <div className="test-toolbar-actions">
           <button
             type="button"
             className="test-feature-toggle typing-sound-toggle"
@@ -586,9 +613,10 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
             <KeyboardIcon enabled={fingerGuideEnabled} />
           </button>
           <button type="button" className="new-testing" onClick={() => prepareTest(session.phase === "completed")}>
-            <span aria-hidden="true">↻</span> New Testing
+            <ResetIcon />
+            <span>Reset</span>
           </button>
-        </div>
+        </div>}
       </div>
 
       {session.phase !== "completed" ? (
@@ -631,26 +659,31 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           <span className="eyebrow dark">TEST COMPLETE</span>
           <h2 id="empty-result-title" className="empty-result-heading">No score recorded.</h2>
           <p>You did not type during this attempt, so there is no WPM or accuracy to save. Start a fresh test when you are ready.</p>
-          <button type="button" className="button button-primary" onClick={() => prepareTest(true)}>RETEST {durationSeconds / 60} MIN <span aria-hidden="true">↗</span></button>
+          <button type="button" className="button button-primary reset-button" onClick={() => prepareTest(true)}>
+            <ResetIcon />
+            Reset
+          </button>
         </section>
       ) : result ? (
         <section className="result-card" aria-labelledby="result-title">
           <p className="sr-only" role="status">Test complete. Your result is {formatScore(result.wpm)} words per minute.</p>
-          <span className="eyebrow dark">YOUR RESULT</span>
+          <p className="result-context">{result.durationSeconds / 60}-minute test result</p>
           <div className="result-main">
-            <div><h2 id="result-title">{formatScore(result.wpm)}<span> WPM</span></h2><p>Correct words per minute</p></div>
-            <p className="result-summary">A snapshot of this attempt. Use the same duration when you compare your next test.</p>
+            <div className="result-primary"><h2 id="result-title">{formatScore(result.wpm)}<span> WPM</span></h2><p>Typing speed</p></div>
+            <div className="result-primary result-primary-accuracy"><strong>{formatScore(result.accuracy, "%")}</strong><p>Accuracy</p></div>
           </div>
           <div className="result-metrics">
-            <div><strong>{formatScore(result.accuracy, "%")}</strong><span>Accuracy</span></div>
             <div><strong>{formatScore(result.rawWpm)}</strong><span>Raw WPM</span></div>
             <div><strong>{result.errors}</strong><span>Errors</span></div>
-            <div><strong>{result.durationSeconds / 60} min</strong><span>Duration</span></div>
           </div>
-          <p className="benchmark-note">No public benchmark is included in this launch. <Link href="/average-wpm" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-wpm" })}>Learn what WPM measures</Link>.</p>
+          <ResultPaceChart samples={paceSamples} durationSeconds={result.durationSeconds} />
           <div className="result-actions">
-            <button type="button" className="button button-primary" onClick={() => prepareTest(true)}>RETEST {durationSeconds / 60} MIN <span aria-hidden="true">↗</span></button>
-            <Link className="button button-secondary" href="/average-typing-speed" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-typing-speed" })}>UNDERSTAND YOUR RESULT</Link>
+            <button type="button" className="button button-primary reset-button" onClick={() => prepareTest(true)}>
+              <ResetIcon />
+              Try again
+            </button>
+            <Link className="button button-secondary" href="/learn">Practice typing</Link>
+            <Link className="result-explainer" href="/average-wpm" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-wpm" })}>How scoring works</Link>
           </div>
         </section>
       ) : <p className="inline-warning" role="status">The result could not be calculated. Please start a new test.</p>}

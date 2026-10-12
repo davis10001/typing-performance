@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TypingLevel architecture concept</title>
+  <style>
+    @font-face{font-family:InterTight;src:url('../node_modules/@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2') format('woff2');font-weight:100 900;font-style:normal}
+    :root{--canvas:#9686df;--stage:#242424;--surface:#343434;--white:#fafafa;--signal:#5cf340;--lilac:#a999ee;--muted:#b9b9b9;--ink:#242424}
+    *{box-sizing:border-box}
+    body{margin:0;padding:28px;background:#dedbeb;font-family:InterTight,Arial,sans-serif;color:var(--white)}
+    .artboard{position:relative;margin:0 auto 32px;background:var(--canvas);overflow:hidden}
+    .desktop{width:1280px;padding:24px}
+    .mobile{width:390px;padding:10px}
+    .site{background:var(--stage);border-radius:24px;overflow:hidden}
+    .desktop .site{min-height:100%}
+    .bar{height:80px;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:0 46px;border-bottom:1px solid #424242}
+    .brand{display:flex;align-items:center;flex:none}
+    .brand img{width:164px;height:auto;display:block}
+    .nav{display:flex;align-items:center;gap:34px;white-space:nowrap;margin-left:auto}
+    .nav-item{color:#e4e4e4;font-size:15px;font-weight:700;position:relative}
+    .nav-item.active{color:var(--signal)}
+    .nav-item.soon{color:#e4e4e4}
+    .home-intro{display:flex;align-items:end;justify-content:space-between;gap:30px;padding:55px 50px 22px}
+    .kicker{font-size:11px;letter-spacing:.12em;font-weight:800;color:var(--signal)}
+    h1,h2,h3,p{margin-top:0}
+    .home-intro h1{font-size:58px;line-height:.95;letter-spacing:-.035em;font-weight:300;margin:14px 0 0}
+    .home-intro h1 strong{font-weight:900}
+    .home-intro p{font-size:17px;line-height:1.45;color:#d1d1d1;max-width:345px;margin:0 12px 4px 0}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;min-height:58px;margin:0 50px;background:var(--surface);border:1px solid #535353;border-radius:12px;padding:6px 12px;color:#c9c9c9}
+    .toolbar .group{display:flex;align-items:center;gap:3px;white-space:nowrap}
+    .toolbar .group + .group{border-left:1px solid #666;padding-left:13px}
+    .toolbar .icon{font-size:17px;color:#a9a9a9;margin-right:5px;min-width:22px;text-align:center}
+    .toolbar span.opt{padding:10px 8px;font-size:13px;font-weight:800;color:#c8c8c8}
+    .toolbar span.opt.selected{color:var(--signal)}
+    .toolbar .utility{margin-left:auto;font-size:13px;font-weight:800;color:#f4f4f4;white-space:nowrap}
+    .passage{padding:46px 51px 34px;min-height:285px}
+    .passage-text{font-family:SFMono-Regular,Consolas,monospace;font-size:30px;line-height:1.65;letter-spacing:.01em;color:#858585;max-width:1125px}
+    .passage-text .caret{color:var(--white);border-left:3px solid var(--signal);padding-left:1px}
+    .hint{display:flex;align-items:center;justify-content:space-between;padding:0 51px 35px;color:#a9a9a9;font-size:14px}
+    .hint strong{color:var(--signal);font-weight:800}
+    .guide{margin:0 50px 48px;padding:20px 28px 26px;border-top:1px solid #444;text-align:center}
+    .guide-title{font-size:13px;font-weight:700;color:#d2d2d2;margin-bottom:20px}
+    .guide-title strong{color:var(--signal)}
+    .keys{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .key-row{display:flex;gap:6px}
+    .key{display:grid;place-items:center;width:45px;height:36px;border:1px solid #575757;background:#303030;border-radius:5px;font-family:SFMono-Regular,Consolas,monospace;font-size:12px;color:#bdbdbd}
+    .key.hot{background:var(--signal);color:var(--ink);border-color:var(--signal);font-weight:900}
+    .key.space{width:280px}
+    .below{padding:44px 50px 58px;background:#f9f9f9;color:var(--ink)}
+    .below-head{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:28px}
+    .below h2{font-size:36px;letter-spacing:-.03em;line-height:1;margin:7px 0 0;font-weight:300}
+    .below h2 strong{font-weight:900}
+    .below-head p{max-width:370px;font-size:15px;color:#555;line-height:1.45;margin:0}
+    .section-label{font-size:11px;letter-spacing:.1em;font-weight:850;color:#555}
+    .stats-panel{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;background:#eee;border-radius:15px;padding:25px 30px}
+    .stats-panel h3{font-size:12px;letter-spacing:.04em;margin:0 0 16px;font-weight:900}
+    .stats-note{font-size:13px;color:#555;line-height:1.4;margin:0 0 15px}
+    .stats-chart{display:flex;flex-direction:column;gap:12px}
+    .chart-row{display:grid;grid-template-columns:46px 1fr 26px;align-items:center;gap:10px;font-size:12px;font-weight:900}
+    .chart-row .track{height:9px;border-radius:2px;background:#d4d4d4}
+    .chart-row em{font-style:normal;color:#777}
+    .stats-list{border-left:1px solid #c9c9c9;padding-left:28px}
+    .stats-list .table-head,.stats-list .table-row{display:grid;grid-template-columns:1.25fr .8fr .8fr .35fr;gap:8px;align-items:center}
+    .stats-list .table-head{font-size:10px;font-weight:850;color:#666;padding-bottom:10px}
+    .stats-list .table-row{font-size:13px;font-weight:850;padding:9px 0;border-top:1px solid #d0d0d0}
+    .stats-list .table-row span:not(:first-child){color:#777}
+    .faq{display:flex;gap:58px;padding-top:46px}
+    .faq h3{font-size:25px;line-height:1.1;width:190px;flex:none}
+    .faq-list{flex:1}
+    .faq-row{padding:16px 0;border-top:1px solid #c8c8c8;font-size:16px;font-weight:700;display:flex;justify-content:space-between}
+    .faq-row:last-child{border-bottom:1px solid #c8c8c8}
+    .footer{height:78px;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:0 50px;color:#b6b6b6;font-size:12px;font-weight:700}
+    .footer strong{color:#fff}
+    .footer span+span{margin-left:22px}
+
+    /* Existing explanation page: the content structure is kept; the global navigation changes. */
+    .article-hero{display:flex;justify-content:space-between;min-height:420px;padding:64px 52px 54px;gap:45px}
+    .article-hero h1{font-size:69px;line-height:.97;letter-spacing:-.035em;font-weight:300;margin:18px 0 24px}
+    .article-hero h1 strong{font-weight:900}
+    .article-hero p{font-size:19px;line-height:1.45;color:#d0d0d0;max-width:450px}
+    .article-hero .cta{display:inline-flex;background:var(--lilac);color:var(--ink);border-radius:999px;padding:15px 24px;font-weight:900;font-size:14px;margin-top:8px}
+    .article-hero .side{width:330px;align-self:center;background:#343434;border-radius:20px;padding:23px 24px;color:#eee}
+    .side .mini-label{font-size:11px;letter-spacing:.08em;color:#aaa;font-weight:800;margin-bottom:22px}
+    .side .minute{font-size:54px;font-weight:900;color:var(--signal);line-height:1}
+    .side p{font-size:14px;color:#d0d0d0;margin:9px 0 17px}
+    .side .go{background:var(--signal);color:var(--ink);border-radius:999px;padding:11px 15px;font-size:13px;font-weight:900;display:inline-block}
+    .article-body{background:#fafafa;color:var(--ink);padding:50px 52px 60px}
+    .article-row{display:grid;grid-template-columns:220px 1fr;gap:40px;border-top:1px solid #bbb;padding:34px 0}
+    .article-row .number{color:#555;font-size:13px;font-weight:850;letter-spacing:.06em}
+    .article-row h2{font-size:31px;line-height:1.05;margin:0 0 14px;font-weight:900}
+    .article-row p{max-width:620px;font-size:17px;line-height:1.5;color:#4e4e4e;margin:0}
+    .test-bottom{display:grid;grid-template-columns:1fr 1fr;gap:70px;background:#fafafa;color:var(--ink);padding:52px 52px 60px}
+    .test-bottom h2{font-size:37px;line-height:1.02;letter-spacing:-.025em;font-weight:300;margin:13px 0 18px}
+    .test-bottom h2 strong{font-weight:900}
+    .test-bottom p{font-size:16px;line-height:1.5;color:#505050;max-width:500px}
+    .test-bottom .text-links{display:flex;gap:24px;margin-top:25px;font-size:14px;font-weight:850;text-decoration:underline}
+    .test-bottom .faq-row{font-size:15px}
+
+    .mobile .site{border-radius:17px}
+    .mobile .bar{height:72px;display:flex;padding:0 18px;border-bottom:1px solid #474747;gap:13px}
+    .mobile .brand img{width:100px}
+    .mobile .nav{gap:11px}
+    .mobile .nav-item{font-size:11px}
+    .mobile .home-intro{display:block;padding:32px 20px 23px}
+    .mobile .home-intro h1{font-size:39px;margin:10px 0 13px}
+    .mobile .home-intro p{font-size:14px;line-height:1.38;margin:0;max-width:300px}
+    .mobile .toolbar{display:block;margin:0 16px;padding:4px 8px}
+    .mobile .toolbar .group{min-height:40px;justify-content:space-between}
+    .mobile .toolbar .group + .group{border-left:0;border-top:1px solid #5e5e5e;padding-left:0}
+    .mobile .toolbar .icon{font-size:14px;min-width:18px;margin:0}
+    .mobile .toolbar span.opt{font-size:11px;padding:8px 5px}
+    .mobile .toolbar .utility{display:none}
+    .mobile .passage{padding:29px 20px 10px;min-height:242px}
+    .mobile .passage-text{font-size:24px;line-height:1.56;letter-spacing:0}
+    .mobile .hint{display:block;padding:0 20px 25px;font-size:13px;line-height:1.45}
+    .mobile .guide{display:none}
+    .mobile .guide-title{font-size:12px;margin-bottom:15px}
+    .mobile .key-row{gap:3px}
+    .mobile .key{width:28px;height:29px;font-size:9px;border-radius:4px}
+    .mobile .key.space{width:175px}
+    .mobile .below{padding:28px 19px 35px}
+    .mobile .below-head{display:block;margin-bottom:22px}
+    .mobile .below h2{font-size:30px;margin:8px 0 10px}
+    .mobile .below-head p{font-size:13px}
+    .mobile .stats-panel{display:block;padding:19px}
+    .mobile .stats-list{border-left:0;border-top:1px solid #c9c9c9;padding:18px 0 0;margin-top:18px}
+    .mobile .faq{display:block;padding-top:35px}
+    .mobile .faq h3{font-size:23px;width:auto;margin-bottom:14px}
+    .mobile .faq-row{font-size:14px;padding:14px 0}
+    .mobile .footer{display:block;height:auto;padding:23px 20px;font-size:11px;line-height:1.6}
+    .mobile .footer span+span{margin-left:10px}
+  </style>
+</head>
+<body>
+  <section id="home-desktop" class="artboard desktop" aria-label="Desktop home concept">
+    <div class="site">
+      <header class="bar">
+        <div class="brand"><img src="../public/images/typing-level-logo.png" alt="TypingLevel"></div>
+        <nav class="nav" aria-label="Main navigation"><span class="nav-item active">Test</span><span class="nav-item">Lessons</span><span class="nav-item">Race</span><span class="nav-item">FAQ</span></nav>
+      </header>
+      <div class="home-intro"><div><span class="kicker">TEST / UNDERSTAND / IMPROVE</span><h1>START <strong>TYPING.</strong></h1></div><p>See your speed and accuracy in one minute. No account, no setup. Just begin with the text below.</p></div>
+      <div class="toolbar"><div class="group"><span class="icon">◷</span><span class="opt selected">1 MIN</span><span class="opt">2 MIN</span><span class="opt">3 MIN</span><span class="opt">5 MIN</span><span class="opt">10 MIN</span></div><div class="group"><span class="icon">☷</span><span class="opt">Easy</span><span class="opt selected">Standard</span><span class="opt">Advanced</span></div><div class="group"><span class="icon">Aa</span><span class="opt selected">M</span><span class="opt">L</span></div><span class="utility">♫ &nbsp;⌨ &nbsp;↻</span></div>
+      <div class="passage"><div class="passage-text"><span class="caret">T</span>he market opens before most of the neighborhood is awake. Vendors lift wooden shutters, arrange their produce, and write prices on small cards. A customer asks which apples will keep through the week. The seller picks a few from a crate and explains how to store them.</div></div>
+      <div class="hint"><span><strong>Start typing</strong> to begin the timer. Backspace works as usual.</span><span>01:00 &nbsp; READY</span></div>
+      <div class="guide"><div class="guide-title">Finger guide &nbsp;·&nbsp; next key <strong>T</strong></div><div class="keys"><div class="key-row"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span><span class="key hot">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span><span class="key">O</span><span class="key">P</span></div><div class="key-row"><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key">L</span></div><div class="key-row"><span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span><span class="key">B</span><span class="key">N</span><span class="key">M</span></div><div class="key-row"><span class="key space"></span></div></div></div>
+      <div class="below"><div class="below-head"><div><span class="section-label">PERFORMANCE SNAPSHOT</span><h2>PACE BY <strong>DURATION.</strong></h2></div><p>Your average and median correct WPM across recent completed tests in this browser.</p></div><div class="stats-panel"><div><h3>PACE PROFILE &nbsp; / &nbsp; CORRECT WPM</h3><p class="stats-note">No completed tests in this browser yet. Your chart will fill in after a test.</p><div class="stats-chart"><div class="chart-row"><span>1 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>2 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>3 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>5 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>10 MIN</span><i class="track"></i><em>—</em></div></div></div><div class="stats-list"><h3>SESSION DETAIL &nbsp; / &nbsp; LOCAL RECENT 20</h3><div class="table-head"><span>TEST</span><span>AVG</span><span>MEDIAN</span><span>N</span></div><div class="table-row"><span>1 MIN</span><span>—</span><span>—</span><span>0</span></div><div class="table-row"><span>2 MIN</span><span>—</span><span>—</span><span>0</span></div><div class="table-row"><span>3 MIN</span><span>—</span><span>—</span><span>0</span></div><div class="table-row"><span>5 MIN</span><span>—</span><span>—</span><span>0</span></div><div class="table-row"><span>10 MIN</span><span>—</span><span>—</span><span>0</span></div></div></div><div class="faq"><h3>GOOD TO<br>KNOW.</h3><div class="faq-list"><div class="faq-row"><span>When does the timer start?</span><span>＋</span></div><div class="faq-row"><span>How is WPM calculated?</span><span>＋</span></div><div class="faq-row"><span>Can I try a different duration?</span><span>＋</span></div></div></div></div>
+      <footer class="footer"><strong>TYPINGLEVEL / TEST. UNDERSTAND. RETEST.</strong><div><span>WPM EXPLAINED</span><span>TYPING SPEED</span><span>PRIVACY</span></div></footer>
+    </div>
+  </section>
+  <section id="home-mobile" class="artboard mobile" aria-label="Mobile home concept">
+    <div class="site">
+      <header class="bar"><div class="brand"><img src="../public/images/typing-level-logo.png" alt="TypingLevel"></div><nav class="nav" aria-label="Main navigation"><span class="nav-item active">Test</span><span class="nav-item">Lessons</span><span class="nav-item">Race</span><span class="nav-item">FAQ</span></nav></header>
+      <div class="home-intro"><span class="kicker">TEST / UNDERSTAND / IMPROVE</span><h1>START <strong>TYPING.</strong></h1><p>See your speed and accuracy in one minute. No account needed.</p></div>
+      <div class="toolbar"><div class="group"><span class="icon">◷</span><span class="opt selected">1 MIN</span><span class="opt">2 MIN</span><span class="opt">3 MIN</span><span class="opt">5 MIN</span><span class="opt">10 MIN</span></div><div class="group"><span class="icon">☷</span><span class="opt">Easy</span><span class="opt selected">Standard</span><span class="opt">Advanced</span><span class="opt">Aa</span></div></div>
+      <div class="passage"><div class="passage-text"><span class="caret">T</span>he market opens before most of the neighborhood is awake. Vendors lift wooden shutters, arrange their produce, and write prices on small cards.</div></div>
+      <div class="hint"><strong>Tap here, then type.</strong> The timer starts with your first character.</div>
+      <div class="guide"><div class="guide-title">Finger guide &nbsp;·&nbsp; next key <strong>T</strong></div><div class="keys"><div class="key-row"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span><span class="key hot">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span><span class="key">O</span><span class="key">P</span></div><div class="key-row"><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key">L</span></div><div class="key-row"><span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span><span class="key">B</span><span class="key">N</span><span class="key">M</span></div><div class="key-row"><span class="key space"></span></div></div></div>
+      <div class="below"><div class="below-head"><span class="section-label">PERFORMANCE SNAPSHOT</span><h2>PACE BY <strong>DURATION.</strong></h2><p>Your completed results stay in this browser.</p></div><div class="stats-panel"><div><h3>PACE PROFILE &nbsp; / &nbsp; CORRECT WPM</h3><p class="stats-note">No completed tests yet. Your chart will fill in after a test.</p><div class="stats-chart"><div class="chart-row"><span>1 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>2 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>3 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>5 MIN</span><i class="track"></i><em>—</em></div><div class="chart-row"><span>10 MIN</span><i class="track"></i><em>—</em></div></div></div><div class="stats-list"><h3>SESSION DETAIL</h3><div class="table-head"><span>TEST</span><span>AVG</span><span>MEDIAN</span><span>N</span></div><div class="table-row"><span>1 MIN</span><span>—</span><span>—</span><span>0</span></div><div class="table-row"><span>2 MIN</span><span>—</span><span>—</span><span>0</span></div></div></div><div class="faq"><h3>GOOD TO KNOW.</h3><div class="faq-list"><div class="faq-row"><span>When does the timer start?</span><span>＋</span></div><div class="faq-row"><span>How is WPM calculated?</span><span>＋</span></div></div></div></div>
+      <footer class="footer"><strong>TYPINGLEVEL</strong><div><span>WPM</span><span>SPEED</span><span>PRIVACY</span></div></footer>
+    </div>
+  </section>
+  <section id="test-desktop" class="artboard desktop" aria-label="One minute test page with shared navigation">
+    <div class="site">
+      <header class="bar"><div class="brand"><img src="../public/images/typing-level-logo.png" alt="TypingLevel"></div><nav class="nav" aria-label="Main navigation"><span class="nav-item active">Test</span><span class="nav-item">Lessons</span><span class="nav-item">Race</span><span class="nav-item">FAQ</span></nav></header>
+      <div class="home-intro"><div><span class="kicker">TIMED TEST / 01</span><h1>1 MINUTE <strong>TYPING TEST.</strong></h1></div><p>A quick check of your current pace. Type the passage below to begin.</p></div>
+      <div class="toolbar"><div class="group"><span class="icon">◷</span><span class="opt selected">1 MIN</span><span class="opt">2 MIN</span><span class="opt">3 MIN</span><span class="opt">5 MIN</span><span class="opt">10 MIN</span></div><div class="group"><span class="icon">☷</span><span class="opt">Easy</span><span class="opt selected">Standard</span><span class="opt">Advanced</span></div><div class="group"><span class="icon">Aa</span><span class="opt selected">M</span><span class="opt">L</span></div><span class="utility">♫ &nbsp;⌨ &nbsp;↻</span></div>
+      <div class="passage"><div class="passage-text"><span class="caret">T</span>he market opens before most of the neighborhood is awake. Vendors lift wooden shutters, arrange their produce, and write prices on small cards. A customer asks which apples will keep through the week. The seller picks a few from a crate and explains how to store them.</div></div>
+      <div class="hint"><span><strong>Start typing</strong> to begin the timer. Backspace works as usual.</span><span>01:00 &nbsp; READY</span></div>
+      <div class="guide"><div class="guide-title">Finger guide &nbsp;·&nbsp; next key <strong>T</strong></div><div class="keys"><div class="key-row"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span><span class="key hot">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span><span class="key">O</span><span class="key">P</span></div><div class="key-row"><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key">L</span></div><div class="key-row"><span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span><span class="key">B</span><span class="key">N</span><span class="key">M</span></div><div class="key-row"><span class="key space"></span></div></div></div>
+      <div class="test-bottom"><div><span class="section-label">ABOUT THIS TEST</span><h2>MEASURE WITH<br><strong>CONTEXT.</strong></h2><p>Use the same duration for repeat attempts. A short test can vary, so look at more than a single result.</p><div class="text-links"><span>How WPM works ↗</span><span>Understand typing speed ↗</span></div></div><div><span class="section-label">SHORT ANSWERS</span><h2>GOOD TO <strong>KNOW.</strong></h2><div class="faq-row"><span>Is a one-minute result reliable?</span><span>＋</span></div><div class="faq-row"><span>Can I retake the test?</span><span>＋</span></div></div></div>
+      <footer class="footer"><strong>TYPINGLEVEL / TEST. UNDERSTAND. RETEST.</strong><div><span>WPM EXPLAINED</span><span>TYPING SPEED</span><span>PRIVACY</span></div></footer>
+    </div>
+  </section>
+  <section id="info-desktop" class="artboard desktop" aria-label="Existing explanation page with new navigation">
+    <div class="site">
+      <header class="bar"><div class="brand"><img src="../public/images/typing-level-logo.png" alt="TypingLevel"></div><nav class="nav" aria-label="Main navigation"><span class="nav-item">Test</span><span class="nav-item">Lessons</span><span class="nav-item">Race</span><span class="nav-item">FAQ</span></nav></header>
+      <div class="article-hero"><div><span class="kicker">WPM / EXPLAINED</span><h1>WHAT IS<br><strong>AVERAGE WPM?</strong></h1><p>Words per minute describes typing speed. Read your score beside accuracy, then compare tests taken under the same conditions.</p><span class="cta">TEST YOUR WPM &nbsp; ↗</span></div></div>
+      <div class="article-body"><div class="article-row"><div class="number">01 / THE MEASURE</div><div><h2>ONE WORD = FIVE CHARACTERS.</h2><p>Typing tests normally turn characters into a standard word unit: five characters equal one word for the calculation. Correct WPM uses correctly typed characters; raw WPM uses all entered characters.</p></div></div><div class="article-row"><div class="number">02 / THE CONTEXT</div><div><h2>ACCURACY CHANGES THE STORY.</h2><p>A faster raw pace can come with more mistakes. Read WPM beside accuracy, and compare attempts taken at the same duration.</p></div></div></div>
+      <footer class="footer"><strong>TYPINGLEVEL / TEST. UNDERSTAND. RETEST.</strong><div><span>THE TEST</span><span>TYPING SPEED</span><span>PRIVACY</span></div></footer>
+    </div>
+  </section>
+</body>
+</html>

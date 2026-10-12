@@ -1,0 +1,26 @@
+# TypingLevel
+
+> TypingLevel is a free browser-based typing test and touch-typing practice site. It measures WPM, raw WPM, accuracy, and mistakes without requiring an account.
+
+## Start here
+
+- [Free typing test](https://how-type.com/): Take a one-minute test immediately or choose another duration.
+- [1 minute typing test](https://how-type.com/1-minute-typing-test): A quick, repeatable WPM and accuracy check.
+- [3 minute typing test](https://how-type.com/3-minute-typing-test): A longer test for a steadier view of typing pace.
+- [5 minute typing test](https://how-type.com/5-minute-typing-test): Measure sustained typing speed and accuracy.
+- [Learn touch typing](https://how-type.com/learn): Choose continuous practice or a fixed 15-lesson course.
+
+## Explanations
+
+- [Average WPM](https://how-type.com/average-wpm): How words per minute is calculated and why accuracy matters.
+- [Average typing speed](https://how-type.com/average-typing-speed): A sourced typing-speed benchmark and guidance for fair comparisons.
+- [Typing FAQ](https://how-type.com/faq): Answers about WPM, accuracy, mistakes, backspaces, and test duration.
+
+## Data and access
+
+- No account is required.
+- Completed results and learning progress stay in the user's browser.
+- Typed passages and individual keystrokes are not uploaded by the application.
+- [Privacy notice](https://how-type.com/privacy)
+- [XML sitemap](https://how-type.com/sitemap.xml)
+- [Full agent-readable overview](https://how-type.com/llms-full.txt)

@@ -2,9 +2,9 @@
 
 ## UXF-01 · UJ-01 快速测试
 
-`Landing → 选择/确认时长 → Ready → 3-2-1 Countdown → Running → time up → Result`。
+`Home 直接进入 Ready → 可选时长/难度 → 输入首字符开始 Running → time up → Result → 同页 Recent results`。
 
-Ready 点击 Start 后才请求输入焦点；倒计时结束自动聚焦输入。Running 期间 Backspace 可用；粘贴/拖放显示一次简短、非阻塞提示“Paste isn't available in a typing test.”；到时自动冻结并进入 Result。
+Ready 时输入区可直接获得焦点；首字符启动计时。Running 期间 Backspace 可用；粘贴/拖放显示一次简短、非阻塞提示“Paste isn't available in a typing test.”；到时自动冻结并进入 Result。
 
 ## UXF-02 · UJ-02 结果理解
 

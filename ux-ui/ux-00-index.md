@@ -29,3 +29,7 @@
 ## 07 无障碍与验收
 
 列出键盘、读屏、响应式和交付验收准则。详见：[ux-07-accessibility-and-validation.md](./ux-07-accessibility-and-validation.md)。
+
+## 08 学习体验
+
+Learn 中 Guided 与 Courses 并列；当前先实施来源和数据基础，页面后续接入原核心。详见：[ux-08-learning.md](./ux-08-learning.md)。

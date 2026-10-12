@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ResetIcon from "@/components/ResetIcon";
 import type { LearningCourse } from "@/lib/learning/course-content";
 import { englishQwertyCourse } from "@/lib/learning/course-content";
 import { CourseInputSession } from "@/lib/learning/course-input";
@@ -23,7 +24,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
   const sessionRef = useRef(new CourseInputSession(lesson.text));
   const startedAt = useRef<number | null>(null);
   const elapsed = useRef(0);
-  const [state, setState] = useState<CourseState>(() => createCourseState(first, "beginner"));
+  const [state, setState] = useState<CourseState>(() => createCourseState(first, "advanced"));
   const [actual, setActual] = useState("");
   const [completion, setCompletion] = useState<CourseCompletion | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       const stored = loadLearning(localStorage, courseLearningScope, courseStateSchema);
-      if (stored.status === "ready") setState(stored.state);
+      if (stored.status === "ready") setState({ ...stored.state, learner: "advanced" });
       else if (stored.status === "invalid" || stored.status === "incompatible") setMessage("Saved course progress is not compatible with this course version.");
       else if (stored.status === "unavailable") setMessage("Progress could not be read or saved in this browser.");
     });
@@ -64,7 +65,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
     };
     let localCompletion: CourseCompletion;
     try {
-      localCompletion = completeCourseAttempt(englishQwertyCourse, state, attempt);
+      localCompletion = completeCourseAttempt(englishQwertyCourse, { ...state, learner: "advanced" }, attempt);
     } catch (error) {
       setMessage(error instanceof Error && error.message.startsWith("Locked lesson") ? "This beginner lesson is still locked. Complete the previous lesson first." : "This lesson could not be completed.");
       return;
@@ -77,31 +78,28 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
       storage: localStorage,
       scope: courseLearningScope,
       stateSchema: courseStateSchema,
-      initialState: () => createCourseState(first, state.learner),
-      update: (fresh) => completeCourseAttempt(englishQwertyCourse, fresh, attempt).state,
+      initialState: () => createCourseState(first, "advanced"),
+      update: (fresh) => completeCourseAttempt(englishQwertyCourse, { ...fresh, learner: "advanced" }, attempt).state,
       locks,
     }).then((saved) => {
       if (saved.status !== "saved") setMessage(saved.status === "conflict" ? "Progress changed in another tab. Reload before continuing." : "The result is shown, but progress could not be saved.");
     });
   };
 
-  const unlockedIndex = englishQwertyCourse.lessons.findIndex(({ id }) => id === state.lastUnlockedLessonId);
-  const locked = state.learner === "beginner" && lessonIndex > unlockedIndex;
-
   return (
     <main className="learning-page learning-practice-page">
       <header className="learning-toolbar">
         <div>
-          <span className="eyebrow">LESSON {String(lessonIndex + 1).padStart(2, "0")} OF {englishQwertyCourse.lessons.length}</span>
           <h1>{lesson.title}</h1>
-          <span>New keys {lesson.newCharacters}</span>
+          <span>Lesson {String(lessonIndex + 1).padStart(2, "0")} of {englishQwertyCourse.lessons.length} · New keys {lesson.newCharacters}</span>
         </div>
-        <button className="learning-toolbar-action" type="button" onClick={reset}>↻ Restart lesson</button>
+        <button className="learning-toolbar-action" type="button" onClick={reset}>
+          <ResetIcon />
+          <span>Reset</span>
+        </button>
       </header>
       {message && <p className="learning-message" role="status">{message}</p>}
-      {locked ? (
-        <section className="learning-result-card"><h1>Lesson locked.</h1><p>Complete the previous lesson or choose Experienced access on the course page.</p><Link className="button button-primary" href="/learn/courses">View courses</Link></section>
-      ) : completion ? (
+      {completion ? (
         <section className="learning-result-card" aria-labelledby="course-result-title">
           <span className="eyebrow dark">LESSON COMPLETE</span>
           <h1 id="course-result-title">{completion.result.passed ? "Lesson passed." : "Practice it again."}</h1>
@@ -111,12 +109,16 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
           </div>
           <div className="learning-result-actions">
             {completion.nextLessonId && <Link className="button button-primary" href={`/learn/courses/${completion.nextLessonId}`}>Next lesson <span>↗</span></Link>}
-            <button className="button button-secondary" type="button" onClick={reset}>Repeat lesson</button>
-            <Link className="text-button" href="/learn/courses">All lessons</Link>
+            <button className="button button-secondary reset-button" type="button" onClick={reset}>
+              <ResetIcon />
+              Reset
+            </button>
+            <Link className="text-button" href="/learn#courses">All lessons</Link>
           </div>
         </section>
       ) : (
         <LearningPracticeSurface
+          key={lesson.id}
           text={lesson.text}
           actual={actual}
           position={[...actual].length}

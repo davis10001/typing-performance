@@ -1,11 +1,18 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("Learn presents two independent learning paths", async ({ page }) => {
+test("Learn opens directly on continuous practice, then courses and guidance", async ({ page }) => {
   await page.goto("/learn");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Choose how you");
-  await expect(page.getByRole("link", { name: /Continue practice/ })).toHaveAttribute("href", "/learn/practice");
-  await expect(page.getByRole("link", { name: /View 15 lessons/ })).toHaveAttribute("href", "/learn/courses");
+  await expect(page.getByText("Loading the Keybr learning model…")).toBeHidden({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Learn touch typing");
+  await expect(page.getByRole("heading", { name: /^Focus / })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reset" })).toBeVisible();
+  expect(await page.locator(".learning-toolbar").evaluate((element) => element.getBoundingClientRect().height)).toBe(56);
+  await expect(page.locator(".course-card")).toHaveCount(15);
+  await expect(page.locator(".course-card--next")).toHaveCount(1);
+  await expect(page.locator(".course-card--not-started")).toHaveCount(14);
+  await expect(page.locator(".course-card").nth(14).getByRole("link")).toHaveAttribute("href", "/learn/courses/caps1");
+  await expect(page.getByRole("heading", { name: "Two ways to learn touch typing." })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
@@ -37,12 +44,14 @@ test("continuous practice completes once and saves a Keybr result", async ({ pag
   expect(saved.state.results).toHaveLength(1);
 });
 
-test("fixed courses preserve KTouch correction and beginner locking", async ({ page }) => {
-  await page.goto("/learn/courses");
+test("fixed courses are freely selectable and preserve KTouch correction", async ({ page }) => {
+  await page.goto("/learn");
   await expect(page.locator(".course-card")).toHaveCount(15);
-  await expect(page.locator(".course-card").nth(0).getByRole("link", { name: /Start lesson/ })).toBeVisible();
-  await expect(page.locator(".course-card").nth(1)).toHaveClass(/is-locked/);
-  await page.locator(".course-card").nth(0).getByRole("link", { name: /Start lesson/ }).click();
+  await expect(page.locator(".course-card").nth(1)).not.toHaveClass(/is-locked/);
+  await page.locator(".course-card").nth(1).getByRole("link").click();
+  await expect(page).toHaveURL(/\/learn\/courses\/kd1$/);
+  await expect(page.getByRole("button", { name: "Reset" })).toBeVisible();
+  expect(await page.locator(".learning-toolbar").evaluate((element) => element.getBoundingClientRect().height)).toBe(56);
   const input = page.getByRole("textbox", { name: "Type the learning exercise here" });
   const expected = await page.locator(".learning-passage .typed-current").textContent();
   const wrong = expected === "x" ? "z" : "x";
@@ -58,7 +67,33 @@ test("fixed courses preserve KTouch correction and beginner locking", async ({ p
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test("a passed beginner course unlocks exactly the next lesson", async ({ page }, testInfo) => {
+test("learning text advances by line without a manually scrollable passage", async ({ page }) => {
+  await page.goto("/learn/courses/kd1");
+  const passage = page.locator(".learning-passage");
+  const input = page.getByRole("textbox", { name: "Type the learning exercise here" });
+  const prompt = await passage.textContent();
+  expect(prompt?.length).toBeGreaterThan(160);
+  await expect(passage).toHaveCSS("overflow", "hidden");
+  await expect(passage).toHaveAttribute("data-window-start", "0");
+
+  const prefix = prompt!.slice(0, 180).split("\n");
+  for (let index = 0; index < prefix.length; index += 1) {
+    await input.pressSequentially(prefix[index]);
+    if (index < prefix.length - 1) await input.press("Enter");
+  }
+
+  await expect.poll(async () => Number(await passage.getAttribute("data-window-start"))).toBeGreaterThan(0);
+  const currentIsVisible = await passage.evaluate((element) => {
+    const current = element.querySelector<HTMLElement>(".typed-current");
+    if (!current) return false;
+    const passageBounds = element.getBoundingClientRect();
+    const currentBounds = current.getBoundingClientRect();
+    return currentBounds.top >= passageBounds.top && currentBounds.bottom <= passageBounds.bottom;
+  });
+  expect(currentIsVisible).toBe(true);
+});
+
+test("a passed course is marked complete while every lesson stays available", async ({ page }, testInfo) => {
   test.setTimeout(60_000);
   test.skip(testInfo.project.name !== "desktop", "Long end-to-end completion is covered once on desktop.");
   await page.goto("/learn/courses/jf1");
@@ -72,10 +107,14 @@ test("a passed beginner course unlocks exactly the next lesson", async ({ page }
     if (index < lines.length - 1) await page.keyboard.press("Enter");
   }
   await expect(page.getByRole("heading", { name: "Lesson passed." })).toBeVisible();
+  await expect(page.locator(".learning-result-actions").getByRole("button", { name: "Reset" })).toBeVisible();
   await expect.poll(async () => page.evaluate(() => localStorage.getItem("typing-performance:learning:v1:course"))).not.toBeNull();
   await page.goto("/learn/courses");
-  await expect(page.locator(".course-card").nth(1)).not.toHaveClass(/is-locked/);
-  await expect(page.locator(".course-card").nth(2)).toHaveClass(/is-locked/);
+  await expect(page.locator(".course-card").nth(0)).toHaveClass(/course-card--completed/);
+  await expect(page.locator(".course-card").nth(0)).toContainText("Practice again");
+  await expect(page.locator(".course-card").nth(1)).toHaveClass(/course-card--next/);
+  await expect(page.locator(".course-card").nth(1).getByRole("link")).toBeVisible();
+  await expect(page.locator(".course-card").nth(14).getByRole("link")).toBeVisible();
 });
 
 test("learning reset preserves typing-test history", async ({ page }) => {

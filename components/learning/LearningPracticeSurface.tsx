@@ -1,7 +1,7 @@
 "use client";
 
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Props = {
   text: string;
@@ -27,11 +27,43 @@ export default function LearningPracticeSurface({
   label,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const passageRef = useRef<HTMLDivElement>(null);
+  const startHistoryRef = useRef([0]);
+  const [windowStart, setWindowStart] = useState(0);
   useEffect(() => { inputRef.current?.focus(); }, [text]);
 
   const chars = [...text];
   const typed = actual == null ? null : [...actual];
   const nextCharacter = chars[position] ?? null;
+  const visibleCharacters = chars.slice(windowStart);
+
+  useLayoutEffect(() => {
+    if (position < windowStart) {
+      const previousStart = startHistoryRef.current.findLast((candidate) => candidate <= position) ?? 0;
+      startHistoryRef.current = startHistoryRef.current.filter((candidate) => candidate <= previousStart);
+      setWindowStart(previousStart);
+      return;
+    }
+
+    const passage = passageRef.current;
+    const current = passage?.querySelector<HTMLElement>(`[data-learning-index="${position}"]`);
+    if (!passage || !current) return;
+
+    const characters = Array.from(passage.querySelectorAll<HTMLElement>("[data-learning-index]"));
+    const lineTops = [...new Set(characters.map((character) => character.offsetTop))];
+    const currentLine = lineTops.indexOf(current.offsetTop);
+    const lineHeight = Number.parseFloat(getComputedStyle(passage).lineHeight);
+    const visibleLines = Math.max(1, Math.floor(passage.clientHeight / lineHeight));
+    if (currentLine < visibleLines) return;
+
+    const nextTop = lineTops[currentLine - visibleLines + 1];
+    const nextLineStart = characters.find((character) => character.offsetTop === nextTop);
+    const nextStart = Number(nextLineStart?.dataset.learningIndex);
+    if (!Number.isFinite(nextStart) || nextStart <= windowStart) return;
+
+    startHistoryRef.current = [...startHistoryRef.current, nextStart];
+    setWindowStart(nextStart);
+  }, [position, windowStart, visibleCharacters]);
 
   return (
     <section
@@ -39,13 +71,14 @@ export default function LearningPracticeSurface({
       onClick={() => inputRef.current?.focus()}
       aria-label={label}
     >
-      <div className="learning-passage" aria-hidden="true">
-        {chars.map((character, index) => {
+      <div ref={passageRef} className="learning-passage" data-window-start={windowStart} aria-hidden="true">
+        {visibleCharacters.map((character, relativeIndex) => {
+          const index = windowStart + relativeIndex;
           let className = "learning-char";
           if (index < position) {
             className += typed && typed[index] !== character ? " typed-error" : " typed-correct";
           } else if (index === position) className += " typed-current";
-          return <span className={className} key={index}>{character}</span>;
+          return <span className={className} data-learning-index={index} key={index}>{character}</span>;
         })}
       </div>
       <textarea

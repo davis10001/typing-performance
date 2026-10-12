@@ -15,3 +15,16 @@ This glossary deliberately contains business terms only; implementation lives in
 | Verified Certificate | A future P1 credential whose result and integrity rules are explicitly checked | A normal P0 test result |
 
 Rules: a completed Test Session produces at most one Test Result; an Abandoned Session produces none. A Benchmark Band may describe a Test Result but never makes it verified or percentile-ranked.
+
+## Learning V1 (2026-10-11)
+
+| Term | Canonical meaning | Not the same as |
+|---|---|---|
+| Learn | The section containing Continuous practice and Courses | A timed-test difficulty setting |
+| Continuous practice | Keybr Guided learning under a pinned source version | A mandatory letters-to-sentences curriculum |
+| Course / Lesson | A sourced ordered course / one of its lessons | Arbitrarily generated replacement teaching content |
+| Learning Attempt | One practice attempt evaluated by its source engine | A Test Session or a test-history result |
+| Guided Progress | Source-engine state and valid key statistics | A statistical confidence interval or course completion |
+| Course Progress | Completion of identified, versioned lessons | Automatic Guided mastery credit |
+
+Learning modes have separate progress and retain their own assessment rules. Teaching rules must be traceable to the pinned source; only evidence-backed defect corrections may deviate. See PRD 10.

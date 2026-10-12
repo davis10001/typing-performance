@@ -6,64 +6,73 @@ import { englishQwertyCourse } from "@/lib/learning/course-content";
 import { evaluateCourseAttempt } from "@/lib/learning/course-engine";
 import { createCourseState, courseStateSchema, type CourseState } from "@/lib/learning/course-state";
 import { courseLearningScope } from "@/lib/learning/scopes";
-import { loadLearning, saveLearning } from "@/lib/learning/repository";
+import { loadLearning } from "@/lib/learning/repository";
 
-export default function CourseCatalog() {
+type CourseCatalogProps = { embedded?: boolean };
+
+export default function CourseCatalog({ embedded = false }: CourseCatalogProps) {
   const first = englishQwertyCourse.lessons[0].id;
-  const [state, setState] = useState<CourseState>(() => createCourseState(first, "beginner"));
+  const [state, setState] = useState<CourseState>(() => createCourseState(first, "advanced"));
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       const stored = loadLearning(localStorage, courseLearningScope, courseStateSchema);
-      if (stored.status === "ready") setState(stored.state);
+      if (stored.status === "ready") setState({ ...stored.state, learner: "advanced" });
       else if (stored.status === "invalid" || stored.status === "incompatible") setMessage("Saved course progress belongs to another version or is damaged. It was kept unchanged.");
       else if (stored.status === "unavailable") setMessage("Progress could not be read or saved in this browser.");
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const chooseLearner = (learner: CourseState["learner"]) => {
-    const current = loadLearning(localStorage, courseLearningScope, courseStateSchema);
-    if (current.status === "invalid" || current.status === "incompatible") {
-      setMessage("Reset the incompatible saved progress before changing learner type.");
-      return;
-    }
-    const next = { ...(current.status === "ready" ? current.state : createCourseState(first, learner)), learner };
-    const saved = saveLearning(localStorage, courseLearningScope, courseStateSchema, next, current.status === "ready" ? current.token : null);
-    setState(next);
-    setMessage(saved.status === "saved" ? null : "Learner type changed for this visit, but could not be saved.");
-  };
-
-  const unlockedIndex = englishQwertyCourse.lessons.findIndex(({ id }) => id === state.lastUnlockedLessonId);
   const completed = new Set(state.attempts.filter((attempt) => evaluateCourseAttempt(attempt).passed).map(({ lessonId }) => lessonId));
+  const nextLessonId = englishQwertyCourse.lessons.find(({ id }) => !completed.has(id))?.id;
+  const CardHeading = embedded ? "h3" : "h2";
+  const heading = embedded ? (
+    <header className="learning-section-heading">
+      <div>
+        <h2 id="courses-title">Choose a fixed lesson.</h2>
+        <p>Fifteen English QWERTY lessons introduce letter keys in a set order. Every lesson is available, so you can start where the keyboard still feels unfamiliar.</p>
+      </div>
+      <p className="learning-section-note">Each lesson keeps the reviewed KTouch text and pass targets. Courses cover letters and capitals, not numbers or punctuation.</p>
+    </header>
+  ) : (
+    <header className="learning-hero">
+      <h1 id="courses-title">Choose a lesson<br /><strong>and start anywhere.</strong></h1>
+      <p>Follow the reviewed 15-lesson KTouch English QWERTY sequence. Every lesson is open for practice; completed lessons stay marked in this browser.</p>
+      {message && <p className="learning-message" role="status">{message}</p>}
+    </header>
+  );
 
-  return (
-    <main className="learning-page course-page">
-      <section className="learning-hero">
-        <span className="eyebrow">FIXED COURSES · 15 LESSONS</span>
-        <h1>Build the keyboard<br /><strong>two keys at a time.</strong></h1>
-        <p>This is the reviewed KTouch English QWERTY sequence. It teaches letters and capitals; it does not claim to cover numbers or punctuation.</p>
-        <div className="learner-toggle" role="group" aria-label="Course access mode">
-          <button type="button" aria-pressed={state.learner === "beginner"} onClick={() => chooseLearner("beginner")}>Beginner · unlock in order</button>
-          <button type="button" aria-pressed={state.learner === "advanced"} onClick={() => chooseLearner("advanced")}>Experienced · all lessons</button>
-        </div>
-        {message && <p className="learning-message" role="status">{message}</p>}
-      </section>
+  const content = (
+    <>
+      {heading}
+      {embedded && message && <p className="learning-message" role="status">{message}</p>}
       <ol className="course-grid">
         {englishQwertyCourse.lessons.map((lesson, index) => {
-          const unlocked = state.learner === "advanced" || index <= unlockedIndex;
+          const status = completed.has(lesson.id) ? "completed" : lesson.id === nextLessonId ? "next" : "not-started";
+          const titleKeys = lesson.title.split(" and ");
           return (
-            <li className={`course-card ${unlocked ? "" : "is-locked"}`} key={lesson.id}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <h2>{lesson.title}</h2>
-              <p>New keys <strong>{lesson.newCharacters}</strong></p>
-              <p>{completed.has(lesson.id) ? "Completed" : unlocked ? "Ready" : "Locked"}</p>
-              {unlocked ? <Link href={`/learn/courses/${lesson.id}`}>{completed.has(lesson.id) ? "Practice again" : "Start lesson"} ↗</Link> : <span aria-label="Lesson locked">Complete the previous lesson</span>}
+            <li className={`course-card course-card--${status}`} key={lesson.id}>
+              <div className="course-card-meta">
+                <span className="course-card-number">LESSON {String(index + 1).padStart(2, "0")}</span>
+                <span className="course-card-state">{status === "completed" ? "Completed" : status === "next" ? "Up next" : "Not started"}</span>
+              </div>
+              <div className="course-card-body">
+                <CardHeading>{titleKeys.length === 2 ? <>{titleKeys[0]} <span className="course-card-conjunction">and</span> {titleKeys[1]}</> : lesson.title}</CardHeading>
+                <p className="course-card-keys">New keys <span className="course-card-keyset" title={lesson.newCharacters}>{lesson.newCharacters.length > 8 ? <kbd>A–Z</kbd> : [...lesson.newCharacters].map((character) => <kbd key={character}>{character}</kbd>)}</span></p>
+              </div>
+              <Link className="course-card-action" href={`/learn/courses/${lesson.id}`} aria-label={`${status === "completed" ? "Practice again" : "Start lesson"}: ${lesson.title}`}>
+                {status === "completed" ? "Practice again" : "Start lesson"}
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M4 16 16 4M7 4h9v9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </Link>
             </li>
           );
         })}
       </ol>
-    </main>
+    </>
   );
+
+  if (embedded) return <section className="learning-courses" id="courses" aria-labelledby="courses-title">{content}</section>;
+  return <main className="learning-page course-page">{content}</main>;
 }

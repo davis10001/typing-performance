@@ -28,7 +28,7 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(footerNavigation.getByRole("link", { name: "PRIVACY" })).toHaveAttribute("href", "/privacy");
   await expect(footerNavigation.getByRole("link", { name: "START A TEST" })).toBeHidden();
   await expect(footerNavigation.getByRole("link", { name: "WPM EXPLAINED" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("START TYPING.");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Free typing test");
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
   await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
@@ -228,6 +228,39 @@ test("typing text size changes only the passage and persists", async ({ page }) 
   await expect(passage).toHaveCSS("font-size", compact ? "22px" : "26px");
 });
 
+test("the running test shows correct WPM beside the timer", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/");
+  await expect(page.locator(".test-page-wpm")).toHaveCount(0);
+  const opening = (await page.locator(".typing-passage").textContent())!.slice(0, 10);
+  await page.getByRole("textbox", { name: "Type the passage here" }).pressSequentially(opening);
+  const currentWpm = async () => Number((await page.locator(".test-page-wpm").textContent())?.split(" ")[0]);
+  await expect.poll(currentWpm).toBeGreaterThan(0);
+  const initialWpm = await currentWpm();
+  await page.clock.fastForward(5_000);
+  await expect.poll(currentWpm).toBeLessThan(initialWpm);
+  await page.getByRole("button", { name: "Reset" }).click();
+  await expect(page.locator(".test-page-wpm")).toHaveCount(0);
+});
+
+test("the result chart tracks pace during one test", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/");
+  const opening = (await page.locator(".typing-passage").textContent())!.slice(0, 12);
+  const input = page.getByRole("textbox", { name: "Type the passage here" });
+  await input.pressSequentially(opening.slice(0, 6));
+  await page.clock.fastForward(1_100);
+  await input.pressSequentially(opening.slice(6));
+  await page.clock.fastForward(1_100);
+  await page.clock.fastForward(60_100);
+  await expect(page.getByRole("figure", { name: "Your pace during this test" })).toBeVisible();
+  const line = await page.locator(".result-pace-correct").getAttribute("d");
+  expect((line?.match(/ L /g) ?? []).length).toBeGreaterThan(2);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.locator(".result-card").getByRole("button", { name: "Try again" }).click();
+  await expect(page.locator(".result-pace")).toHaveCount(0);
+});
+
 for (const duration of durations) {
   test(`${duration.seconds / 60}-minute test completes, saves locally, and retests`, async ({ page }) => {
     await page.clock.install();
@@ -267,12 +300,13 @@ for (const duration of durations) {
     await page.clock.fastForward(duration.seconds * 1000 + 100);
     await expect(page.getByRole("timer")).toHaveText("00:00");
     await expect(page.getByRole("heading", { name: /wpm/i })).toBeVisible();
+    await expect(page.getByRole("figure", { name: "Your pace during this test" })).toBeVisible();
     await expect(input).toHaveCount(0);
     await expect(page.locator(".history-section")).toHaveCount(0);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("typing-performance:results:v1") ?? "[]"));
     expect(saved).toHaveLength(1);
     expect(saved[0].durationSeconds).toBe(duration.seconds);
-    await page.getByRole("button", { name: new RegExp(`RETEST ${duration.seconds / 60} MIN`) }).click();
+    await page.locator(".result-card").getByRole("button", { name: "Try again" }).click();
     await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
     await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
   });
@@ -291,7 +325,7 @@ test("reload and retest present different opening text", async ({ page }) => {
 
   await page.getByRole("textbox", { name: "Type the passage here" }).pressSequentially("x");
   await page.clock.fastForward(60_100);
-  await page.getByRole("button", { name: "RETEST 1 MIN" }).click();
+  await page.locator(".result-card").getByRole("button", { name: "Try again" }).click();
   const third = await page.locator(".typing-passage").textContent();
   expect(third).not.toBe(second);
 });
@@ -311,12 +345,12 @@ test("changing duration keeps the current passage and guide state", async ({ pag
   await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
 });
 
-test("difficulty and New Testing change text, then the toolbar switches when typing starts", async ({ page }) => {
+test("difficulty and Reset change text, then the toolbar switches when typing starts", async ({ page }) => {
   await page.clock.install();
   await page.goto("/1-minute-typing-test");
   const standard = page.getByRole("button", { name: "Standard", exact: true });
   const advanced = page.getByRole("button", { name: "Advanced", exact: true });
-  const newTesting = page.getByRole("button", { name: "New Testing" });
+  const reset = page.getByRole("button", { name: "Reset" });
   await expect(standard).toHaveAttribute("aria-pressed", "true");
   await standard.focus();
   await expect(page.locator(".typed-current")).toHaveCount(1);
@@ -326,24 +360,24 @@ test("difficulty and New Testing change text, then the toolbar switches when typ
   await expect(advanced).toHaveAttribute("aria-pressed", "true");
   const firstAdvanced = await page.locator(".typing-passage").textContent();
   expect(firstAdvanced).not.toBe(standardText);
-  await newTesting.click();
+  await reset.click();
   const secondAdvanced = await page.locator(".typing-passage").textContent();
   expect(secondAdvanced).not.toBe(firstAdvanced);
   await expect(advanced).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("textbox", { name: "Type the passage here" }).pressSequentially("x");
   await expect(advanced).toHaveCount(0);
-  await expect(newTesting).toBeVisible();
+  await expect(reset).toBeVisible();
   await expect(page.getByRole("timer")).toBeVisible();
-  await newTesting.click();
+  await reset.click();
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
   await expect(advanced).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("timer")).toHaveCount(0);
   await page.getByRole("textbox", { name: "Type the passage here" }).pressSequentially("x");
   await page.clock.fastForward(60_100);
-  await page.getByRole("button", { name: "RETEST 1 MIN" }).click();
+  await page.locator(".result-card").getByRole("button", { name: "Try again" }).click();
   await expect(advanced).toHaveAttribute("aria-pressed", "true");
-  await expect(newTesting).toBeEnabled();
+  await expect(reset).toBeEnabled();
 
   await page.reload();
   await expect(advanced).toHaveAttribute("aria-pressed", "true");
@@ -443,13 +477,13 @@ test("finger guide starts collapsed on a compact viewport", async ({ page }) => 
   await expect(page.locator(".keyboard-guide-visual")).toHaveCount(0);
 });
 
-test("New Testing restores first-key start without keeping old text", async ({ page }) => {
+test("Reset restores first-key start without keeping old text", async ({ page }) => {
   await page.goto("/2-minute-typing-test");
   const input = page.getByRole("textbox", { name: "Type the passage here" });
   const previousText = await page.locator(".typing-passage").textContent();
   await input.pressSequentially("a");
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "running");
-  await page.getByRole("button", { name: "New Testing" }).click();
+  await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
   await expect(page.getByRole("timer")).toHaveCount(0);
   expect(await page.locator(".typing-passage").textContent()).not.toBe(previousText);
@@ -684,6 +718,6 @@ test("local storage write failure leaves result and retest usable", async ({ pag
   await expect(page.getByRole("heading", { name: /wpm/i })).toBeVisible();
   await expect(page.getByText("Recent results could not be saved in this browser.", { exact: false })).toBeVisible();
   await expect(page.locator(".history-section")).toHaveCount(0);
-  await page.getByRole("button", { name: "RETEST 1 MIN" }).click();
+  await page.locator(".result-card").getByRole("button", { name: "Try again" }).click();
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
 });

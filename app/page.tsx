@@ -1,24 +1,38 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import JsonLd from "@/components/seo/JsonLd";
 import TestShell from "@/components/typing/TestShell";
 import { testTexts } from "@/lib/content/test-texts";
+import { buildPageMetadata, siteUrl } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Typing Test — measure your speed and accuracy",
-  description: "Start a free typing test right away. Choose a duration, type the passage, and see your WPM and accuracy. No account needed.",
-  alternates: { canonical: "/" },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Free Typing Test: Check Your WPM & Accuracy",
+  description: "Take a free typing test and see your WPM, accuracy, and mistakes immediately. Choose a 1, 2, 3, 5, or 10 minute test. No account needed.",
+  path: "/",
+});
 
 export default function HomePage() {
+  const applicationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": `${siteUrl}/#typing-test-app`,
+    name: "TypingLevel",
+    url: siteUrl,
+    description: "A free browser-based typing test that measures WPM, raw WPM, accuracy, and mistakes without requiring an account.",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: ["Timed typing tests", "WPM and accuracy results", "Browser-local result history", "Guided typing practice"],
+  };
+
   return (
     <main className="home-page">
+      <JsonLd data={applicationJsonLd} />
       <section className="home-hero" aria-labelledby="home-title">
-        <div className="home-hero-copy">
-          <h1 id="home-title">START <strong>TYPING.</strong></h1>
-        </div>
-        <p>See your speed and accuracy in one minute. No account, no setup. Just begin with the text below.</p>
-        <Image className="hero-typing-art" src="/images/typing-hands-hero-cutout.png" alt="Illustration of hands typing on floating keys" width={1672} height={941} fetchPriority="high" unoptimized />
+        <h1 className="sr-only" id="home-title">Free typing test</h1>
+        <p>See your speed and accuracy in one minute. No account, no setup.</p>
       </section>
 
       <TestShell

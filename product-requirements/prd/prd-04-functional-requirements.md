@@ -13,3 +13,5 @@
 | FR-09 匿名分析 | UJ-01–05 | 关键动作发生 | 发送最小化的 view/start/complete/retest/history-clear/benchmark-click 事件；不发送测试文本或逐击键内容 |
 
 FR-01–09 都属于 P0。P1 的 Certificate、KPH、Weak-key 需求在功能进入范围时另行编号，避免把未设计功能伪装成 P0 承诺。
+
+2026-10-11 新增 Learning V1：FR-L01–12 已在 [PRD 10](./prd-10-learning.md) 完整定义，分别覆盖两个入口、原 Guided 规则、原固定课程、输入、结果、本机恢复、清除、开源交付与版本。此扩展独立于 FR-01–09，不改变测速计分口径。

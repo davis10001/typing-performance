@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import ResetIcon from "@/components/ResetIcon";
 import { loadEnglishGuidedLesson, createGuidedRound, type GuidedRound } from "@/lib/learning/guided-engine";
 import { GuidedInputSession } from "@/lib/learning/guided-input";
 import { createGuidedState, guidedStateSchema, recordGuidedResult, restoreGuidedResults, type GuidedState } from "@/lib/learning/guided-state";
@@ -13,12 +14,13 @@ import type { Result } from "@keybr/result";
 import LearningPracticeSurface from "./LearningPracticeSurface";
 
 type Completion = { result: Result; saved: boolean };
+type GuidedPracticeProps = { embedded?: boolean };
 
 function attemptId() {
   return globalThis.crypto?.randomUUID?.() ?? `guided-${Date.now()}-${Math.random()}`;
 }
 
-export default function GuidedPractice() {
+export default function GuidedPractice({ embedded = false }: GuidedPracticeProps) {
   const [lesson, setLesson] = useState<GuidedLesson | null>(null);
   const [history, setHistory] = useState<GuidedState>(createGuidedState);
   const [round, setRound] = useState<GuidedRound | null>(null);
@@ -109,23 +111,27 @@ export default function GuidedPractice() {
     });
   }, [completion, history]);
 
-  if (!round || !lesson) return <section className="learning-loading" aria-live="polite">Loading the Keybr learning model…{message && <p>{message}</p>}</section>;
+  if (!round || !lesson) return <section className={`learning-loading ${embedded ? "is-embedded" : ""}`} aria-live="polite">Loading the Keybr learning model…{message && <p>{message}</p>}</section>;
 
-  return (
-    <main className="learning-page learning-practice-page">
+  const Heading = embedded ? "h2" : "h1";
+  const ResultHeading = embedded ? "h2" : "h1";
+  const content = (
+    <>
       <header className="learning-toolbar">
         <div>
-          <span className="eyebrow">CONTINUOUS PRACTICE</span>
-          <h1>Focus {round.focusCharacter?.toUpperCase() ?? "review"}</h1>
+          <Heading id="guided-practice-title">Focus {round.focusCharacter?.toUpperCase() ?? "review"}</Heading>
           <span>{round.availableCharacters.map((item) => item.toUpperCase()).join(" · ")}</span>
         </div>
-        <button className="learning-toolbar-action" type="button" onClick={resetCurrent}>↻ New practice</button>
+        <button className="learning-toolbar-action" type="button" onClick={resetCurrent}>
+          <ResetIcon />
+          <span>Reset</span>
+        </button>
       </header>
       {message && <p className="learning-message" role="status">{message}</p>}
       {completion ? (
         <section className="learning-result-card" aria-labelledby="guided-result-title">
           <span className="eyebrow dark">ROUND COMPLETE</span>
-          <h1 id="guided-result-title">Keep the rhythm.</h1>
+          <ResultHeading id="guided-result-title">Keep the rhythm.</ResultHeading>
           <div className="learning-result-metrics">
             <p><strong>{Math.round(completion.result.speed)}</strong><span>CPM</span></p>
             <p><strong>{Math.round(completion.result.accuracy * 100)}%</strong><span>accuracy</span></p>
@@ -134,11 +140,12 @@ export default function GuidedPractice() {
           <p>{completion.saved ? "Progress saved in this browser." : "This result is available now; saved status is shown above."}</p>
           <div className="learning-result-actions">
             <button className="button button-primary" type="button" onClick={() => startRound(lesson, history)}>Continue practice <span>↗</span></button>
-            <Link className="button button-secondary" href="/learn">Back to Learn</Link>
+            {embedded ? <a className="text-button" href="#courses">Browse fixed lessons</a> : <Link className="button button-secondary" href="/learn">Back to Learn</Link>}
           </div>
         </section>
       ) : (
         <LearningPracticeSurface
+          key={round.text}
           text={round.text}
           position={position}
           status={feedback}
@@ -154,6 +161,9 @@ export default function GuidedPractice() {
           onBlur={() => { if (position > 0) resetCurrent(); }}
         />
       )}
-    </main>
+    </>
   );
+
+  if (embedded) return <section className="learning-practice-page learning-practice-block" aria-labelledby="guided-practice-title">{content}</section>;
+  return <main className="learning-page learning-practice-page">{content}</main>;
 }

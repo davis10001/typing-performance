@@ -33,3 +33,7 @@
 ## 08 延期决策与开放问题
 
 隔离不影响 P0 的未来选择和发布前配置问题。详见：[arch-08-open-questions-and-deferred-decisions.md](./arch-08-open-questions-and-deferred-decisions.md)。
+
+## 09 学习模块接入
+
+Learning V1 已进入当前实施范围；FR-L01–12 由独立学习适配层、原算法/课程与本机进度承载。详见：[arch-09-learning.md](./arch-09-learning.md)。

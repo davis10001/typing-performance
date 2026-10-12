@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import ClearLocalResults from "@/components/privacy/ClearLocalResults";
 import ClearLearningProgress from "@/components/privacy/ClearLearningProgress";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy — TypingLevel",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Privacy",
   description: "How TypingLevel handles typing tests, local results, and site requests.",
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

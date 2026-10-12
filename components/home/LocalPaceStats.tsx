@@ -19,15 +19,20 @@ export default function LocalPaceStats() {
   const [clearError, setClearError] = useState(false);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
+    const refreshHistory = () => {
       try {
         setHistory(loadHistory(window.localStorage));
       } catch {
         setStorageUnavailable(true);
       }
       setLoaded(true);
-    });
-    return () => window.cancelAnimationFrame(frame);
+    };
+    const frame = window.requestAnimationFrame(refreshHistory);
+    window.addEventListener("typing-level:history-updated", refreshHistory);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("typing-level:history-updated", refreshHistory);
+    };
   }, []);
 
   const rows = summarizeWpmByDuration(history);
@@ -53,7 +58,7 @@ export default function LocalPaceStats() {
       <div className="home-stats-heading">
         <div className="home-stats-intro">
           <span className="eyebrow dark">PERFORMANCE SNAPSHOT</span>
-          <h3 id="home-stats-title">PACE BY DURATION.</h3>
+          <h2 id="home-stats-title">PACE BY DURATION.</h2>
           <p>Your average and median correct WPM across your most recent 20 completed tests in this browser.</p>
         </div>
       </div>

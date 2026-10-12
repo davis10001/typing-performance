@@ -29,3 +29,7 @@ Local History 1 ── * Test Result summary
 ## 映射
 
 UJ-01 主要使用 Configuration、Session、Text、Result；UJ-02 使用 Result、Benchmark、Interpretation；UJ-03/05 使用 Local History。FR-02–04 承载 Session/Result，FR-05 承载 Benchmark/Interpretation，FR-07 承载 Local History。
+
+## Learning V1 扩展
+
+Learning Attempt 是一次学习练习，不是 Test Session。Guided Progress 保存 Keybr 原规则所需的有效统计；Course Progress 保存某一来源/版本课程的完成状态。Course 和 Lesson 分别代表有序课程与具体课次；二者都有来源版本和内容版本。某课通过不自动意味着 Guided 解锁。详细生命周期见 [PRD 10](./prd-10-learning.md)。
