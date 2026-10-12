@@ -396,7 +396,7 @@ body:has(.home-page, .test-page) .site-footer .footer-action { display: none; }
 .keyboard-guide-heading h2 { flex: none; margin: 0; color: var(--tp-text-on-dark); font-size: 14px; font-weight: 800; line-height: 1.2; letter-spacing: 0; }
 .keyboard-guide-heading p { min-width: 0; margin: 0; color: var(--tp-text-muted-on-dark); font-size: 14px; font-weight: 600; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .keyboard-guide-heading strong { display: inline-block; min-width: 3ch; color: var(--tp-signal); font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 16px; font-weight: 800; text-align: center; }
-.keyboard-guide-visual { position: relative; width: min(100%, 820px); height: clamp(230px, 34cqw, 280px); margin: 14px auto 0; overflow: hidden; isolation: isolate; }
+.keyboard-guide-visual { position: relative; width: min(100%, 820px); height: clamp(300px, 44cqw, 360px); margin: 14px auto 0; overflow: hidden; isolation: isolate; }
 .virtual-keyboard { position: relative; z-index: 1; display: flex; flex-direction: column; gap: clamp(3px, 0.6cqw, 6px); width: 100%; }
 .virtual-keyboard-row { display: flex; justify-content: center; gap: clamp(3px, 0.6cqw, 6px); width: 100%; }
 .virtual-keyboard-row.row-5 { width: 46%; margin-inline: auto; }
@@ -405,19 +405,19 @@ body:has(.home-page, .test-page) .site-footer .footer-action { display: none; }
 .virtual-key.is-stage-key { border-color: color-mix(in oklch, var(--tp-lilac-control) 58%, transparent); background: color-mix(in oklch, var(--tp-lilac-control) 22%, transparent); color: var(--tp-lilac-control); font-size: 13px; font-weight: 900; }
 .virtual-key.is-active { border-color: var(--tp-signal); background: var(--tp-signal); color: var(--tp-ink); box-shadow: inset 0 -3px 0 oklch(0.55 0.16 145); transform: translateY(-2px); }
 .keyboard-hands { position: absolute; z-index: 3; inset: 0; overflow: hidden; pointer-events: none; }
-.photo-hand { --accent-start: 52%; --accent-end: 78%; position: absolute; top: 13%; display: block; width: 38%; aspect-ratio: 0.6; pointer-events: none; transform: translate3d(var(--hand-reach-x), var(--hand-reach-y), 0) rotate(var(--hand-rotation)); transform-origin: 50% 78%; transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
-.photo-hand-left { left: 12%; }
-.photo-hand-right { right: 12%; }
+.photo-hand { --highlight-start: 55%; --highlight-end: 73%; --highlight-top: 0%; --highlight-bottom: 58%; position: absolute; top: 10%; display: block; width: 32%; aspect-ratio: 0.6; pointer-events: none; transform: translate3d(var(--hand-reach-x), var(--hand-reach-y), 0) rotate(var(--hand-rotation)); transform-origin: 50% 78%; transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+.photo-hand-left { left: 16%; }
+.photo-hand-right { right: 16%; }
 .photo-hand-sprite { position: absolute; inset: 0; display: block; background-image: url("/typing-guide/hand-poses-outline-v2.png"); background-repeat: no-repeat; background-size: 500% 100%; }
 .photo-hand-sprite-base { filter: invert(1) grayscale(1) brightness(1.7); opacity: 0.48; }
-.photo-hand-sprite-accent { clip-path: inset(0 calc(100% - var(--accent-end)) 0 var(--accent-start)); filter: brightness(0) saturate(100%) invert(85%) sepia(54%) saturate(1275%) hue-rotate(68deg) brightness(104%) contrast(105%); opacity: 0.95; }
+.photo-hand-sprite-accent { clip-path: inset(var(--highlight-top) calc(100% - var(--highlight-end)) calc(100% - var(--highlight-bottom)) var(--highlight-start)); filter: brightness(0) saturate(100%) invert(85%) sepia(54%) saturate(1275%) hue-rotate(68deg) brightness(104%) contrast(105%); opacity: 1; }
 .photo-hand-right .photo-hand-sprite { transform: scaleX(-1); }
 .photo-hand.is-resting .photo-hand-sprite-base { opacity: 0.4; }
-.hand-pose-pinky { --accent-start: 0%; --accent-end: 28%; }
-.hand-pose-ring { --accent-start: 22%; --accent-end: 47%; }
-.hand-pose-middle { --accent-start: 39%; --accent-end: 64%; }
-.hand-pose-index { --accent-start: 53%; --accent-end: 80%; }
-.hand-pose-thumb { --accent-start: 67%; --accent-end: 100%; }
+.hand-pose-pinky { --highlight-start: 2%; --highlight-end: 22%; --highlight-top: 7%; --highlight-bottom: 58%; }
+.hand-pose-ring { --highlight-start: 42%; --highlight-end: 60%; --highlight-top: 2%; --highlight-bottom: 58%; }
+.hand-pose-middle { --highlight-start: 36%; --highlight-end: 56%; --highlight-top: 0%; --highlight-bottom: 58%; }
+.hand-pose-index { --highlight-start: 53%; --highlight-end: 71%; --highlight-top: 5%; --highlight-bottom: 60%; }
+.hand-pose-thumb { --highlight-start: 73%; --highlight-end: 100%; --highlight-top: 27%; --highlight-bottom: 72%; }
 .hand-pose-pinky .photo-hand-sprite { background-position: 0% 0; }
 .hand-pose-ring .photo-hand-sprite { background-position: 25% 0; }
 .hand-pose-middle .photo-hand-sprite { background-position: 50% 0; }
@@ -622,10 +622,10 @@ body:has(.home-page, .test-page) .site-footer .footer-action { display: none; }
   .test-shell[data-font-size="large"] .typing-passage { font-size: 30px; }
   .keyboard-guide-heading { align-items: center; flex-direction: column; gap: 3px; }
   .keyboard-guide-heading p { max-width: min(64vw, 52ch); }
-  .keyboard-guide-visual { height: clamp(206px, 60cqw, 232px); margin-top: 12px; }
-  .photo-hand { top: 12%; width: 39%; }
-  .photo-hand-left { left: 9%; }
-  .photo-hand-right { right: 9%; }
+  .keyboard-guide-visual { height: clamp(250px, 72cqw, 300px); margin-top: 12px; }
+  .photo-hand { top: 10%; width: 36%; }
+  .photo-hand-left { left: 10%; }
+  .photo-hand-right { right: 10%; }
   .result-main { gap: 14px; }
   .result-main h2 { font-size: clamp(40px, 10vw, 78px); }
   .result-primary-accuracy strong { font-size: clamp(37px, 9vw, 72px); }

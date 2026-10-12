@@ -481,10 +481,14 @@ test("finger guide follows the next character and remembers its toggle", async (
   expect(keyboardBefore).not.toBeNull();
   expect(leftHandBefore).not.toBeNull();
   expect(rightHandBefore).not.toBeNull();
-  expect(leftHandBefore!.width / keyboardBefore!.width).toBeGreaterThanOrEqual(0.37);
-  expect(leftHandBefore!.width / keyboardBefore!.width).toBeLessThanOrEqual(0.45);
-  expect(rightHandBefore!.width / keyboardBefore!.width).toBeGreaterThanOrEqual(0.37);
-  expect(rightHandBefore!.width / keyboardBefore!.width).toBeLessThanOrEqual(0.45);
+  const handWidthUpperBound = page.viewportSize()!.width <= 680 ? 0.4 : 0.36;
+  expect(leftHandBefore!.width / keyboardBefore!.width).toBeGreaterThanOrEqual(0.31);
+  expect(leftHandBefore!.width / keyboardBefore!.width).toBeLessThanOrEqual(handWidthUpperBound);
+  expect(rightHandBefore!.width / keyboardBefore!.width).toBeGreaterThanOrEqual(0.31);
+  expect(rightHandBefore!.width / keyboardBefore!.width).toBeLessThanOrEqual(handWidthUpperBound);
+
+  const fingerHighlights = await page.locator(".photo-hand-sprite-accent").evaluateAll((highlights) => highlights.map((highlight) => getComputedStyle(highlight).clipPath));
+  fingerHighlights.forEach((clipPath) => expect(clipPath).not.toBe("none"));
 
   await input.pressSequentially("A");
   await expect(page.locator(".keyboard-guide-visual")).toHaveAttribute("data-hand-state", "target");
@@ -628,6 +632,13 @@ test("primary route has no horizontal overflow or blocking accessibility violati
       handTopGap: guideVisual && handBounds.length > 0
         ? Math.min(...handBounds.map((bounds) => bounds.top)) - guideVisual.getBoundingClientRect().top
         : null,
+      handVisibleFraction: guideVisual && handBounds.length > 0
+        ? Math.min(...handBounds.map((bounds) => {
+          const visualBounds = guideVisual.getBoundingClientRect();
+          const visibleHeight = Math.max(0, Math.min(bounds.bottom, visualBounds.bottom) - Math.max(bounds.top, visualBounds.top));
+          return visibleHeight / bounds.height;
+        }))
+        : null,
       handsLayerBottomGap: guideVisual
         ? guideVisual.getBoundingClientRect().bottom
           - document.querySelector<HTMLElement>(".keyboard-hands")!.getBoundingClientRect().bottom
@@ -663,6 +674,7 @@ test("primary route has no horizontal overflow or blocking accessibility violati
   expect(alignment.statusRemoved).toBe(true);
   expect(alignment.instructionsAreScreenReaderOnly).toBe(true);
   if (alignment.handTopGap !== null) expect(alignment.handTopGap).toBeGreaterThanOrEqual(0);
+  if (alignment.handVisibleFraction !== null) expect(alignment.handVisibleFraction).toBeGreaterThanOrEqual(0.7);
   if (alignment.handsLayerBottomGap !== null) expect(Math.abs(alignment.handsLayerBottomGap)).toBeLessThanOrEqual(1);
   if (alignment.handsLayerOverflow !== null) expect(alignment.handsLayerOverflow).toBe("hidden");
   await expect(page.getByRole("button", { name: "START TYPING TEST" })).toHaveCount(0);
