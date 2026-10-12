@@ -1,6 +1,7 @@
 "use client";
 
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
+import { useTypingSound } from "@/components/typing/useTypingSound";
 import { alignTypingInput } from "@/lib/typing-engine/alignment";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
@@ -11,11 +12,9 @@ type Props = {
   onCharacter: (character: string, timeStamp: number) => void;
   onBackspace: (word: boolean, timeStamp: number) => void;
   onBlur?: () => void;
-  blurBehavior?: "reset" | "pause";
   status?: "idle" | "error";
   label: string;
   highlightCharacters?: readonly string[];
-  showOnlyHighlightedCharacters?: boolean;
 };
 
 export default function LearningPracticeSurface({
@@ -25,16 +24,15 @@ export default function LearningPracticeSurface({
   onCharacter,
   onBackspace,
   onBlur,
-  blurBehavior = "reset",
   status = "idle",
   label,
   highlightCharacters,
-  showOnlyHighlightedCharacters,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const passageRef = useRef<HTMLDivElement>(null);
   const startHistoryRef = useRef([0]);
   const [windowStart, setWindowStart] = useState(0);
+  const { play: playTypingClick } = useTypingSound();
   useEffect(() => { inputRef.current?.focus(); }, [text]);
 
   const chars = [...text];
@@ -106,20 +104,20 @@ export default function LearningPracticeSurface({
           if (event.key === "Backspace") {
             event.preventDefault();
             onBackspace(event.ctrlKey, event.timeStamp);
+            playTypingClick(true);
             return;
           }
           const character = event.key === "Enter" ? "\n" : event.key;
           if ([...character].length === 1 || character === "\n") {
             event.preventDefault();
             onCharacter(character, event.timeStamp);
+            playTypingClick();
           }
         }}
       />
-      <p className="learning-focus-note">Type to begin. Pasting is disabled. Leaving the exercise {blurBehavior === "reset" ? "resets an unfinished round" : "pauses the lesson timer"}.</p>
       <KeyboardGuide
         nextCharacter={nextCharacter}
         highlightCharacters={highlightCharacters}
-        showOnlyHighlightedCharacters={showOnlyHighlightedCharacters}
       />
     </section>
   );

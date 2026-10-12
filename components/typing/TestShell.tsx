@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import ResetIcon from "@/components/ResetIcon";
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
 import ResultPaceChart, { type PaceSample, type TimedError } from "@/components/typing/ResultPaceChart";
+import { useTypingSound } from "@/components/typing/useTypingSound";
 import { composeTestPrompt, nextTextIndex, type Difficulty, type PromptText } from "@/lib/content/prompt-selection";
 import { durationOptions, type TestPageSlug } from "@/lib/content/test-pages";
 import { saveHistory } from "@/lib/history/repository";
@@ -26,7 +27,6 @@ type Props = {
 type TypingFontSize = "small" | "medium" | "large";
 
 const fingerGuideStorageKey = "typing-level:finger-guide:v1";
-const typingSoundStorageKey = "typing-level:typing-sound:v1";
 const recentTextsStorageKey = "typing-level:recent-texts:v1";
 const difficultyStorageKey = "typing-level:difficulty:v1";
 const fontSizeStorageKey = "typing-level:font-size:v1";
@@ -190,9 +190,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
   const [storageWarning, setStorageWarning] = useState(false);
   const [inputWarning, setInputWarning] = useState("");
   const [fingerGuideEnabled, setFingerGuideEnabled] = useState(true);
-  const [typingSoundEnabled, setTypingSoundEnabled] = useState(true);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const clickBufferRef = useRef<AudioBuffer | null>(null);
+  const { enabled: typingSoundEnabled, play: playTypingClick, toggle: toggleTypingSound } = useTypingSound();
 
   const choosePrompt = useCallback((level: Difficulty) => {
     const options = texts.filter((item) => item.difficulty === level);
@@ -284,21 +282,6 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
       }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      try {
-        setTypingSoundEnabled(window.localStorage.getItem(typingSoundStorageKey) !== "off");
-      } catch {
-        // Sound remains available when storage is unavailable.
-      }
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      if (audioContextRef.current) void audioContextRef.current.close();
-      audioContextRef.current = null;
-    };
   }, []);
 
   useEffect(() => {
@@ -434,18 +417,6 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
     });
   }
 
-  function toggleTypingSound() {
-    setTypingSoundEnabled((enabled) => {
-      const next = !enabled;
-      try {
-        window.localStorage.setItem(typingSoundStorageKey, next ? "on" : "off");
-      } catch {
-        // The sound control still works for this visit when storage is unavailable.
-      }
-      return next;
-    });
-  }
-
   function restoreTypingFocus() {
     window.requestAnimationFrame(() => {
       const input = inputRef.current;
@@ -453,39 +424,6 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
       input.focus();
       input.setSelectionRange(input.value.length, input.value.length);
     });
-  }
-
-  function playTypingClick(backspace = false) {
-    if (!typingSoundEnabled || !window.AudioContext) return;
-    try {
-      const audio = audioContextRef.current ?? new window.AudioContext();
-      audioContextRef.current = audio;
-      if (audio.state === "suspended") void audio.resume();
-      if (!clickBufferRef.current) {
-        const length = Math.ceil(audio.sampleRate * 0.035);
-        const buffer = audio.createBuffer(1, length, audio.sampleRate);
-        const samples = buffer.getChannelData(0);
-        for (let index = 0; index < length; index += 1) {
-          samples[index] = (Math.random() * 2 - 1) * Math.pow(1 - index / length, 1.5);
-        }
-        clickBufferRef.current = buffer;
-      }
-      const source = audio.createBufferSource();
-      const tone = audio.createBiquadFilter();
-      const volume = audio.createGain();
-      const now = audio.currentTime;
-      source.buffer = clickBufferRef.current;
-      source.playbackRate.value = (backspace ? 0.77 : 0.95) + Math.random() * 0.12;
-      tone.type = "bandpass";
-      tone.frequency.value = backspace ? 1150 : 1850;
-      tone.Q.value = 0.7;
-      volume.gain.setValueAtTime(0.22, now);
-      volume.gain.exponentialRampToValueAtTime(0.004, now + 0.032);
-      source.connect(tone).connect(volume).connect(audio.destination);
-      source.start(now);
-    } catch {
-      // Audio is optional; typing must work even when the browser blocks it.
-    }
   }
 
   function onInput(value: string) {

@@ -1,5 +1,46 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function installAudioContextSpy(page: Page) {
+  await page.addInitScript(() => {
+    class FakeAudioContext {
+      sampleRate = 48_000;
+      currentTime = 0;
+      state = "running";
+      destination = {};
+
+      createBuffer(_channels: number, length: number) {
+        const samples = new Float32Array(length);
+        return { getChannelData: () => samples };
+      }
+
+      createBufferSource() {
+        return {
+          buffer: null,
+          playbackRate: { value: 1 },
+          connect: <T>(node: T) => node,
+          start: () => sessionStorage.setItem("typing-sound-starts", String(Number(sessionStorage.getItem("typing-sound-starts") ?? "0") + 1)),
+        };
+      }
+
+      createBiquadFilter() {
+        return { type: "bandpass", frequency: { value: 0 }, Q: { value: 0 }, connect: <T>(node: T) => node };
+      }
+
+      createGain() {
+        return {
+          gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+          connect: <T>(node: T) => node,
+        };
+      }
+
+      resume() { return Promise.resolve(); }
+      close() { return Promise.resolve(); }
+    }
+
+    Object.defineProperty(window, "AudioContext", { configurable: true, value: FakeAudioContext });
+  });
+}
 
 test("Practice opens directly on adaptive practice, then lessons and guidance", async ({ page }) => {
   await page.goto("/learn");
@@ -48,6 +89,22 @@ test("continuous practice loads the locked Keybr engine and rejects paste", asyn
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
+test("Practice plays typing sounds and respects the shared Tester preference", async ({ page }) => {
+  await installAudioContextSpy(page);
+  await page.goto("/learn/courses/jf1");
+  const input = page.getByRole("textbox", { name: "Type the exercise here" });
+  const expected = await page.locator(".learning-passage .typed-current").textContent();
+  await input.press(expected!);
+  await input.press("Backspace");
+  expect(await page.evaluate(() => Number(sessionStorage.getItem("typing-sound-starts")))).toBe(2);
+
+  await page.evaluate(() => localStorage.setItem("typing-level:typing-sound:v1", "off"));
+  await page.reload();
+  const mutedExpected = await page.locator(".learning-passage .typed-current").textContent();
+  await page.getByRole("textbox", { name: "Type the exercise here" }).press(mutedExpected!);
+  expect(await page.evaluate(() => Number(sessionStorage.getItem("typing-sound-starts")))).toBe(2);
+});
+
 test("continuous practice completes once and saves a Keybr result", async ({ page }) => {
   await page.goto("/learn/practice");
   await expect(page.getByText("Loading practice…")).toBeHidden({ timeout: 20_000 });
@@ -82,7 +139,7 @@ test("fixed courses are freely selectable and preserve KTouch correction", async
   const courseStageKeys = page.locator(".virtual-key.is-stage-key");
   await expect(courseStageKeys).toHaveCount(2);
   expect((await courseStageKeys.allTextContents()).sort()).toEqual(["D", "K"]);
-  await expect(page.locator('.virtual-key[data-key-code="KeyJ"] .virtual-key-label')).toBeEmpty();
+  await expect(page.locator('.virtual-key[data-key-code="KeyJ"] .virtual-key-label')).toHaveText("J");
   expect(await page.locator(".learning-toolbar").evaluate((element) => element.getBoundingClientRect().height)).toBe(56);
   const input = page.getByRole("textbox", { name: "Type the exercise here" });
   const expected = await page.locator(".learning-passage .typed-current").textContent();
@@ -95,7 +152,7 @@ test("fixed courses are freely selectable and preserve KTouch correction", async
   await input.press(expected!);
   await page.locator(".learning-toolbar h1").click();
   await expect(page.locator(".learning-passage .typed-correct")).toHaveCount(1);
-  await expect(page.getByText(/Leaving the exercise pauses the lesson timer/)).toBeVisible();
+  await expect(page.locator(".learning-focus-note")).toHaveCount(0);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 

@@ -255,8 +255,6 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
           position={alignTypingInput(lesson.text, actual).cursorIndex}
           label={`Course lesson ${lesson.title}`}
           highlightCharacters={[...new Set(lesson.newCharacters)]}
-          showOnlyHighlightedCharacters
-          blurBehavior="pause"
           onCharacter={handleCharacter}
           onBackspace={(word) => setActual(sessionRef.current.backspace(word).actual)}
           onBlur={() => {

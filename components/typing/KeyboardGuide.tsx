@@ -11,7 +11,6 @@ import type { CSSProperties } from "react";
 type Props = {
   nextCharacter: string | null;
   highlightCharacters?: readonly string[];
-  showOnlyHighlightedCharacters?: boolean;
 };
 
 type HandTarget = {
@@ -56,16 +55,6 @@ const homeKeys: Record<HandSide, string> = {
   left: "KeyF",
   right: "KeyJ",
 };
-
-const guideKeyCodes = new Set([
-  "Backspace",
-  "Tab",
-  "CapsLock",
-  "Enter",
-  "ShiftLeft",
-  "ShiftRight",
-  "Space",
-]);
 
 function parseFinger(fingerId: FingerId): { side: HandSide; finger: FingerName } {
   const [side, finger] = fingerId.split("-") as [HandSide, FingerName];
@@ -129,7 +118,6 @@ function PhotoHand({ target }: { target: HandTarget }) {
 export default function KeyboardGuide({
   nextCharacter,
   highlightCharacters = [],
-  showOnlyHighlightedCharacters = false,
 }: Props) {
   const guidance = getKeyGuidance(nextCharacter);
   const activeKeys = new Set([guidance?.primaryKey, guidance?.modifierKey].filter(Boolean));
@@ -173,7 +161,6 @@ export default function KeyboardGuide({
                 const active = activeKeys.has(code);
                 const modifier = guidance?.modifierKey === code;
                 const stageKey = stageKeys.has(code);
-                const showLabel = !showOnlyHighlightedCharacters || stageKey || active || guideKeyCodes.has(code);
                 return (
                   <span
                     className={`virtual-key ${stageKey ? "is-stage-key" : ""} ${active ? "is-active" : ""} ${modifier ? "is-modifier" : ""}`}
@@ -181,7 +168,7 @@ export default function KeyboardGuide({
                     key={code}
                     style={{ "--key-width": width } as CSSProperties}
                   >
-                    <span className="virtual-key-label">{showLabel ? label : null}</span>
+                    <span className="virtual-key-label">{label}</span>
                   </span>
                 );
               })}
