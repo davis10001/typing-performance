@@ -27,7 +27,7 @@ export default function LearnPage() {
         <div className="learning-guide-topics">
           <article>
             <h3>Adaptive practice</h3>
-            <p>Start with a small set of common letters. After each round, your results help choose the next key to focus on and when to add a new letter.</p>
+            <p>Start with four keys from the same sequence as the lessons. Early rounds repeat short key patterns; as more letters become available, practice shifts into words and adds new keys based on your results.</p>
           </article>
           <article>
             <h3>Typing lessons</h3>

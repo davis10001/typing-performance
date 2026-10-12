@@ -4,8 +4,9 @@ import type { RNGStream } from "@keybr/rand";
 import { makeKeyStatsMap, type Result } from "@keybr/result";
 import { Settings } from "@keybr/settings";
 import words from "@/vendor/keybr/packages/keybr-content-words/lib/data/words-en.json";
-import { GuidedLesson } from "@/vendor/keybr/packages/keybr-lesson/lib/guided";
+import { CourseOrderedGuidedLesson } from "./course-ordered-guided-lesson";
 import { Lesson } from "@/vendor/keybr/packages/keybr-lesson/lib/lesson";
+import type { GuidedLesson } from "@/vendor/keybr/packages/keybr-lesson/lib/guided";
 
 export const KEYBR_MODEL_URL = "/learning/keybr/model-en.data";
 
@@ -22,7 +23,7 @@ export type GuidedMilestone = {
 
 export function createEnglishGuidedLesson(modelData: Uint8Array): GuidedLesson {
   const model: PhoneticModel = makePhoneticModel(Language.EN, modelData);
-  return new GuidedLesson(new Settings(), loadKeyboard(Layout.EN_US), model, words);
+  return new CourseOrderedGuidedLesson(new Settings(), loadKeyboard(Layout.EN_US), model, words);
 }
 
 export async function loadEnglishGuidedLesson(

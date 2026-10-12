@@ -54,6 +54,10 @@ function ArrowIcon() {
   return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M7 5h8v8" /></svg>;
 }
 
+function BackIcon() {
+  return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5M7.5 10h7" /></svg>;
+}
+
 export default function CoursePractice({ lesson }: { lesson: Lesson }) {
   const first = englishQwertyCourse.lessons[0].id;
   const sessionRef = useRef(new CourseInputSession(lesson.text));
@@ -142,9 +146,14 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
   return (
     <main className="learning-page learning-practice-page">
       <header className="learning-toolbar">
-        <div>
-          <h1>{lesson.title}</h1>
-          <span>Lesson {String(lessonIndex + 1).padStart(2, "0")} of {englishQwertyCourse.lessons.length} · New keys {lesson.newCharacters}</span>
+        <div className="lesson-toolbar-main">
+          <Link className="lesson-toolbar-back" href="/learn#courses" aria-label="Back to lessons" title="Back to lessons">
+            <BackIcon />
+          </Link>
+          <div className="lesson-toolbar-copy">
+            <h1>{lesson.title}</h1>
+            <span>Lesson {String(lessonIndex + 1).padStart(2, "0")} of {englishQwertyCourse.lessons.length}</span>
+          </div>
         </div>
         <button className="learning-toolbar-action" type="button" onClick={reset}>
           <ResetIcon />
@@ -234,6 +243,8 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
           actual={actual}
           position={alignTypingInput(lesson.text, actual).cursorIndex}
           label={`Course lesson ${lesson.title}`}
+          highlightCharacters={[...new Set(lesson.newCharacters)]}
+          showOnlyHighlightedCharacters
           blurBehavior="pause"
           onCharacter={handleCharacter}
           onBackspace={(word) => setActual(sessionRef.current.backspace(word).actual)}

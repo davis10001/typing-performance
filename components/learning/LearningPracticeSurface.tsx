@@ -14,6 +14,8 @@ type Props = {
   blurBehavior?: "reset" | "pause";
   status?: "idle" | "error";
   label: string;
+  highlightCharacters?: readonly string[];
+  showOnlyHighlightedCharacters?: boolean;
 };
 
 export default function LearningPracticeSurface({
@@ -26,6 +28,8 @@ export default function LearningPracticeSurface({
   blurBehavior = "reset",
   status = "idle",
   label,
+  highlightCharacters,
+  showOnlyHighlightedCharacters,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const passageRef = useRef<HTMLDivElement>(null);
@@ -112,7 +116,11 @@ export default function LearningPracticeSurface({
         }}
       />
       <p className="learning-focus-note">Type to begin. Pasting is disabled. Leaving the exercise {blurBehavior === "reset" ? "resets an unfinished round" : "pauses the lesson timer"}.</p>
-      <KeyboardGuide nextCharacter={nextCharacter} />
+      <KeyboardGuide
+        nextCharacter={nextCharacter}
+        highlightCharacters={highlightCharacters}
+        showOnlyHighlightedCharacters={showOnlyHighlightedCharacters}
+      />
     </section>
   );
 }

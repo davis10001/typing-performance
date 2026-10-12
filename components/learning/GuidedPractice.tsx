@@ -193,6 +193,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
           position={position}
           status={feedback}
           label="Adaptive typing exercise"
+          highlightCharacters={round.availableCharacters}
           onCharacter={handleCharacter}
           onBackspace={(word, timeStamp) => {
             const session = sessionRef.current;

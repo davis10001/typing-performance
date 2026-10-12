@@ -7,6 +7,13 @@ test("Practice opens directly on adaptive practice, then lessons and guidance", 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Typing practice and lessons");
   await expect(page.getByRole("heading", { name: /^Focus / })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset continuous practice progress" })).toBeVisible();
+  const guidedStageKeys = page.locator(".virtual-key.is-stage-key");
+  await expect(guidedStageKeys).toHaveCount(4);
+  expect((await guidedStageKeys.allTextContents()).sort()).toEqual(["D", "F", "J", "K"]);
+  await expect(page.locator('.virtual-key[data-key-code="KeyQ"] .virtual-key-label')).toHaveText("Q");
+  const activeGuidedStageKey = page.locator(".virtual-key.is-stage-key.is-active");
+  await expect(activeGuidedStageKey).toHaveCount(1);
+  expect(["D", "F", "J", "K"]).toContain(await activeGuidedStageKey.innerText());
   expect(await page.locator(".learning-toolbar").evaluate((element) => element.getBoundingClientRect().height)).toBe(56);
   await expect(page.locator(".course-card")).toHaveCount(15);
   await expect(page.locator(".course-card--next")).toHaveCount(1);
@@ -70,6 +77,12 @@ test("fixed courses are freely selectable and preserve KTouch correction", async
   await page.locator(".course-card").nth(1).click();
   await expect(page).toHaveURL(/\/learn\/courses\/kd1$/);
   await expect(page.getByRole("button", { name: "Reset" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to lessons" })).toHaveAttribute("href", "/learn#courses");
+  await expect(page.locator(".learning-toolbar")).not.toContainText("New keys");
+  const courseStageKeys = page.locator(".virtual-key.is-stage-key");
+  await expect(courseStageKeys).toHaveCount(2);
+  expect((await courseStageKeys.allTextContents()).sort()).toEqual(["D", "K"]);
+  await expect(page.locator('.virtual-key[data-key-code="KeyJ"] .virtual-key-label')).toBeEmpty();
   expect(await page.locator(".learning-toolbar").evaluate((element) => element.getBoundingClientRect().height)).toBe(56);
   const input = page.getByRole("textbox", { name: "Type the exercise here" });
   const expected = await page.locator(".learning-passage .typed-current").textContent();

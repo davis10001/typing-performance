@@ -10,6 +10,8 @@ import type { CSSProperties } from "react";
 
 type Props = {
   nextCharacter: string | null;
+  highlightCharacters?: readonly string[];
+  showOnlyHighlightedCharacters?: boolean;
 };
 
 type HandTarget = {
@@ -54,6 +56,16 @@ const homeKeys: Record<HandSide, string> = {
   left: "KeyF",
   right: "KeyJ",
 };
+
+const guideKeyCodes = new Set([
+  "Backspace",
+  "Tab",
+  "CapsLock",
+  "Enter",
+  "ShiftLeft",
+  "ShiftRight",
+  "Space",
+]);
 
 function parseFinger(fingerId: FingerId): { side: HandSide; finger: FingerName } {
   const [side, finger] = fingerId.split("-") as [HandSide, FingerName];
@@ -114,9 +126,17 @@ function PhotoHand({ target }: { target: HandTarget }) {
   );
 }
 
-export default function KeyboardGuide({ nextCharacter }: Props) {
+export default function KeyboardGuide({
+  nextCharacter,
+  highlightCharacters = [],
+  showOnlyHighlightedCharacters = false,
+}: Props) {
   const guidance = getKeyGuidance(nextCharacter);
   const activeKeys = new Set([guidance?.primaryKey, guidance?.modifierKey].filter(Boolean));
+  const stageKeys = new Set(highlightCharacters
+    .map((character) => getKeyGuidance(character)?.primaryKey)
+    .filter((key): key is string => Boolean(key)));
+  const stageCharacters = [...new Set(highlightCharacters.map((character) => character.toUpperCase()))];
   const handTargets = getHandTargets(guidance);
 
   return (
@@ -138,9 +158,13 @@ export default function KeyboardGuide({ nextCharacter }: Props) {
         className="keyboard-guide-visual"
         data-hand-state={guidance ? "target" : "rest"}
         role="img"
-        aria-label={guidance
-          ? `Next key ${guidance.displayCharacter}. ${guidance.instruction}.`
-          : "Hands resting on F and J."}
+        aria-label={stageCharacters.length > 0
+          ? guidance
+            ? `Practice keys ${stageCharacters.join(", ")}. Next key ${guidance.displayCharacter}. ${guidance.instruction}.`
+            : `Practice keys ${stageCharacters.join(", ")}. Hands resting on F and J.`
+          : guidance
+            ? `Next key ${guidance.displayCharacter}. ${guidance.instruction}.`
+            : "Hands resting on F and J."}
       >
         <div className="virtual-keyboard" aria-hidden="true">
           {keyboardRows.map((row, rowIndex) => (
@@ -148,13 +172,16 @@ export default function KeyboardGuide({ nextCharacter }: Props) {
               {row.map(([code, label, width]) => {
                 const active = activeKeys.has(code);
                 const modifier = guidance?.modifierKey === code;
+                const stageKey = stageKeys.has(code);
+                const showLabel = !showOnlyHighlightedCharacters || stageKey || active || guideKeyCodes.has(code);
                 return (
                   <span
-                    className={`virtual-key ${active ? "is-active" : ""} ${modifier ? "is-modifier" : ""}`}
+                    className={`virtual-key ${stageKey ? "is-stage-key" : ""} ${active ? "is-active" : ""} ${modifier ? "is-modifier" : ""}`}
+                    data-key-code={code}
                     key={code}
                     style={{ "--key-width": width } as CSSProperties}
                   >
-                    <span className="virtual-key-label">{label}</span>
+                    <span className="virtual-key-label">{showLabel ? label : null}</span>
                   </span>
                 );
               })}

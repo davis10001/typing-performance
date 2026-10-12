@@ -21,17 +21,22 @@ const resultSchema = z.strictObject({
   histogram: z.array(sampleSchema),
 });
 
-export const guidedStateSchema = z.strictObject({ results: z.array(resultSchema) });
+const guidedResultsSchema = z.array(resultSchema);
+const guidedStateV2Schema = z.strictObject({ strategyRevision: z.literal(2), results: guidedResultsSchema });
+const legacyGuidedStateSchema = z.strictObject({ results: guidedResultsSchema })
+  .transform(() => ({ strategyRevision: 2 as const, results: [] }));
+
+export const guidedStateSchema = z.union([guidedStateV2Schema, legacyGuidedStateSchema]);
 export type GuidedState = z.infer<typeof guidedStateSchema>;
 
 export function createGuidedState(): GuidedState {
-  return { results: [] };
+  return { strategyRevision: 2, results: [] };
 }
 
 export function rewindGuidedState(state: GuidedState, resultCount: number): GuidedState {
   const parsed = guidedStateSchema.parse(state);
   const end = Math.max(0, Math.min(Math.trunc(resultCount), parsed.results.length));
-  return { results: parsed.results.slice(0, end) };
+  return { ...parsed, results: parsed.results.slice(0, end) };
 }
 
 export function recordGuidedResult(
@@ -54,7 +59,7 @@ export function recordGuidedResult(
     histogram: [...result.histogram],
   });
   if (!stored.success) return { status: "invalid", state: parsed };
-  return { status: "recorded", state: { results: [...parsed.results, stored.data] } };
+  return { status: "recorded", state: { ...parsed, results: [...parsed.results, stored.data] } };
 }
 
 export function restoreGuidedResults(state: GuidedState): Result[] {
