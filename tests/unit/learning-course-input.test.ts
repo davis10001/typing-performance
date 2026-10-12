@@ -11,6 +11,19 @@ describe("CourseInputSession", () => {
     expect(session.snapshot).toEqual({ actual: "abc", correctCharacters: 3, errorCount: 1, errorsByExpectedKey: { b: 1 }, completed: true });
   });
 
+  it("finishes at the end when an earlier letter was left wrong", () => {
+    const session = new CourseInputSession("abc");
+    session.append("x");
+    session.append("bc");
+    expect(session.snapshot).toEqual({
+      actual: "xbc",
+      correctCharacters: 2,
+      errorCount: 1,
+      errorsByExpectedKey: { a: 1 },
+      completed: true,
+    });
+  });
+
   it("does not remove logged statistics when deleting", () => {
     const session = new CourseInputSession("ab cd");
     session.append("ab x");

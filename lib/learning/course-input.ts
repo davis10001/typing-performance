@@ -13,8 +13,7 @@ export type CourseInputSnapshot = {
 export class CourseInputSession {
   #actual = "";
   #cursorIndex = 0;
-  #uncorrectedErrors = 0;
-  #history: { advanced: boolean; wrong: boolean }[] = [];
+  #history: { advanced: boolean }[] = [];
   #correctCharacters = 0;
   #errorCount = 0;
   #errorsByExpectedKey: Record<string, number> = {};
@@ -24,7 +23,7 @@ export class CourseInputSession {
   get snapshot(): CourseInputSnapshot {
     return {
       actual: this.#actual,
-      completed: this.#cursorIndex === this.text.length && this.#uncorrectedErrors === 0,
+      completed: this.#cursorIndex === this.text.length,
       correctCharacters: this.#correctCharacters,
       errorCount: this.#errorCount,
       errorsByExpectedKey: { ...this.#errorsByExpectedKey },
@@ -44,10 +43,9 @@ export class CourseInputSession {
         this.#errorsByExpectedKey[expected] = (this.#errorsByExpectedKey[expected] ?? 0) + 1;
       }
       this.#actual += input;
-      this.#history.push({ advanced, wrong });
+      this.#history.push({ advanced });
       if (advanced) {
         this.#cursorIndex += 1;
-        if (wrong) this.#uncorrectedErrors += 1;
       }
     }
     return this.snapshot;
@@ -62,7 +60,6 @@ export class CourseInputSession {
       const last = this.#history.pop();
       if (last?.advanced) {
         this.#cursorIndex -= 1;
-        if (last.wrong) this.#uncorrectedErrors -= 1;
       }
     }
     return this.snapshot;

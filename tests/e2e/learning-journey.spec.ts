@@ -209,18 +209,20 @@ test("a lesson that misses a goal shows its result and recovery choices", async 
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await input.evaluate(async (element, text) => {
     element.focus();
+    let uncorrectedMistakes = 0;
     for (let index = 0; index < text.length; index += 1) {
       const character = text[index];
-      if (index < 20) {
+      if (uncorrectedMistakes < 20 && character !== " " && character !== "\n") {
         const wrongCharacter = character === "x" ? "z" : "x";
         element.dispatchEvent(new KeyboardEvent("keydown", { key: wrongCharacter, bubbles: true, cancelable: true }));
-        element.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true, cancelable: true }));
+        uncorrectedMistakes += 1;
+      } else {
+        element.dispatchEvent(new KeyboardEvent("keydown", {
+          key: character === "\n" ? "Enter" : character,
+          bubbles: true,
+          cancelable: true,
+        }));
       }
-      element.dispatchEvent(new KeyboardEvent("keydown", {
-        key: character === "\n" ? "Enter" : character,
-        bubbles: true,
-        cancelable: true,
-      }));
       if (index % 20 === 19) await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }, prompt!);

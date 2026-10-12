@@ -202,7 +202,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
               <div>
                 <span>Mistakes</span>
                 <strong>{errorCount}</strong>
-                <small>{errorCount === 0 ? "Clean run" : `${errorCount} corrected during the lesson`}</small>
+                <small>{errorCount === 0 ? "Clean run" : `${errorCount} recorded during the lesson`}</small>
               </div>
             </div>
 
