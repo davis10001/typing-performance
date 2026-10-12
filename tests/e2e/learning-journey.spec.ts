@@ -241,7 +241,7 @@ test("a passed course is marked complete while every lesson stays available", as
   await expect(page.locator(".lesson-result-summary")).toContainText("Your accuracy and pace both reached the lesson targets");
   await expect(page.locator(".course-result-keys")).toContainText("1 mistake");
   await expect(page.locator(".lesson-confetti span")).toHaveCount(30);
-  await expect(page.locator(".lesson-progress")).toHaveAccessibleName("1 of 15 lessons passed");
+  await expect(page.locator(".lesson-progress")).toHaveAccessibleName("1 of 15 lessons completed");
   await expect(page.locator(".lesson-next")).toContainText("k and d");
   await expect(page.getByRole("link", { name: "Start next lesson" })).toHaveAttribute("href", "/learn/courses/kd1");
   await expect(page.locator(".learning-result-actions").getByRole("button", { name: "Try again" })).toBeVisible();
@@ -285,16 +285,20 @@ test("a lesson that misses a goal shows its result and recovery choices", async 
   }, prompt!);
 
   const result = page.locator(".lesson-result-card");
-  await expect(page.getByRole("heading", { name: "Lesson not passed yet." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Lesson 01 complete." })).toBeVisible();
   await expect(result).toHaveClass(/needs-practice/);
   await expect(result).toContainText("Goal 98% not met");
   await expect(result.getByRole("button", { name: "Try again" })).toBeVisible();
   await expect(result.getByRole("link", { name: "Start next lesson" })).toHaveAttribute("href", "/learn/courses/kd1");
+  await expect(result.getByRole("link", { name: "Start next lesson" })).toHaveClass(/button-primary/);
   await expect(page.locator(".lesson-confetti")).toHaveCount(0);
   await expect.poll(async () => result.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
     return bounds.top >= 0 && bounds.top < window.innerHeight;
   })).toBe(true);
+  await page.goto("/learn");
+  await expect(page.locator(".course-card").nth(0)).toHaveClass(/course-card--completed/);
+  await expect(page.locator(".course-card").nth(0)).toContainText("Completed");
 });
 
 test("learning reset preserves typing-test history", async ({ page }) => {

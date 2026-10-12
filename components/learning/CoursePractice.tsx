@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import ResetIcon from "@/components/ResetIcon";
 import type { LearningCourse } from "@/lib/learning/course-content";
 import { englishQwertyCourse } from "@/lib/learning/course-content";
-import { evaluateCourseAttempt } from "@/lib/learning/course-engine";
 import { CourseInputSession } from "@/lib/learning/course-input";
 import { completeCourseAttempt, type CourseCompletion } from "@/lib/learning/course-session";
 import { createCourseState, courseStateSchema, type CourseState } from "@/lib/learning/course-state";
@@ -120,8 +119,6 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
       setMessage(error instanceof Error && error.message.startsWith("Locked lesson") ? "This beginner lesson is still locked. Complete the previous lesson first." : "This lesson could not be completed.");
       return;
     }
-    setState(localCompletion.state);
-    setCompletion(localCompletion);
     setErrorsByKey(snapshot.errorsByExpectedKey);
     startedAt.current = null;
     const locks = "locks" in navigator ? navigator.locks : undefined;
@@ -133,7 +130,17 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
       update: (fresh) => completeCourseAttempt(englishQwertyCourse, { ...fresh, learner: "advanced" }, attempt).state,
       locks,
     }).then((saved) => {
-      if (saved.status !== "saved") setMessage(saved.status === "conflict" ? "Progress changed in another tab. Reload before continuing." : "The result is shown, but progress could not be saved.");
+      if (saved.status === "saved") {
+        setState({ ...saved.state, learner: "advanced" });
+      } else {
+        setState(localCompletion.state);
+        setMessage(saved.status === "conflict" ? "Progress changed in another tab. Reload before continuing." : "The result is shown, but progress could not be saved.");
+      }
+      setCompletion(localCompletion);
+    }).catch(() => {
+      setState(localCompletion.state);
+      setMessage("The result is shown, but progress could not be saved.");
+      setCompletion(localCompletion);
     });
   };
 
@@ -144,7 +151,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
     .sort((left, right) => (errorsByKey[right] ?? 0) - (errorsByKey[left] ?? 0)).slice(0, 4);
   const focusErrorCount = [...new Set(lesson.newCharacters)].reduce((total, key) => total + (errorsByKey[key] ?? 0), 0);
   const completedLessonCount = useMemo(() => new Set(
-    state.attempts.filter((attempt) => evaluateCourseAttempt(attempt).passed).map((attempt) => attempt.lessonId),
+    state.attempts.map((attempt) => attempt.lessonId),
   ).size, [state.attempts]);
   const nextLesson = completion?.nextLessonId
     ? englishQwertyCourse.lessons.find(({ id }) => id === completion.nextLessonId) ?? null
@@ -176,12 +183,10 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
           <section ref={resultCardRef} className={`learning-result-card lesson-result-card ${completion.result.passed ? "is-passed" : "needs-practice"}`} aria-labelledby="course-result-title" aria-live="polite">
             <header className="lesson-result-heading">
               <div>
-                <h1 id="course-result-title">{completion.result.passed
-                  ? `Lesson ${String(lessonIndex + 1).padStart(2, "0")} complete.`
-                  : "Lesson not passed yet."}</h1>
-                <p><strong>{lesson.title}</strong> · {completion.result.passed ? "Both lesson goals met." : "Review the missed goal and choose what to do next."}</p>
+                <h1 id="course-result-title">Lesson {String(lessonIndex + 1).padStart(2, "0")} complete.</h1>
+                <p><strong>{lesson.title}</strong> · {completion.result.passed ? "Both lesson goals met." : "Lesson finished. Review the goals and choose what to do next."}</p>
               </div>
-              <div className="lesson-progress" aria-label={`${completedLessonCount} of ${englishQwertyCourse.lessons.length} lessons passed`}>
+              <div className="lesson-progress" aria-label={`${completedLessonCount} of ${englishQwertyCourse.lessons.length} lessons completed`}>
                 <span>Course progress</span>
                 <strong>{completedLessonCount}<small>/{englishQwertyCourse.lessons.length}</small></strong>
                 <div aria-hidden="true"><span style={{ width: `${progressPercent}%` }} /></div>
@@ -208,7 +213,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
 
             <div className="lesson-result-detail">
               <div className="lesson-result-summary">
-                <h2>{completion.result.passed ? "Ready to move on" : "Try this lesson again"}</h2>
+                <h2>{completion.result.passed ? "Goals met" : "Keep building"}</h2>
                 <p>{accuracyMet && speedMet
                   ? "Your accuracy and pace both reached the lesson targets."
                   : !accuracyMet
@@ -232,13 +237,13 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
                     <strong>{nextLesson.title}</strong>
                     <small>New keys {nextLesson.newCharacters}</small>
                   </div>
-                  <Link className={`button ${completion.result.passed ? "button-primary" : "button-secondary"}`} href={`/learn/courses/${nextLesson.id}`}>
+                  <Link className="button button-primary" href={`/learn/courses/${nextLesson.id}`}>
                     Start next lesson <ArrowIcon />
                   </Link>
                 </div>
               )}
               <div className="learning-result-actions">
-                <button className={`button ${completion.result.passed ? "button-secondary" : "button-primary"} reset-button`} type="button" onClick={reset}>
+                <button className="button button-secondary reset-button" type="button" onClick={reset}>
                   <ResetIcon />
                   Try again
                 </button>

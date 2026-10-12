@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { englishQwertyCourse } from "@/lib/learning/course-content";
-import { evaluateCourseAttempt } from "@/lib/learning/course-engine";
 import { createCourseState, courseStateSchema, type CourseState } from "@/lib/learning/course-state";
 import { courseLearningScope } from "@/lib/learning/scopes";
 import { loadLearning } from "@/lib/learning/repository";
@@ -25,7 +24,7 @@ export default function CourseCatalog({ embedded = false }: CourseCatalogProps) 
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const completed = new Set(state.attempts.filter((attempt) => evaluateCourseAttempt(attempt).passed).map(({ lessonId }) => lessonId));
+  const completed = new Set(state.attempts.map(({ lessonId }) => lessonId));
   const nextLessonId = englishQwertyCourse.lessons.find(({ id }) => !completed.has(id))?.id;
   const CardHeading = embedded ? "h3" : "h2";
   const heading = embedded ? (
