@@ -16,10 +16,10 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(homeLink.locator("img")).toHaveAttribute("src", /typing-level-logo/);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/images/typing-level-icon.png");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
-  await expect(navigation).toHaveText("TestLearnRaceFAQ");
+  await expect(navigation).toHaveText("TestPracticeRaceFAQ");
   await expect(navigation.getByRole("link")).toHaveCount(3);
   await expect(navigation.getByRole("link", { name: "Test" })).toHaveAttribute("href", "/");
-  await expect(navigation.getByRole("link", { name: "Learn" })).toHaveAttribute("href", "/learn");
+  await expect(navigation.getByRole("link", { name: "Practice" })).toHaveAttribute("href", "/learn");
   await expect(navigation.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/faq");
   await expect(navigation.locator("button, svg, img")).toHaveCount(0);
   const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });
@@ -141,7 +141,7 @@ test("typing sound can be muted and the preference persists", async ({ page }) =
   await expect(sound).toHaveAttribute("aria-checked", "false");
 });
 
-test("word errors preserve the expected letter while space errors show actual input", async ({ page }) => {
+test("space errors mark the space without shifting passage text", async ({ page }) => {
   await page.goto("/1-minute-typing-test");
   const passage = page.locator(".typing-passage");
   const prompt = await passage.textContent();
@@ -152,20 +152,38 @@ test("word errors preserve the expected letter while space errors show actual in
   const firstSpace = prompt!.indexOf(" ", word!.index + word![0].length);
   const wrongCharacter = prompt![typoIndex].toLowerCase() === "x" ? "z" : "x";
   const input = page.getByRole("textbox", { name: "Type the passage here" });
-
-  await input.pressSequentially(`${prompt!.slice(0, typoIndex)}${wrongCharacter}${prompt!.slice(typoIndex + 1, firstSpace)}xy `);
+  const nextCharacter = passage.locator(`[data-prompt-index="${firstSpace + 1}"]`);
+  await input.pressSequentially(`${prompt!.slice(0, typoIndex)}${wrongCharacter}${prompt!.slice(typoIndex + 1, firstSpace)}`);
+  const nextBefore = await nextCharacter.boundingBox();
+  await input.pressSequentially("xy");
 
   await expect(passage.locator(".typed-error")).toHaveCount(1);
   await expect(passage.locator(".typed-error")).toHaveText(prompt![typoIndex]);
-  await expect(passage.locator(".typed-extra")).toHaveText("xy");
+  const space = passage.locator(`[data-prompt-index="${firstSpace}"]`);
+  await expect(space).toHaveClass(/typed-space-error/);
+  await expect(space).toHaveText(" ");
+  await expect(passage.locator(".typed-extra")).toHaveCount(0);
+  await expect(space).toHaveClass(/typed-current/);
+  const nextAfter = await nextCharacter.boundingBox();
+  expect(nextBefore).not.toBeNull();
+  expect(nextAfter).not.toBeNull();
+  expect(Math.abs(nextAfter!.x - nextBefore!.x)).toBeLessThan(1);
+  expect(Math.abs(nextAfter!.y - nextBefore!.y)).toBeLessThan(1);
+
+  await input.pressSequentially(" ");
   await expect(passage.locator(".typed-current")).toHaveText(prompt![firstSpace + 1]);
+  await expect(space).not.toHaveClass(/typed-space-error/);
 
   await input.press("Backspace");
   await expect(passage.locator(".typed-current")).toHaveText(" ");
+  await expect(space).toHaveClass(/typed-space-error/);
+  await input.pressSequentially(" ");
+  await expect(space).not.toHaveClass(/typed-space-error/);
   await input.press("Backspace");
-  await expect(passage.locator(".typed-extra")).toHaveText("x");
   await input.press("Backspace");
-  await expect(passage.locator(".typed-extra")).toHaveCount(0);
+  await expect(space).toHaveClass(/typed-space-error/);
+  await input.press("Backspace");
+  await expect(space).not.toHaveClass(/typed-space-error/);
 });
 
 test("typing passage advances by rendered lines without pulling the third line to the top", async ({ page }) => {
@@ -239,7 +257,7 @@ test("the running test shows correct WPM beside the timer", async ({ page }) => 
   const initialWpm = await currentWpm();
   await page.clock.fastForward(5_000);
   await expect.poll(currentWpm).toBeLessThan(initialWpm);
-  await page.getByRole("button", { name: "Reset" }).click();
+  await page.getByRole("button", { name: "Restart" }).click();
   await expect(page.locator(".test-page-wpm")).toHaveCount(0);
 });
 
@@ -250,12 +268,18 @@ test("the result chart tracks pace during one test", async ({ page }) => {
   const input = page.getByRole("textbox", { name: "Type the passage here" });
   await input.pressSequentially(opening.slice(0, 6));
   await page.clock.fastForward(1_100);
+  await input.pressSequentially(opening[6] === "x" ? "q" : "x");
+  await input.press("Backspace");
   await input.pressSequentially(opening.slice(6));
+  await input.pressSequentially((await page.locator(".typing-passage").textContent())![12] === "x" ? "q" : "x");
   await page.clock.fastForward(1_100);
   await page.clock.fastForward(60_100);
   await expect(page.getByRole("figure", { name: "Your pace during this test" })).toBeVisible();
   const line = await page.locator(".result-pace-correct").getAttribute("d");
   expect((line?.match(/ L /g) ?? []).length).toBeGreaterThan(2);
+  await expect(page.locator(".result-pace-error-fixed")).toHaveCount(1);
+  await expect(page.locator(".result-pace-error-remaining")).toHaveCount(1);
+  await expect(page.locator(".result-pace-insight")).toContainText("1 corrected with Backspace, 1 left in the final text");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.locator(".result-card").getByRole("button", { name: "Try again" }).click();
   await expect(page.locator(".result-pace")).toHaveCount(0);
@@ -345,12 +369,12 @@ test("changing duration keeps the current passage and guide state", async ({ pag
   await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
 });
 
-test("difficulty and Reset change text, then the toolbar switches when typing starts", async ({ page }) => {
+test("difficulty and Restart change text, then the toolbar switches when typing starts", async ({ page }) => {
   await page.clock.install();
   await page.goto("/1-minute-typing-test");
   const standard = page.getByRole("button", { name: "Standard", exact: true });
   const advanced = page.getByRole("button", { name: "Advanced", exact: true });
-  const reset = page.getByRole("button", { name: "Reset" });
+  const reset = page.getByRole("button", { name: "Restart" });
   await expect(standard).toHaveAttribute("aria-pressed", "true");
   await standard.focus();
   await expect(page.locator(".typed-current")).toHaveCount(1);
@@ -477,13 +501,13 @@ test("finger guide starts collapsed on a compact viewport", async ({ page }) => 
   await expect(page.locator(".keyboard-guide-visual")).toHaveCount(0);
 });
 
-test("Reset restores first-key start without keeping old text", async ({ page }) => {
+test("Restart restores first-key start without keeping old text", async ({ page }) => {
   await page.goto("/2-minute-typing-test");
   const input = page.getByRole("textbox", { name: "Type the passage here" });
   const previousText = await page.locator(".typing-passage").textContent();
   await input.pressSequentially("a");
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "running");
-  await page.getByRole("button", { name: "Reset" }).click();
+  await page.getByRole("button", { name: "Restart" }).click();
   await expect(page.locator(".test-shell")).toHaveAttribute("data-phase", "ready");
   await expect(page.getByRole("timer")).toHaveCount(0);
   expect(await page.locator(".typing-passage").textContent()).not.toBe(previousText);
@@ -531,8 +555,8 @@ test("SEO explanation remains readable without JavaScript", async ({ browser }) 
   try {
     const page = await context.newPage();
     await page.goto("/average-wpm");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("AVERAGE WPM");
-    await expect(page.getByText("ONE WORD = FIVE CHARACTERS.")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("YOUR WPM");
+    await expect(page.getByRole("heading", { name: "HOW IS WPM CALCULATED?" })).toBeVisible();
     await expect(page.getByRole("link", { name: /test your wpm/i })).toBeVisible();
   } finally {
     await context.close();

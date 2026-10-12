@@ -5,40 +5,40 @@ import GuidedPractice from "@/components/learning/GuidedPractice";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Learn Touch Typing with Guided Practice and Lessons",
-  description: "Learn touch typing with adaptive practice or choose any of 15 fixed English QWERTY lessons. Practice letter keys, accuracy, and keyboard control.",
+  title: "Typing Practice and Lessons",
+  description: "Improve your touch typing with adaptive practice or choose from 15 English QWERTY lessons. Work on accuracy and individual keys at your own pace.",
   path: "/learn",
 });
 
 export default function LearnPage() {
   return (
     <main className="learning-page learning-overview-page">
-      <h1 className="sr-only">Learn touch typing with guided practice and fixed lessons</h1>
-      <p className="learning-intro">Build accuracy one key at a time. Start typing below, or choose a fixed lesson when you want a specific sequence.</p>
+      <h1 className="sr-only">Typing practice and lessons</h1>
+      <p className="learning-intro">Build accuracy one key at a time. Start with adaptive practice, or pick a lesson to work on specific keys.</p>
 
       <GuidedPractice embedded />
       <CourseCatalog embedded />
 
       <section className="learning-guide" aria-labelledby="learning-guide-title">
         <div className="learning-guide-heading">
-          <h2 id="learning-guide-title">Two ways to learn touch typing.</h2>
-          <p>Continuous practice adapts the next exercise to your saved results. Fixed lessons keep the content predictable when you want to practise a specific group of keys.</p>
+          <h2 id="learning-guide-title">Two ways to practice.</h2>
+          <p>Adaptive practice chooses your next exercise based on your results. Typing lessons let you choose the keys you want to work on.</p>
         </div>
         <div className="learning-guide-topics">
           <article>
-            <h3>How continuous practice works</h3>
-            <p>The guided exercise begins with a small set of common letters. After each valid round, the Keybr engine uses your per-key results to choose the next focus and decide when another letter should enter the practice set.</p>
+            <h3>Adaptive practice</h3>
+            <p>Start with a small set of common letters. After each round, your results help choose the next key to focus on and when to add a new letter.</p>
           </article>
           <article>
-            <h3>What the fixed lessons cover</h3>
-            <p>The 15 English QWERTY lessons introduce letter keys in a reviewed order and finish with capital letters. You can open any lesson and repeat it as often as needed. Numbers and punctuation are not included in this course.</p>
+            <h3>Typing lessons</h3>
+            <p>The 15 English QWERTY lessons introduce letter keys step by step and finish with capital letters. Start anywhere and repeat any lesson. Numbers and punctuation are not included.</p>
           </article>
           <article>
-            <h3>Which practice should you choose?</h3>
-            <p>Use continuous practice when you want the next round selected from your results. Choose a fixed lesson when you already know which keys need attention or prefer a visible sequence.</p>
+            <h3>Where should you start?</h3>
+            <p>Try adaptive practice if you want the next exercise chosen for you. Pick a lesson if you already know which keys need work or prefer a clear sequence.</p>
           </article>
         </div>
-        <p className="learning-source-note">Your learning progress stays in this browser and remains separate from typing-test history. Read the <Link href="/privacy">local-data details</Link> or <Link href="/faq#faq-improve">typing practice advice</Link>.</p>
+        <p className="learning-source-note">Your practice progress stays in this browser, separate from your typing test results. Read the <Link href="/privacy">privacy details</Link> or <Link href="/faq#faq-improve">tips for improving</Link>.</p>
       </section>
     </main>
   );

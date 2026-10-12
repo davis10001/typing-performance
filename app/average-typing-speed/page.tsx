@@ -35,7 +35,7 @@ export default function AverageTypingSpeedPage() {
         </div>
         <div><h2>TRACK THE NEXT ATTEMPT.</h2><p>One result is a starting point. Take another test after a break or practice session and look for a steadier pace with fewer errors. Completed results stay in this browser until you clear them.</p></div>
       </section>
-      <section className="content-cta"><h2>START WITH<br /><strong>A REAL TEST.</strong></h2><p>Pick one, two, three, five, or ten minutes. Your result explains what was measured.</p><Link className="button button-primary" href="/5-minute-typing-test">TRY 5 MINUTES <span aria-hidden="true">↗</span></Link></section>
+      <section className="content-cta"><h2>TAKE A<br /><strong>TYPING TEST.</strong></h2><p>Pick one, two, three, five, or ten minutes. Your result explains what was measured.</p><Link className="button button-primary" href="/5-minute-typing-test">TRY 5 MINUTES <span aria-hidden="true">↗</span></Link></section>
     </main>
   );
 }

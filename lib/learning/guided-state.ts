@@ -28,6 +28,12 @@ export function createGuidedState(): GuidedState {
   return { results: [] };
 }
 
+export function rewindGuidedState(state: GuidedState, resultCount: number): GuidedState {
+  const parsed = guidedStateSchema.parse(state);
+  const end = Math.max(0, Math.min(Math.trunc(resultCount), parsed.results.length));
+  return { results: parsed.results.slice(0, end) };
+}
+
 export function recordGuidedResult(
   state: GuidedState,
   attemptId: string,

@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import ResetIcon from "@/components/ResetIcon";
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
-import ResultPaceChart, { type PaceSample } from "@/components/typing/ResultPaceChart";
+import ResultPaceChart, { type PaceSample, type TimedError } from "@/components/typing/ResultPaceChart";
 import { composeTestPrompt, nextTextIndex, type Difficulty, type PromptText } from "@/lib/content/prompt-selection";
 import { durationOptions, type TestPageSlug } from "@/lib/content/test-pages";
 import { saveHistory } from "@/lib/history/repository";
@@ -58,11 +58,15 @@ function formatCountdown(milliseconds: number): string {
 function appendPaceSample(samples: PaceSample[], session: TestSession, elapsedSeconds: number): PaceSample[] {
   const seconds = Math.min(session.durationSeconds, elapsedSeconds);
   if (seconds <= 0 || seconds <= (samples.at(-1)?.elapsedSeconds ?? 0)) return samples;
-  const { correctCharacters } = alignTypingInput(session.prompt, session.typed);
+  const baseline = [...samples].reverse().find((sample) => sample.elapsedSeconds <= seconds - 5)
+    ?? { elapsedSeconds: 0, correctKeys: 0, typedKeys: 0 };
+  const windowSeconds = seconds - baseline.elapsedSeconds;
   return [...samples, {
     elapsedSeconds: seconds,
-    correctWpm: Math.round(correctCharacters * 120 / seconds) / 10,
-    rawWpm: Math.round(session.totalInputChars * 120 / seconds) / 10,
+    correctKeys: session.correctKeystrokes,
+    typedKeys: session.totalInputChars,
+    correctWpm: Math.round((session.correctKeystrokes - baseline.correctKeys) * 120 / windowSeconds) / 10,
+    rawWpm: Math.round((session.totalInputChars - baseline.typedKeys) * 120 / windowSeconds) / 10,
   }];
 }
 
@@ -151,17 +155,14 @@ function TextRenderer({ prompt, typed, active }: { prompt: string; typed: string
       {Array.from(visible).map((character, relativeIndex) => {
         const index = start + relativeIndex;
         const state = characterStates.get(index);
-        const className = state === "correct"
+        const spaceError = character === " " && index === cursorIndex && extraCharacters.has(index);
+        const className = `${spaceError ? "typed-space-error " : ""}${state === "correct"
           ? "typed-correct"
           : state === "error"
             ? "typed-error"
-            : (active && index === cursorIndex ? "typed-current" : "");
-        const extras = extraCharacters.get(index);
+            : (active && index === cursorIndex ? "typed-current" : "")}`;
         return (
-          <Fragment key={index}>
-            {extras && <span className="typed-extra" aria-hidden="true">{extras}</span>}
-            <span className={className} data-prompt-index={index} aria-hidden="true">{character}</span>
-          </Fragment>
+          <span key={index} className={className} data-prompt-index={index} aria-hidden="true">{character}</span>
         );
       })}
     </div>
@@ -180,6 +181,8 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
   const [result, setResult] = useState<TestResult | null>(null);
   const [paceSamples, setPaceSamples] = useState<PaceSample[]>([]);
   const paceSamplesRef = useRef<PaceSample[]>([]);
+  const [timedErrors, setTimedErrors] = useState<TimedError[]>([]);
+  const timedErrorsRef = useRef<TimedError[]>([]);
   const [storageWarning, setStorageWarning] = useState(false);
   const [inputWarning, setInputWarning] = useState("");
   const [fingerGuideEnabled, setFingerGuideEnabled] = useState(true);
@@ -312,6 +315,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
     if (next.phase === "completed" && previous.phase !== "completed") {
       paceSamplesRef.current = appendPaceSample(paceSamplesRef.current, next, (next.endedAt! - next.startedAt!) / 1000);
       setPaceSamples(paceSamplesRef.current);
+      setTimedErrors([...timedErrorsRef.current]);
       const nextResult = calculateResult(next);
       setResult(nextResult);
       if (!nextResult) { telemetry.error("scoring"); return; }
@@ -367,6 +371,8 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
     setResult(null);
     paceSamplesRef.current = [];
     setPaceSamples([]);
+    timedErrorsRef.current = [];
+    setTimedErrors([]);
     setInputWarning("");
     setRemainingMs(durationSeconds * 1000);
     commit(createSession(crypto.randomUUID(), durationSeconds, choosePrompt(difficulty)));
@@ -481,6 +487,15 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
   function onInput(value: string) {
     const current = sessionRef.current;
     const now = performance.now();
+    const recordMistake = (active: TestSession, character: string) => {
+      const { cursorIndex } = alignTypingInput(active.prompt, active.typed);
+      if (character === active.prompt[cursorIndex]) return;
+      timedErrorsRef.current.push({
+        elapsedSeconds: Math.min(active.durationSeconds, Math.max(0, (now - (active.startedAt ?? now)) / 1000)),
+        inputIndex: active.typed.length,
+        corrected: false,
+      });
+    };
     if (current.phase === "ready") {
       if (value.length !== 1) {
         if (value) setInputWarning("Use the keyboard to type one character at a time.");
@@ -489,15 +504,20 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
       const fresh = current.id === "unstarted" ? createSession(crypto.randomUUID(), durationSeconds, current.prompt) : current;
       telemetry.event({ name: "test_start", duration: durationSeconds, entry_page: entryPage });
       setInputWarning("");
+      recordMistake(fresh, value);
       commit(applyCharacter(beginRunning(fresh, now), value, now));
       playTypingClick();
       return;
     }
     if (current.phase !== "running") return;
     if (value.length === current.typed.length + 1 && value.startsWith(current.typed)) {
+      recordMistake(current, value.slice(-1));
       commit(applyCharacter(current, value.slice(-1), now));
       playTypingClick();
     } else if (value.length === current.typed.length - 1 && current.typed.startsWith(value)) {
+      const removedIndex = current.typed.length - 1;
+      const error = [...timedErrorsRef.current].reverse().find((item) => !item.corrected && item.inputIndex === removedIndex);
+      if (error) error.corrected = true;
       commit(applyBackspace(current, now));
       playTypingClick(true);
     } else if (value !== current.typed) {
@@ -614,7 +634,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           </button>
           <button type="button" className="new-testing" onClick={() => prepareTest(session.phase === "completed")}>
             <ResetIcon />
-            <span>Reset</span>
+            <span>Restart</span>
           </button>
         </div>}
       </div>
@@ -661,7 +681,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           <p>You did not type during this attempt, so there is no WPM or accuracy to save. Start a fresh test when you are ready.</p>
           <button type="button" className="button button-primary reset-button" onClick={() => prepareTest(true)}>
             <ResetIcon />
-            Reset
+            Try again
           </button>
         </section>
       ) : result ? (
@@ -676,7 +696,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
             <div><strong>{formatScore(result.rawWpm)}</strong><span>Raw WPM</span></div>
             <div><strong>{result.errors}</strong><span>Errors</span></div>
           </div>
-          <ResultPaceChart samples={paceSamples} durationSeconds={result.durationSeconds} />
+          <ResultPaceChart samples={paceSamples} errors={timedErrors} durationSeconds={result.durationSeconds} />
           <div className="result-actions">
             <button type="button" className="button button-primary reset-button" onClick={() => prepareTest(true)}>
               <ResetIcon />

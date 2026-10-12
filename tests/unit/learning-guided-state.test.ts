@@ -3,12 +3,13 @@ import { describe, expect, it } from "vitest";
 import { Layout } from "@keybr/keyboard";
 import { Result, TextType } from "@keybr/result";
 import { Histogram } from "@keybr/textinput";
-import { createEnglishGuidedLesson, createGuidedRound } from "@/lib/learning/guided-engine";
+import { createEnglishGuidedLesson, createGuidedMilestones, createGuidedRound } from "@/lib/learning/guided-engine";
 import {
   createGuidedState,
   guidedStateSchema,
   recordGuidedResult,
   restoreGuidedResults,
+  rewindGuidedState,
 } from "@/lib/learning/guided-state";
 
 const model = readFileSync("vendor/keybr/packages/keybr-phonetic-model/assets/model-en.data");
@@ -27,6 +28,11 @@ describe("Guided learning state", () => {
     const next = createGuidedRound(lesson, restored);
     expect(next.availableCharacters).toHaveLength(7);
     expect(next.focusCharacter).toBe(next.availableCharacters[6]);
+    const milestones = createGuidedMilestones(lesson, restored);
+    expect(milestones.slice(0, 6).every(({ resultCount }) => resultCount === 0)).toBe(true);
+    expect(milestones[6]).toEqual({ character: next.availableCharacters[6], resultCount: 1 });
+    expect(rewindGuidedState(recorded.state, milestones[6].resultCount)).toEqual(recorded.state);
+    expect(rewindGuidedState(recorded.state, 0)).toEqual(createGuidedState());
   });
 
   it("ignores duplicate completion callbacks and rejects invalid Keybr samples", () => {

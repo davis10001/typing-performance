@@ -19,7 +19,7 @@ export default function CourseCatalog({ embedded = false }: CourseCatalogProps) 
     const frame = requestAnimationFrame(() => {
       const stored = loadLearning(localStorage, courseLearningScope, courseStateSchema);
       if (stored.status === "ready") setState({ ...stored.state, learner: "advanced" });
-      else if (stored.status === "invalid" || stored.status === "incompatible") setMessage("Saved course progress belongs to another version or is damaged. It was kept unchanged.");
+      else if (stored.status === "invalid" || stored.status === "incompatible") setMessage("We couldn't read your saved lesson progress. Your saved data has not been changed.");
       else if (stored.status === "unavailable") setMessage("Progress could not be read or saved in this browser.");
     });
     return () => cancelAnimationFrame(frame);
@@ -31,15 +31,15 @@ export default function CourseCatalog({ embedded = false }: CourseCatalogProps) 
   const heading = embedded ? (
     <header className="learning-section-heading">
       <div>
-        <h2 id="courses-title">Choose a fixed lesson.</h2>
-        <p>Fifteen English QWERTY lessons introduce letter keys in a set order. Every lesson is available, so you can start where the keyboard still feels unfamiliar.</p>
+        <h2 id="courses-title">Typing lessons</h2>
+        <p>Explore 15 English QWERTY lessons, from letter keys to capitals. Start with the keys you want to practice.</p>
       </div>
-      <p className="learning-section-note">Each lesson keeps the reviewed KTouch text and pass targets. Courses cover letters and capitals, not numbers or punctuation.</p>
+      <p className="learning-section-note">Each lesson has speed and accuracy goals. These lessons cover letters and capitals, not numbers or punctuation.</p>
     </header>
   ) : (
     <header className="learning-hero">
-      <h1 id="courses-title">Choose a lesson<br /><strong>and start anywhere.</strong></h1>
-      <p>Follow the reviewed 15-lesson KTouch English QWERTY sequence. Every lesson is open for practice; completed lessons stay marked in this browser.</p>
+      <h1 id="courses-title">Typing lessons.<br /><strong>Start anywhere.</strong></h1>
+      <p>Explore 15 English QWERTY lessons, from letter keys to capitals. You can repeat any lesson, and your completed lessons stay marked in this browser.</p>
       {message && <p className="learning-message" role="status">{message}</p>}
     </header>
   );
@@ -53,18 +53,25 @@ export default function CourseCatalog({ embedded = false }: CourseCatalogProps) 
           const status = completed.has(lesson.id) ? "completed" : lesson.id === nextLessonId ? "next" : "not-started";
           const titleKeys = lesson.title.split(" and ");
           return (
-            <li className={`course-card course-card--${status}`} key={lesson.id}>
-              <div className="course-card-meta">
-                <span className="course-card-number">LESSON {String(index + 1).padStart(2, "0")}</span>
-                <span className="course-card-state">{status === "completed" ? "Completed" : status === "next" ? "Up next" : "Not started"}</span>
-              </div>
-              <div className="course-card-body">
-                <CardHeading>{titleKeys.length === 2 ? <>{titleKeys[0]} <span className="course-card-conjunction">and</span> {titleKeys[1]}</> : lesson.title}</CardHeading>
-                <p className="course-card-keys">New keys <span className="course-card-keyset" title={lesson.newCharacters}>{lesson.newCharacters.length > 8 ? <kbd>A–Z</kbd> : [...lesson.newCharacters].map((character) => <kbd key={character}>{character}</kbd>)}</span></p>
-              </div>
-              <Link className="course-card-action" href={`/learn/courses/${lesson.id}`} aria-label={`${status === "completed" ? "Practice again" : "Start lesson"}: ${lesson.title}`}>
-                {status === "completed" ? "Practice again" : "Start lesson"}
-                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M4 16 16 4M7 4h9v9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <li className="course-card-item" key={lesson.id}>
+              <Link className={`course-card course-card--${status}`} href={`/learn/courses/${lesson.id}`} aria-label={`${status === "completed" ? "Practice again" : "Start lesson"}: ${lesson.title}`}>
+                <div className="course-card-meta">
+                  <span className="course-card-number">LESSON {String(index + 1).padStart(2, "0")}</span>
+                  <span className="course-card-state">{status === "completed" ? "Completed" : status === "next" ? "Up next" : "Not started"}</span>
+                </div>
+                <div className="course-card-body">
+                  <CardHeading className="course-card-title">
+                    {titleKeys.length === 2 ? (
+                      <><kbd>{titleKeys[0]}</kbd><span className="course-card-conjunction">and</span><kbd>{titleKeys[1]}</kbd></>
+                    ) : (
+                      <kbd className="course-card-keycap-wide">{lesson.title}</kbd>
+                    )}
+                  </CardHeading>
+                </div>
+                <span className="course-card-action" aria-hidden="true">
+                  {status === "completed" ? "Practice again" : "Start lesson"}
+                  <svg viewBox="0 0 20 20" fill="none"><path d="M4 16 16 4M7 4h9v9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </span>
               </Link>
             </li>
           );

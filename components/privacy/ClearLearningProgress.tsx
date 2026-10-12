@@ -15,8 +15,8 @@ export default function ClearLearningProgress() {
     const course = clearLearningMode(storage, "course", courseToken);
     setMessage(
       guided.status === "cleared" && course.status === "cleared"
-        ? "Learning progress removed. Saved typing-test results were not changed."
-        : "Learning progress changed in another tab or could not be removed. Reload and try again.",
+        ? "Practice progress removed. Your saved typing test results are still here."
+        : "Practice progress changed in another tab or could not be removed. Reload and try again.",
     );
     setConfirming(false);
   }
@@ -24,13 +24,13 @@ export default function ClearLearningProgress() {
   return (
     <div className="privacy-clear-results">
       {confirming ? (
-        <div className="privacy-clear-actions" role="group" aria-label="Clear learning progress">
-          <span>Remove continuous-practice and course progress from this browser? Test history will stay.</span>
-          <button type="button" onClick={clearProgress}>Clear learning progress</button>
+        <div className="privacy-clear-actions" role="group" aria-label="Clear practice progress">
+          <span>Remove adaptive practice and lesson progress from this browser? Your test results will stay.</span>
+          <button type="button" onClick={clearProgress}>Clear practice progress</button>
           <button type="button" onClick={() => setConfirming(false)}>Cancel</button>
         </div>
       ) : (
-        <button type="button" className="text-button" onClick={() => { setMessage(""); setConfirming(true); }}>Clear learning progress</button>
+        <button type="button" className="text-button" onClick={() => { setMessage(""); setConfirming(true); }}>Clear practice progress</button>
       )}
       {message && <p role="status">{message}</p>}
     </div>

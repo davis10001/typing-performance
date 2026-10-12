@@ -20,9 +20,9 @@ Rules: a completed Test Session produces at most one Test Result; an Abandoned S
 
 | Term | Canonical meaning | Not the same as |
 |---|---|---|
-| Learn | The section containing Continuous practice and Courses | A timed-test difficulty setting |
-| Continuous practice | Keybr Guided learning under a pinned source version | A mandatory letters-to-sentences curriculum |
-| Course / Lesson | A sourced ordered course / one of its lessons | Arbitrarily generated replacement teaching content |
+| Practice (UI; `/learn` route) | The section containing adaptive practice and typing lessons | A timed-test difficulty setting |
+| Adaptive practice (UI) | Keybr Guided learning under a pinned source version | A mandatory letters-to-sentences curriculum |
+| Typing lessons (UI) / Course (internal) | A sourced ordered course and its individual lessons | Arbitrarily generated replacement teaching content |
 | Learning Attempt | One practice attempt evaluated by its source engine | A Test Session or a test-history result |
 | Guided Progress | Source-engine state and valid key statistics | A statistical confidence interval or course completion |
 | Course Progress | Completion of identified, versioned lessons | Automatic Guided mastery credit |

@@ -1,6 +1,7 @@
 "use client";
 
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
+import { alignTypingInput } from "@/lib/typing-engine/alignment";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Props = {
@@ -33,7 +34,7 @@ export default function LearningPracticeSurface({
   useEffect(() => { inputRef.current?.focus(); }, [text]);
 
   const chars = [...text];
-  const typed = actual == null ? null : [...actual];
+  const alignment = actual == null ? null : alignTypingInput(text, actual);
   const nextCharacter = chars[position] ?? null;
   const visibleCharacters = chars.slice(windowStart);
 
@@ -54,9 +55,10 @@ export default function LearningPracticeSurface({
     const currentLine = lineTops.indexOf(current.offsetTop);
     const lineHeight = Number.parseFloat(getComputedStyle(passage).lineHeight);
     const visibleLines = Math.max(1, Math.floor(passage.clientHeight / lineHeight));
-    if (currentLine < visibleLines) return;
+    const previewLines = visibleLines > 1 ? 1 : 0;
+    if (currentLine < visibleLines - previewLines) return;
 
-    const nextTop = lineTops[currentLine - visibleLines + 1];
+    const nextTop = lineTops[currentLine - visibleLines + previewLines + 1];
     const nextLineStart = characters.find((character) => character.offsetTop === nextTop);
     const nextStart = Number(nextLineStart?.dataset.learningIndex);
     if (!Number.isFinite(nextStart) || nextStart <= windowStart) return;
@@ -75,16 +77,18 @@ export default function LearningPracticeSurface({
         {visibleCharacters.map((character, relativeIndex) => {
           const index = windowStart + relativeIndex;
           let className = "learning-char";
-          if (index < position) {
-            className += typed && typed[index] !== character ? " typed-error" : " typed-correct";
-          } else if (index === position) className += " typed-current";
+          const state = alignment?.characterStates.get(index);
+          if (state) className += state === "error" ? " typed-error" : " typed-correct";
+          else if (index < position) className += " typed-correct";
+          else if (index === position) className += " typed-current";
+          if (character === " " && index === position && alignment?.extraCharacters.has(index)) className += " typed-space-error";
           return <span className={className} data-learning-index={index} key={index}>{character}</span>;
         })}
       </div>
       <textarea
         ref={inputRef}
         className="typing-capture-input"
-        aria-label="Type the learning exercise here"
+        aria-label="Type the exercise here"
         autoCapitalize="off"
         autoComplete="off"
         autoCorrect="off"

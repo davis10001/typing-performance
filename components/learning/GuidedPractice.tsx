@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ResetIcon from "@/components/ResetIcon";
-import { loadEnglishGuidedLesson, createGuidedRound, type GuidedRound } from "@/lib/learning/guided-engine";
+import { createGuidedMilestones, loadEnglishGuidedLesson, createGuidedRound, type GuidedRound } from "@/lib/learning/guided-engine";
 import { GuidedInputSession } from "@/lib/learning/guided-input";
-import { createGuidedState, guidedStateSchema, recordGuidedResult, restoreGuidedResults, type GuidedState } from "@/lib/learning/guided-state";
+import { createGuidedState, guidedStateSchema, recordGuidedResult, restoreGuidedResults, rewindGuidedState, type GuidedState } from "@/lib/learning/guided-state";
 import { loadLearning } from "@/lib/learning/repository";
 import { updateLearning } from "@/lib/learning/browser-repository";
 import { guidedLearningScope } from "@/lib/learning/scopes";
@@ -28,6 +28,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
   const [feedback, setFeedback] = useState<"idle" | "error">("idle");
   const [completion, setCompletion] = useState<Completion | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isRewinding, setIsRewinding] = useState(false);
   const sessionRef = useRef<GuidedInputSession | null>(null);
   const lastInputAt = useRef(0);
 
@@ -57,20 +58,36 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
         setHistory(state);
         startRound(engine, state);
       } catch {
-        if (!cancelled) setMessage("The Keybr learning model could not be loaded. Reload to try again.");
+        if (!cancelled) setMessage("Practice couldn't load. Reload the page to try again.");
       }
     })();
     return () => { cancelled = true; };
   }, [startRound]);
 
-  const resetCurrent = useCallback(() => {
-    if (!round) return;
-    sessionRef.current = new GuidedInputSession(round.text);
-    lastInputAt.current = 0;
-    setPosition(0);
-    setFeedback("idle");
-    setCompletion(null);
-  }, [round]);
+  const restoredResults = useMemo(() => restoreGuidedResults(history), [history]);
+  const milestones = useMemo(() => lesson == null ? [] : createGuidedMilestones(lesson, restoredResults), [lesson, restoredResults]);
+
+  const restartFrom = useCallback((resultCount: number) => {
+    if (!lesson || isRewinding) return;
+    setIsRewinding(true);
+    setMessage(null);
+    const locks = "locks" in navigator ? navigator.locks : undefined;
+    void updateLearning({
+      storage: localStorage,
+      scope: guidedLearningScope,
+      stateSchema: guidedStateSchema,
+      initialState: createGuidedState,
+      update: (state) => rewindGuidedState(state, resultCount),
+      locks,
+    }).then((saved) => {
+      if (saved.status === "saved") {
+        setHistory(saved.state);
+        startRound(lesson, saved.state);
+      } else {
+        setMessage(saved.status === "conflict" ? "Progress changed in another tab. Reload before restarting." : "Progress could not be restarted in this browser.");
+      }
+    }).finally(() => setIsRewinding(false));
+  }, [isRewinding, lesson, startRound]);
 
   const handleCharacter = useCallback((character: string, timeStamp: number) => {
     const session = sessionRef.current;
@@ -92,7 +109,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
     const recorded = recordGuidedResult(history, id, result);
     if (recorded.status !== "recorded") {
       setCompletion({ result, saved: false });
-      setMessage("This round was too short or too fast to become a Keybr learning sample. Try another round.");
+      setMessage("That round was too short or too fast to count toward your progress. Try another round.");
       return;
     }
     setHistory(recorded.state);
@@ -111,8 +128,11 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
     });
   }, [completion, history]);
 
-  if (!round || !lesson) return <section className={`learning-loading ${embedded ? "is-embedded" : ""}`} aria-live="polite">Loading the Keybr learning model…{message && <p>{message}</p>}</section>;
+  if (!round || !lesson) return <section className={`learning-loading ${embedded ? "is-embedded" : ""}`} aria-live="polite">Loading practice…{message && <p>{message}</p>}</section>;
 
+  const focusMistakes = completion && round.focusCharacter
+    ? completion.result.histogram.get(round.focusCharacter.codePointAt(0) ?? 0)?.missCount
+    : null;
   const Heading = embedded ? "h2" : "h1";
   const ResultHeading = embedded ? "h2" : "h1";
   const content = (
@@ -120,9 +140,31 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
       <header className="learning-toolbar">
         <div>
           <Heading id="guided-practice-title">Focus {round.focusCharacter?.toUpperCase() ?? "review"}</Heading>
-          <span>{round.availableCharacters.map((item) => item.toUpperCase()).join(" · ")}</span>
+          <div className="learning-stage-list" aria-label="Restart continuous practice from a learned stage">
+            {round.availableCharacters.map((character, index) => {
+              const milestone = milestones.find((item) => item.character === character);
+              const tooltipId = `restart-stage-${character.codePointAt(0)}`;
+              return (
+                <span className="learning-stage-item" key={character}>
+                  <button
+                    type="button"
+                    className="learning-stage-button"
+                    aria-current={character === round.focusCharacter ? "step" : undefined}
+                    aria-describedby={tooltipId}
+                    aria-label={`Restart from ${character.toUpperCase()} stage`}
+                    disabled={isRewinding || milestone == null}
+                    onClick={() => milestone && restartFrom(milestone.resultCount)}
+                  >
+                    {character.toUpperCase()}
+                    <span className="learning-stage-tooltip" id={tooltipId} role="tooltip">Restart from here</span>
+                  </button>
+                  {index < round.availableCharacters.length - 1 && <span className="learning-stage-separator" aria-hidden="true">·</span>}
+                </span>
+              );
+            })}
+          </div>
         </div>
-        <button className="learning-toolbar-action" type="button" onClick={resetCurrent}>
+        <button className="learning-toolbar-action" type="button" aria-label="Reset continuous practice progress" title="Restart from the beginning" disabled={isRewinding} onClick={() => restartFrom(0)}>
           <ResetIcon />
           <span>Reset</span>
         </button>
@@ -131,16 +173,17 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
       {completion ? (
         <section className="learning-result-card" aria-labelledby="guided-result-title">
           <span className="eyebrow dark">ROUND COMPLETE</span>
-          <ResultHeading id="guided-result-title">Keep the rhythm.</ResultHeading>
+          <ResultHeading id="guided-result-title">Here&apos;s how you did.</ResultHeading>
           <div className="learning-result-metrics">
-            <p><strong>{Math.round(completion.result.speed)}</strong><span>CPM</span></p>
+            <p><strong>{Math.round(completion.result.speed)}</strong><span>characters/min</span></p>
             <p><strong>{Math.round(completion.result.accuracy * 100)}%</strong><span>accuracy</span></p>
             <p><strong>{completion.result.errors}</strong><span>errors</span></p>
           </div>
-          <p>{completion.saved ? "Progress saved in this browser." : "This result is available now; saved status is shown above."}</p>
+          {focusMistakes != null && <p className="guided-result-note">Focus key {round.focusCharacter!.toUpperCase()}: {focusMistakes === 0 ? "no mistakes this round" : `${focusMistakes} ${focusMistakes === 1 ? "mistake" : "mistakes"} this round`}.</p>}
+          <p>{completion.saved ? "Progress saved in this browser." : "Your result is shown here, but your progress could not be saved."}</p>
           <div className="learning-result-actions">
             <button className="button button-primary" type="button" onClick={() => startRound(lesson, history)}>Continue practice <span>↗</span></button>
-            {embedded ? <a className="text-button" href="#courses">Browse fixed lessons</a> : <Link className="button button-secondary" href="/learn">Back to Learn</Link>}
+            {embedded ? <a className="text-button" href="#courses">Browse lessons</a> : <Link className="button button-secondary" href="/learn">Back to practice</Link>}
           </div>
         </section>
       ) : (
@@ -149,7 +192,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
           text={round.text}
           position={position}
           status={feedback}
-          label="Keybr continuous learning exercise"
+          label="Adaptive typing exercise"
           onCharacter={handleCharacter}
           onBackspace={(word, timeStamp) => {
             const session = sessionRef.current;
@@ -158,7 +201,13 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
             setPosition(snapshot.position);
             setFeedback("idle");
           }}
-          onBlur={() => { if (position > 0) resetCurrent(); }}
+          onBlur={() => {
+            if (position === 0) return;
+            sessionRef.current = new GuidedInputSession(round.text);
+            lastInputAt.current = 0;
+            setPosition(0);
+            setFeedback("idle");
+          }}
         />
       )}
     </>

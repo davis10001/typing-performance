@@ -3,8 +3,8 @@ import GuidedPractice from "@/components/learning/GuidedPractice";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Continuous typing practice",
-  description: "Practice with the Keybr Guided engine and advance according to per-key performance.",
+  title: "Adaptive Typing Practice",
+  description: "Practice touch typing with exercises that adjust to your results on each key.",
   path: "/learn/practice",
 });
 

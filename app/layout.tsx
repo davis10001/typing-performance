@@ -58,7 +58,7 @@ function SiteHeader() {
       </Link>
       <nav className="site-nav" aria-label="Main navigation">
         <Link href="/">Test</Link>
-        <Link href="/learn">Learn</Link>
+        <Link href="/learn">Practice</Link>
         <span>Race</span>
         <Link href="/faq">FAQ</Link>
       </nav>
@@ -90,7 +90,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Image className="footer-logo" src="/images/typing-level-logo.png" alt="TypingLevel" width={2030} height={775} />
             </span>
             <nav aria-label="Footer navigation">
-              <Link href="/learn">LEARN</Link>
+              <Link href="/learn">PRACTICE</Link>
               <Link href="/average-typing-speed">TYPING SPEED</Link>
               <Link href="/faq">FAQ</Link>
               <Link href="/privacy">PRIVACY</Link>

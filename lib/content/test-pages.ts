@@ -24,7 +24,7 @@ export const testPages = {
   "1-minute-typing-test": {
     slug: "1-minute-typing-test",
     durationSeconds: 60,
-    title: "1 Minute Typing Test",
+    title: "1-Minute Typing Test",
     description: "Take a quick one-minute typing test. Get your WPM, accuracy, and an easy way to retest.",
     intro: "One minute is enough for a quick check of your current pace. It is easy to repeat when you want to compare attempts.",
     guidance: "Use the same duration for repeat attempts. A short test can vary from one attempt to the next, so look at more than a single result.",
@@ -36,7 +36,7 @@ export const testPages = {
   "2-minute-typing-test": {
     slug: "2-minute-typing-test",
     durationSeconds: 120,
-    title: "2 Minute Typing Test",
+    title: "2-Minute Typing Test",
     description: "Take a two-minute typing test and see your WPM, accuracy, mistakes, and result summary.",
     intro: "Two minutes gives you a little more time to settle in while keeping the test quick to repeat.",
     guidance: "Use the same duration when comparing attempts. Your result reflects the full two minutes, not just your fastest stretch.",
@@ -48,7 +48,7 @@ export const testPages = {
   "3-minute-typing-test": {
     slug: "3-minute-typing-test",
     durationSeconds: 180,
-    title: "3 Minute Typing Test",
+    title: "3-Minute Typing Test",
     description: "Measure your typing pace over three minutes with WPM, accuracy, mistakes, and a simple result summary.",
     intro: "Three minutes gives you time to settle into a rhythm while keeping the test manageable. It is a useful middle ground for repeat practice.",
     guidance: "Aim for consistent typing rather than a fast opening burst. The final result uses your full elapsed test time.",
@@ -60,7 +60,7 @@ export const testPages = {
   "5-minute-typing-test": {
     slug: "5-minute-typing-test",
     durationSeconds: 300,
-    title: "5 Minute Typing Test",
+    title: "5-Minute Typing Test",
     description: "Try a five-minute typing test to see how your speed and accuracy hold up over a longer session.",
     intro: "A longer session shows whether your pace stays steady. Use this test when you want more than a quick snapshot.",
     guidance: "Stay comfortable and keep an even rhythm. The final score reflects the full five-minute attempt, including corrections and pauses.",
@@ -72,7 +72,7 @@ export const testPages = {
   "10-minute-typing-test": {
     slug: "10-minute-typing-test",
     durationSeconds: 600,
-    title: "10 Minute Typing Test",
+    title: "10-Minute Typing Test",
     description: "Take a ten-minute typing test to see your WPM and accuracy over a sustained session.",
     intro: "Ten minutes gives you a sustained session to see how your pace and accuracy hold up over time.",
     guidance: "Keep a comfortable rhythm and take the full session at your own pace. The result includes pauses and corrections during the ten minutes.",

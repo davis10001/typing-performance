@@ -15,6 +15,11 @@ export type GuidedRound = {
   focusCharacter: string | null;
 };
 
+export type GuidedMilestone = {
+  character: string;
+  resultCount: number;
+};
+
 export function createEnglishGuidedLesson(modelData: Uint8Array): GuidedLesson {
   const model: PhoneticModel = makePhoneticModel(Language.EN, modelData);
   return new GuidedLesson(new Settings(), loadKeyboard(Layout.EN_US), model, words);
@@ -28,16 +33,40 @@ export async function loadEnglishGuidedLesson(
   return createEnglishGuidedLesson(new Uint8Array(await response.arrayBuffer()));
 }
 
+function updateGuidedLesson(lesson: GuidedLesson, results: readonly Result[]) {
+  return lesson.update(makeKeyStatsMap(lesson.letters, lesson.filter(results)));
+}
+
 export function createGuidedRound(
   lesson: GuidedLesson,
   results: readonly Result[],
   rng: RNGStream = Lesson.rng,
 ): GuidedRound {
-  const lessonKeys = lesson.update(makeKeyStatsMap(lesson.letters, lesson.filter(results)));
+  const lessonKeys = updateGuidedLesson(lesson, results);
   const focusedKey = lessonKeys.findFocusedKey();
   return {
     text: lesson.generate(lessonKeys, rng),
     availableCharacters: lessonKeys.findIncludedKeys().map(({ letter }) => String.fromCodePoint(letter.codePoint)),
     focusCharacter: focusedKey == null ? null : String.fromCodePoint(focusedKey.letter.codePoint),
   };
+}
+
+export function createGuidedMilestones(
+  lesson: GuidedLesson,
+  results: readonly Result[],
+): GuidedMilestone[] {
+  const milestones: GuidedMilestone[] = [];
+  const seen = new Set<string>();
+
+  for (let resultCount = 0; resultCount <= results.length; resultCount += 1) {
+    const lessonKeys = updateGuidedLesson(lesson, results.slice(0, resultCount));
+    for (const { letter } of lessonKeys.findIncludedKeys()) {
+      const character = String.fromCodePoint(letter.codePoint);
+      if (seen.has(character)) continue;
+      seen.add(character);
+      milestones.push({ character, resultCount });
+    }
+  }
+
+  return milestones;
 }
