@@ -197,6 +197,47 @@ test("a passed course is marked complete while every lesson stays available", as
   await expect(page.locator(".course-card").nth(14)).toBeVisible();
 });
 
+test("a lesson that misses a goal shows its result and recovery choices", async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  test.skip(testInfo.project.name !== "desktop", "Long end-to-end completion is covered once on desktop.");
+  await page.goto("/learn/courses/jf1");
+  const passage = page.locator(".learning-passage");
+  const prompt = await passage.textContent();
+  expect(prompt).not.toBeNull();
+  const input = page.getByRole("textbox", { name: "Type the exercise here" });
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await input.evaluate(async (element, text) => {
+    element.focus();
+    for (let index = 0; index < text.length; index += 1) {
+      const character = text[index];
+      if (index < 20) {
+        const wrongCharacter = character === "x" ? "z" : "x";
+        element.dispatchEvent(new KeyboardEvent("keydown", { key: wrongCharacter, bubbles: true, cancelable: true }));
+        element.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true, cancelable: true }));
+      }
+      element.dispatchEvent(new KeyboardEvent("keydown", {
+        key: character === "\n" ? "Enter" : character,
+        bubbles: true,
+        cancelable: true,
+      }));
+      if (index % 20 === 19) await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  }, prompt!);
+
+  const result = page.locator(".lesson-result-card");
+  await expect(page.getByRole("heading", { name: "Lesson not passed yet." })).toBeVisible();
+  await expect(result).toHaveClass(/needs-practice/);
+  await expect(result).toContainText("Goal 98% not met");
+  await expect(result.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(result.getByRole("link", { name: "Start next lesson" })).toHaveAttribute("href", "/learn/courses/kd1");
+  await expect(page.locator(".lesson-confetti")).toHaveCount(0);
+  await expect.poll(async () => result.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.top >= 0 && bounds.top < window.innerHeight;
+  })).toBe(true);
+});
+
 test("learning reset preserves typing-test history", async ({ page }) => {
   await page.goto("/privacy");
   await page.evaluate(() => {

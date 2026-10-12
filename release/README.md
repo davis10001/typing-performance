@@ -1,8 +1,8 @@
 # Production release gate
 
-`npm run release:check` verifies the recorded product approvals and requires a real HTTPS `NEXT_PUBLIC_SITE_URL` before production deployment. The current launch approvals and evidence are recorded in `approvals.json` and `verification-2026-10-11.md`.
+`npm run release:check` verifies the recorded product approvals and requires a real HTTPS `NEXT_PUBLIC_SITE_URL` before production deployment. Current approvals are recorded in `approvals.json`; the initial launch evidence remains in `verification-2026-10-11.md`.
 
-- `benchmark`: OQ-01 — the product owner chose **no public benchmark in the first launch** on 2026-10-11. A later release may change `mode` to `published` only with a centrally reviewed source, version and definition. Do not publish numeric averages, percentiles, rankings, or “verified” claims without source review.
+- `benchmark`: OQ-01 — the product/content owner approved benchmark definition `typing-speed-benchmarks-v1.json` for publication on 2026-10-12. Do not publish additional averages, percentiles, rankings, or “verified” claims without source review.
 - `privacyAndDomain`: OQ-02 — TypingLevel remains the launch brand and `how-type.com` is the selected domain. GA4 and Vercel Analytics/Speed Insights are **off for the first launch** by product-owner decision on 2026-10-11. A reviewed privacy notice and domain/launch sign-off remain required; do not turn analytics on without a separate reviewed release.
 - `testTextLicense`: OQ-03 — the product owner confirmed the current 67 passages for launch on 2026-10-11. The text set and decision are recorded in `content/test-texts/launch-copy-v1.md`.
 - `verification`: link or path to CI evidence plus manual keyboard, screen reader, target-browser, performance, SEO and privacy checks.

@@ -1,0 +1,31 @@
+{
+  "id": "typing-speed-benchmarks-v1",
+  "version": "1.0.0",
+  "reviewedAt": "2026-10-12",
+  "reviewOwner": "TypingLevel product/content owner",
+  "adultStudy": {
+    "title": "Observations on Typing from 136 Million Keystrokes",
+    "publicationYear": 2018,
+    "sampleSize": 168960,
+    "keystrokes": 136857600,
+    "averageWpm": 51.56,
+    "displayAverageWpm": 52,
+    "commonRangeWpm": [30, 60],
+    "fastestObservedWpm": 120,
+    "sourceUrl": "https://www.aalto.fi/en/news/the-traits-of-fast-typists-discovered-by-analysing-136-million-keystrokes",
+    "paperUrl": "https://www.researchgate.net/publication/324659119_Observations_on_Typing_from_136_Million_Keystrokes",
+    "limitations": "Participants were self-selected, mostly younger, interested in typing, and more than 70% had taken a typing course. The results describe this sample and are not a universal pass or fail standard."
+  },
+  "historicalProfessionalRangeWpm": [60, 90],
+  "educationGuidance": {
+    "sourceUrl": "https://support.typing.com/en/articles/9045953",
+    "sourceName": "Typing.com planning guidance",
+    "limitations": "These figures are educational planning guidance, not scientific age norms or fixed ability targets.",
+    "groups": [
+      { "label": "Elementary school", "detail": "Grades 3–5", "range": "8–20 WPM" },
+      { "label": "Middle school", "detail": "Grades 6–8", "range": "20–30 WPM" },
+      { "label": "High school", "detail": "Grades 9–12", "range": "30–40 WPM" },
+      { "label": "College / adult", "detail": "Planning reference", "range": "40+ WPM" }
+    ]
+  }
+}

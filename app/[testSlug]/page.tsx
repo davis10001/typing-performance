@@ -56,7 +56,7 @@ export default async function TestPage({ params }: Props) {
     <main className="test-page">
       <JsonLd data={pageJsonLd} />
       <section className="test-intro" aria-labelledby="test-title">
-        <div><span className="eyebrow">TIMED TEST</span><h1 id="test-title">{config.title}</h1></div>
+        <h1 id="test-title">{config.title}</h1>
         <p>{config.intro}</p>
       </section>
       <TestShell durationSeconds={config.durationSeconds} texts={testTexts.map(({ id, difficulty, text }) => ({ id, difficulty, text }))} entryPage={testSlug} />

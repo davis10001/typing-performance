@@ -16,10 +16,12 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(homeLink.locator("img")).toHaveAttribute("src", /typing-level-logo/);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/images/typing-level-icon.png");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
-  await expect(navigation).toHaveText("TestPracticeRaceFAQ");
-  await expect(navigation.getByRole("link")).toHaveCount(3);
+  await expect(navigation).toHaveText("TestPracticeCompeteSoonFAQ");
+  await expect(navigation.locator("a")).toHaveCount(3);
   await expect(navigation.getByRole("link", { name: "Test" })).toHaveAttribute("href", "/");
   await expect(navigation.getByRole("link", { name: "Practice" })).toHaveAttribute("href", "/learn");
+  await expect(navigation.getByRole("link", { name: "Compete, coming soon" })).toHaveAttribute("aria-disabled", "true");
+  await expect(navigation.getByRole("link", { name: "Compete, coming soon" })).not.toHaveAttribute("href");
   await expect(navigation.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/faq");
   await expect(navigation.locator("button, svg, img")).toHaveCount(0);
   const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });
@@ -33,6 +35,13 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
   await expect(page.locator(".home-stats")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "WHAT IS A GOOD TYPING SPEED?" })).toBeVisible();
+  await expect(page.getByText("the average was 52 WPM", { exact: false })).toBeVisible();
+  await expect(page.getByRole("img", { name: /Most study participants typed between 30 and 60 WPM/ })).toBeVisible();
+  await expect(page.locator(".benchmark-school tbody tr")).toHaveCount(4);
+  await expect(page.getByRole("link", { name: "Study source" })).toHaveAttribute("href", /aalto\.fi/);
+  await expect(page.getByRole("heading", { name: "UNDERSTAND YOUR RESULT." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "How scoring works" })).toHaveAttribute("href", "/average-wpm");
   const geometry = await page.evaluate(() => {
     const header = document.querySelector<HTMLElement>(".site-header")!.getBoundingClientRect();
     const logo = document.querySelector<HTMLElement>(".header-wordmark")!.getBoundingClientRect();
@@ -186,7 +195,7 @@ test("space errors mark the space without shifting passage text", async ({ page 
   await expect(space).not.toHaveClass(/typed-space-error/);
 });
 
-test("typing passage advances by rendered lines without pulling the third line to the top", async ({ page }) => {
+test("typing passage advances by rendered lines and restores the previous window", async ({ page }) => {
   test.slow();
   await page.goto("/1-minute-typing-test");
   const passage = page.locator(".typing-passage");
@@ -216,17 +225,17 @@ test("typing passage advances by rendered lines without pulling the third line t
   expect(thirdLinePosition).toBe(2);
 
   await input.pressSequentially(prompt!.slice(initialLineStarts[2], initialLineStarts[5]));
-  await expect(passage).toHaveAttribute("data-window-start", String(initialLineStarts[1]));
+  await expect(passage).toHaveAttribute("data-window-start", String(initialLineStarts[2]));
   const shiftedCaretPosition = await passage.locator(".typed-current").evaluate((current) => {
     const passage = current.parentElement!;
     const tops = [...new Set(Array.from(passage.querySelectorAll<HTMLElement>("[data-prompt-index]"), (character) => character.offsetTop))];
     return tops.indexOf((current as HTMLElement).offsetTop);
   });
-  expect(shiftedCaretPosition).toBe(4);
+  expect(shiftedCaretPosition).toBe(3);
 
-  const backspacesToPreviousWindow = initialLineStarts[5] - initialLineStarts[1] + 1;
+  const backspacesToPreviousWindow = initialLineStarts[5] - initialLineStarts[2] + 1;
   for (let index = 0; index < backspacesToPreviousWindow; index += 1) await input.press("Backspace");
-  await expect(passage).toHaveAttribute("data-window-start", "0");
+  await expect(passage).toHaveAttribute("data-window-start", String(initialLineStarts[1]));
 });
 
 test("typing text size changes only the passage and persists", async ({ page }) => {
@@ -234,6 +243,9 @@ test("typing text size changes only the passage and persists", async ({ page }) 
   const sizes = page.getByRole("group", { name: "Typing text size" });
   const passage = page.locator(".typing-passage");
   const compact = page.viewportSize()!.width <= 680;
+  await expect(sizes.getByRole("button", { name: "Small text size" })).toHaveText("S");
+  await expect(sizes.getByRole("button", { name: "Medium text size" })).toHaveText("M");
+  await expect(sizes.getByRole("button", { name: "Large text size" })).toHaveText("L");
   await expect(sizes.getByRole("button", { name: "Medium text size" })).toHaveAttribute("aria-pressed", "true");
   await expect(passage).toHaveCSS("font-size", compact ? "26px" : "30px");
   await sizes.getByRole("button", { name: "Large text size" }).click();
@@ -566,6 +578,7 @@ test("SEO explanation remains readable without JavaScript", async ({ browser }) 
 test("primary route has no horizontal overflow or blocking accessibility violations", async ({ page }) => {
   await page.goto("/1-minute-typing-test");
   await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to typing test" })).toHaveAttribute("href", "/");
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(horizontalOverflow).toBe(false);
   const viewport = page.viewportSize();
@@ -639,8 +652,8 @@ test("primary route has no horizontal overflow or blocking accessibility violati
   expect(alignment.captureOpacity).toBe("0");
   expect(alignment.passageColor).toBe("rgb(120, 120, 120)");
   expect(alignment.passageFontSize).toBe(viewport!.width <= 680 ? 26 : 30);
-  expect(alignment.passageVisibleLines).toBeGreaterThanOrEqual(5);
-  expect(alignment.passageVisibleLines).toBeLessThan(5.1);
+  expect(alignment.passageVisibleLines).toBeGreaterThanOrEqual(4);
+  expect(alignment.passageVisibleLines).toBeLessThan(4.1);
   expect(alignment.passageCharacters).toBeGreaterThanOrEqual(520);
   expect(alignment.passageHasClippedOverflow).toBe(true);
   expect(alignment.passageOverflow).toBe("hidden");

@@ -59,7 +59,10 @@ function SiteHeader() {
       <nav className="site-nav" aria-label="Main navigation">
         <Link href="/">Test</Link>
         <Link href="/learn">Practice</Link>
-        <span>Race</span>
+        <span className="site-nav-disabled" role="link" aria-disabled="true" aria-label="Compete, coming soon" title="Coming soon">
+          Compete
+          <small aria-hidden="true">Soon</small>
+        </span>
         <Link href="/faq">FAQ</Link>
       </nav>
     </header>

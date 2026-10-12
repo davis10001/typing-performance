@@ -61,6 +61,7 @@ function BackIcon() {
 export default function CoursePractice({ lesson }: { lesson: Lesson }) {
   const first = englishQwertyCourse.lessons[0].id;
   const sessionRef = useRef(new CourseInputSession(lesson.text));
+  const resultCardRef = useRef<HTMLElement>(null);
   const startedAt = useRef<number | null>(null);
   const elapsed = useRef(0);
   const [state, setState] = useState<CourseState>(() => createCourseState(first, "advanced"));
@@ -79,6 +80,14 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    if (!completion) return;
+    const frame = requestAnimationFrame(() => {
+      resultCardRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [completion]);
 
   const reset = () => {
     sessionRef.current = new CourseInputSession(lesson.text);
@@ -164,11 +173,13 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
       {completion ? (
         <>
           {completion.result.passed && <LessonCelebration />}
-          <section className={`learning-result-card lesson-result-card ${completion.result.passed ? "is-passed" : "needs-practice"}`} aria-labelledby="course-result-title" aria-live="polite">
+          <section ref={resultCardRef} className={`learning-result-card lesson-result-card ${completion.result.passed ? "is-passed" : "needs-practice"}`} aria-labelledby="course-result-title" aria-live="polite">
             <header className="lesson-result-heading">
               <div>
-                <h1 id="course-result-title">Lesson {String(lessonIndex + 1).padStart(2, "0")} complete.</h1>
-                <p><strong>{lesson.title}</strong> · {completion.result.passed ? "Both lesson goals met." : "Complete both goals to mark this lesson as passed."}</p>
+                <h1 id="course-result-title">{completion.result.passed
+                  ? `Lesson ${String(lessonIndex + 1).padStart(2, "0")} complete.`
+                  : "Lesson not passed yet."}</h1>
+                <p><strong>{lesson.title}</strong> · {completion.result.passed ? "Both lesson goals met." : "Review the missed goal and choose what to do next."}</p>
               </div>
               <div className="lesson-progress" aria-label={`${completedLessonCount} of ${englishQwertyCourse.lessons.length} lessons passed`}>
                 <span>Course progress</span>

@@ -42,7 +42,7 @@ const fontSizeOptions: { value: TypingFontSize; label: string; shortLabel: strin
   { value: "large", label: "Large", shortLabel: "L" },
 ];
 const visiblePromptCharacters = 520;
-const visiblePromptLines = 5;
+const visiblePromptLines = 4;
 
 function formatScore(value: number | null, suffix = ""): string {
   return value === null ? "—" : `${Number.isInteger(value) ? value : value.toFixed(1)}${suffix}`;
@@ -88,6 +88,10 @@ function DifficultyIcon() {
       <circle cx="11" cy="17" r="1.7" />
     </svg>
   );
+}
+
+function BackIcon() {
+  return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5M7.5 10h7" /></svg>;
 }
 
 function SoundIcon({ enabled }: { enabled: boolean }) {
@@ -539,7 +543,12 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
 
   return (
     <div className="test-shell" data-phase={session.phase} data-font-size={fontSize}>
-      <div className="test-toolbar">
+      <div className={`test-toolbar ${entryPage !== "typing-test" ? "has-back" : ""}`}>
+        {entryPage !== "typing-test" && (
+          <Link className="test-toolbar-back" href="/" aria-label="Back to typing test" title="Back to typing test">
+            <BackIcon />
+          </Link>
+        )}
         {isReady ? (
           <div className="test-toolbar-config">
             <div className="duration-cards" role="group" aria-label="Choose test duration">
@@ -582,7 +591,6 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
                   aria-pressed={fontSize === option.value}
                   onClick={() => changeFontSize(option.value)}
                 >
-                  <span className="font-size-label">{option.label}</span>
                   <span className="font-size-short-label" aria-hidden="true">{option.shortLabel}</span>
                 </button>
               ))}

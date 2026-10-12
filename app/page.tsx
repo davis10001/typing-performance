@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import TypingBenchmarks from "@/components/home/TypingBenchmarks";
 import JsonLd from "@/components/seo/JsonLd";
 import TestShell from "@/components/typing/TestShell";
 import { testTexts } from "@/lib/content/test-texts";
@@ -7,7 +8,7 @@ import { buildPageMetadata, siteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Free Typing Test: Check Your WPM & Accuracy",
-  description: "Take a free typing test and see your WPM, accuracy, and mistakes immediately. Choose a 1, 2, 3, 5, or 10 minute test. No account needed.",
+  description: "Take a free typing test and see your WPM, accuracy, and mistakes immediately. Compare your result with sourced typing speed benchmarks. No account needed.",
   path: "/",
 });
 
@@ -41,11 +42,13 @@ export default function HomePage() {
         entryPage="typing-test"
       />
 
-      <section className="home-guide" aria-labelledby="home-guide-title">
-        <div className="home-guide-heading">
-          <h2 id="home-guide-title">UNDERSTAND YOUR RESULT.</h2>
+      <TypingBenchmarks />
+
+      <section className="home-result-guide" aria-labelledby="home-result-guide-title">
+        <header>
+          <h2 id="home-result-guide-title">UNDERSTAND YOUR RESULT.</h2>
           <p>Your first score is a starting point. A little context can help you decide what to try next.</p>
-        </div>
+        </header>
         <div className="home-guide-topics">
           <article>
             <h3>What do WPM and accuracy mean?</h3>
