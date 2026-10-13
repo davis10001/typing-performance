@@ -20,7 +20,7 @@ export default function TypingBenchmarks({ showExtended = true }: { showExtended
     <section className="home-guide home-benchmark" aria-labelledby="typing-benchmark-title">
       <header className="benchmark-heading">
         <h2 id="typing-benchmark-title">WHAT IS A GOOD TYPING SPEED?</h2>
-        <p>In a study of 168,960 typists, the average was <strong>52 WPM</strong> and most people typed between <strong>30 and 60 WPM</strong>.</p>
+        <p>In a study of 168,960 self-selected online volunteers, the average was <strong>52 WPM</strong> and most participants typed between <strong>30 and 60 WPM</strong>.</p>
       </header>
 
       <figure className="benchmark-bar-card" aria-labelledby="benchmark-bar-title benchmark-bar-caption">
@@ -55,7 +55,7 @@ export default function TypingBenchmarks({ showExtended = true }: { showExtended
           <div><dt>Fastest observed</dt><dd>{benchmark.adultStudy.fastestObservedWpm}+ WPM</dd></div>
         </dl>
 
-        <figcaption id="benchmark-bar-caption">The study measured transcription typing from randomized English sentences.</figcaption>
+        <figcaption id="benchmark-bar-caption">The study measured transcription typing from randomized English sentences. Its 52 WPM average describes this self-selected online sample, not a universal pass or fail line.</figcaption>
       </figure>
 
       <div className="benchmark-scan">
@@ -98,7 +98,7 @@ export default function TypingBenchmarks({ showExtended = true }: { showExtended
           <a href={benchmark.adultStudy.sourceUrl} target="_blank" rel="noopener noreferrer">Study source</a>
           <a href={benchmark.educationGuidance.sourceUrl} target="_blank" rel="noopener noreferrer">School guidance</a>
           <Link href="/average-typing-speed">More on typing speed</Link>
-          <Link href="/average-wpm">How WPM works</Link>
+          <Link href="/how-wpm-is-calculated">How WPM works</Link>
         </nav>
       </footer>}
     </section>

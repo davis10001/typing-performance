@@ -53,7 +53,7 @@ export default function HomePage() {
           <article>
             <h3>What do WPM and accuracy mean?</h3>
             <p>Correct WPM shows your pace on the passage. Accuracy shows how often you pressed the right key. Read the two together.</p>
-            <Link href="/average-wpm">How scoring works</Link>
+            <Link href="/how-wpm-is-calculated">How scoring works</Link>
           </article>
           <article>
             <h3>Is my typing speed good?</h3>

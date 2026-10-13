@@ -38,6 +38,18 @@ function TestLengthLinks() {
   </nav>;
 }
 
+function ReportCard({ score }: { score: Score | null }) {
+  const durationMinutes = score ? score.durationSeconds / 60 : null;
+
+  return <div className="speed-report-preview" role="region" aria-label={score ? "Completed typing report" : "Preview of an unfilled typing report"}>
+    <dl className="speed-report-preview-metrics">
+      <div><dt>Correct speed</dt><dd>{score ? Number(score.wpm.toFixed(1)) : <><span aria-hidden="true">—</span><span className="sr-only">Waiting for your result</span></>} <small>WPM</small></dd></div>
+      <div><dt>Accuracy</dt><dd>{score ? Number(score.accuracy.toFixed(1)) : <><span aria-hidden="true">—</span><span className="sr-only">Waiting for your result</span></>} <small>%</small></dd></div>
+      <div><dt>Test length</dt><dd>{durationMinutes ?? <><span aria-hidden="true">—</span><span className="sr-only">Waiting for your result</span></>} <small>min</small></dd></div>
+    </dl>
+  </div>;
+}
+
 export default function SpeedInterpretation() {
   const [score, setScore] = useState<Score | null>(null);
 
@@ -63,34 +75,24 @@ export default function SpeedInterpretation() {
   return (
     <section className="speed-followup">
       {score ? <div className="speed-result" aria-live="polite" aria-labelledby="speed-result-title">
-        <div className="speed-result-score">
-          <p>Your {durationMinutes}-minute result</p>
-          <strong>{Number(score.wpm.toFixed(1))}<span> WPM</span></strong>
-          <p>{Number(score.accuracy.toFixed(1))}% accuracy</p>
-        </div>
+        <h2 id="speed-result-title">Your typing report is ready.</h2>
+        <p className="speed-result-intro">Your completed {durationMinutes}-minute test now appears below. Use the same test length when you compare another attempt.</p>
+        <TestLengthLinks />
+        <ReportCard score={score} />
         <div className="speed-result-reading">
-          <p className="speed-result-label">YOUR RESULT, IN CONTEXT</p>
-          <h2 id="speed-result-title">{score.accuracy < 90 ? "Make accuracy the next focus." : score.accuracy < 95 ? "Build a steadier pace." : "Keep this pace consistent."}</h2>
+          <h3>{score.accuracy < 90 ? "Make accuracy the next focus." : score.accuracy < 95 ? "Build a steadier pace." : "Keep this pace consistent."}</h3>
           <p className="speed-score-context">{resultContext(score)} {score.durationSeconds === 60 ? "A one-minute test is a quick snapshot, so repeat it before judging a trend." : `Compare this ${durationMinutes}-minute result with other attempts at the same length.`}</p>
           <p>{score.accuracy < 90
             ? "Slow down enough to reduce mistakes, then repeat the same test length."
             : score.accuracy < 95
               ? "Practice the words that interrupt your rhythm, then repeat the same test length."
               : "Your accuracy is strong on this attempt. Repeat the same test length to see whether the pace holds."}</p>
-          <div className="speed-next"><Link className="button button-primary" href={`/${durationMinutes}-minute-typing-test`}>Retest at {durationMinutes} minute{score.durationSeconds === 60 ? "" : "s"}</Link><Link className="button button-secondary" href={score.accuracy < 95 ? "/learn/paragraphs" : "/learn/practice"}>Practice next</Link></div>
         </div>
-        <TestLengthLinks />
       </div> : <div className="speed-empty" aria-labelledby="speed-empty-title">
         <h2 id="speed-empty-title">Your typing report will appear here.</h2>
         <p className="speed-empty-intro">Complete a typing test, then choose <strong>Understand my speed</strong>. Your score will automatically fill this report.</p>
         <TestLengthLinks />
-        <div className="speed-report-preview" role="region" aria-label="Preview of an unfilled typing report">
-          <dl className="speed-report-preview-metrics">
-            <div><dt>Correct speed</dt><dd><span aria-hidden="true">—</span><span className="sr-only">Waiting for your result</span> <small>WPM</small></dd></div>
-            <div><dt>Accuracy</dt><dd><span aria-hidden="true">—</span><span className="sr-only">Waiting for your result</span> <small>%</small></dd></div>
-            <div><dt>Test length</dt><dd><span aria-hidden="true">—</span><span className="sr-only">Waiting for your result</span> <small>min</small></dd></div>
-          </dl>
-        </div>
+        <ReportCard score={null} />
       </div>}
     </section>
   );

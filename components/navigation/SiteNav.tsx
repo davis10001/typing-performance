@@ -8,7 +8,7 @@ export default function SiteNav() {
   const active = pathname === "/" || /^\/(?:[1-9]|10)-minute-typing-test$/.test(pathname) ? "/"
     : pathname.startsWith("/learn") ? "/learn"
       : pathname === "/faq" ? "/faq"
-        : ["/good-typing-speed", "/average-typing-speed", "/average-wpm"].includes(pathname) ? "/good-typing-speed"
+        : ["/good-typing-speed", "/average-typing-speed", "/how-wpm-is-calculated"].includes(pathname) ? "/good-typing-speed"
           : null;
   return <nav className="site-nav" aria-label="Main navigation">
     <Link href="/" aria-current={active === "/" ? "page" : undefined}>Test</Link>

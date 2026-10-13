@@ -44,7 +44,7 @@ export default function AnalyticsGate({ mode, gaId, privacyPolicyUrl }: Props) {
       vital: () => {},
     });
     const landingPages = {
-      "/average-typing-speed": "average-typing-speed", "/average-wpm": "average-wpm", "/good-typing-speed": "good-typing-speed",
+      "/average-typing-speed": "average-typing-speed", "/how-wpm-is-calculated": "how-wpm-is-calculated", "/good-typing-speed": "good-typing-speed",
       "/learn": "learn", "/learn/practice": "learn-practice", "/learn/courses": "learn-courses", "/learn/paragraphs": "learn-paragraphs", "/faq": "faq",
     } as const;
     const page = landingPages[pathname as keyof typeof landingPages];

@@ -5,8 +5,11 @@ test("speed guide shows the benchmark and invites a first test by default", asyn
   await page.goto("/good-typing-speed");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
   await expect(navigation.getByRole("link", { name: "Typing Speed" })).toHaveAttribute("aria-current", "page");
+  await expect(page.locator(".content-hero")).toContainText("maintain accurately and consistently");
   await expect(page.getByRole("heading", { name: "What is a good typing speed?" })).toBeVisible();
   await expect(page.getByRole("img", { name: /A WPM scale/ })).toBeVisible();
+  await expect(page.locator("#benchmark-bar-caption")).toContainText("self-selected online sample");
+  await expect(page.locator("#benchmark-bar-caption")).toContainText("not a universal pass or fail line");
   await expect(page.getByRole("heading", { name: "A quick way to read your score" })).toBeVisible();
   await expect(page.locator(".benchmark-range-grid > p")).toHaveCount(4);
   await expect(page.locator(".benchmark-school")).toHaveCount(0);
@@ -17,6 +20,10 @@ test("speed guide shows the benchmark and invites a first test by default", asyn
   await expect(page.locator(".speed-duration-picker")).toHaveCSS("border-top-width", "0px");
   await expect(page.getByRole("link", { name: /Take a 1-minute test/ })).toHaveAttribute("href", "/1-minute-typing-test");
   await expect(page.getByRole("navigation", { name: "Typing test lengths" }).getByRole("link")).toHaveCount(5);
+  await expect(page.getByRole("link", { name: "Average typing speed" })).toHaveAttribute("href", "/average-typing-speed");
+  await expect(page.getByRole("link", { name: "How WPM is calculated" })).toHaveAttribute("href", "/how-wpm-is-calculated");
+  await expect(page.getByRole("heading", { name: "What counts as good?" }).locator(".."))
+    .toContainText("correct WPM, accuracy, and repeated tests at the same duration");
   await expect(page.locator(".speed-result")).toHaveCount(0);
   await expect(page.getByRole("spinbutton")).toHaveCount(0);
   await expect(page.getByRole("combobox")).toHaveCount(0);
@@ -52,9 +59,29 @@ test("a completed test carries its result into the speed guide", async ({ page }
   await page.clock.fastForward(60_100);
   const result = page.locator(".result-card");
   await expect(result.getByRole("link", { name: /Understand my speed/ })).toBeVisible();
+  await expect(result.getByRole("link", { name: "What is average WPM?" })).toHaveAttribute("href", "/average-typing-speed");
+  await expect(result.getByRole("link", { name: "How scoring works" })).toHaveAttribute("href", "/how-wpm-is-calculated");
   const score = await result.locator("#result-title").textContent();
   await result.getByRole("link", { name: /Understand my speed/ }).click();
   await expect(page).toHaveURL(/\/good-typing-speed$/);
   await expect(page.locator(".speed-result")).toContainText(score!.trim());
-  await expect(page.locator(".speed-result")).toContainText("Your 1-minute result");
+  await expect(page.getByRole("heading", { name: "Your typing report is ready." })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Completed typing report" })).toContainText("Test length");
+  await expect(page.locator(".speed-next")).toHaveCount(0);
+});
+
+test("average speed and WPM calculation pages separate benchmark and formula intent", async ({ page }) => {
+  await page.goto("/average-typing-speed");
+  await expect(page.locator(".content-hero")).toContainText("not the average for all U.S. adults or a universal pass line");
+  await expect(page.getByText("52 correct WPM", { exact: false })).toBeVisible();
+  await expect(page.getByText("99% accuracy", { exact: false })).toBeVisible();
+  await expect(page.getByText("54 WPM five-minute result", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "How WPM is calculated" })).toHaveAttribute("href", "/how-wpm-is-calculated");
+
+  await page.goto("/how-wpm-is-calculated");
+  await expect(page.getByRole("heading", { level: 1, name: "HOW WPM IS CALCULATED." })).toBeVisible();
+  await expect(page.getByText("240 ÷ 5 ÷ 1 = 48 correct WPM.")).toBeVisible();
+  await expect(page.getByText("250 ÷ 5 ÷ 1 = 50 raw WPM.")).toBeVisible();
+  await expect(page.getByText("240 ÷ 250 × 100 = 96% accuracy.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Average typing speed" })).toHaveAttribute("href", "/average-typing-speed");
 });

@@ -12,7 +12,7 @@
 
 ## Explanations
 
-- [Average WPM](https://how-type.com/average-wpm): How words per minute is calculated and why accuracy matters.
+- [How WPM is calculated](https://how-type.com/how-wpm-is-calculated): How correct WPM, raw WPM, and accuracy are calculated.
 - [Average typing speed](https://how-type.com/average-typing-speed): A sourced typing-speed benchmark and guidance for fair comparisons.
 - [Typing FAQ](https://how-type.com/faq): Answers about WPM, accuracy, mistakes, backspaces, and test duration.
 

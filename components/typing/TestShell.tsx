@@ -653,7 +653,10 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
               Try again
             </button>
             <Link className="button button-secondary" href="/learn" onClick={() => telemetry.event({ name: "result_next_step", step: "practice" })}>Practice typing</Link>
-            <Link className="result-explainer" href="/average-wpm" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-wpm" })}>How scoring works</Link>
+            <div className="result-explainer-links">
+              <Link className="result-explainer" href="/average-typing-speed" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-typing-speed" })}>What is average WPM?</Link>
+              <Link className="result-explainer" href="/how-wpm-is-calculated" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "how-wpm-is-calculated" })}>How scoring works</Link>
+            </div>
           </div>
         </section>
       ) : <p className="inline-warning" role="status">The result could not be calculated. Please start a new test.</p>}

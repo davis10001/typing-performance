@@ -29,7 +29,7 @@ Source: https://www.aalto.fi/en/news/the-traits-of-fast-typists-discovered-by-an
 
 Detailed explanations:
 
-- https://how-type.com/average-wpm
+- https://how-type.com/how-wpm-is-calculated
 - https://how-type.com/average-typing-speed
 - https://how-type.com/faq
 

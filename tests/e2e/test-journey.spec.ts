@@ -36,9 +36,10 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(page.locator(".home-stats")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "What does your speed mean?" })).toBeVisible();
   await expect(page.getByText("the average was 52 WPM", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "52 WPM" })).toHaveAttribute("href", "/average-typing-speed");
   await expect(page.getByRole("link", { name: /Understand my speed/ })).toHaveAttribute("href", "/good-typing-speed");
   await expect(page.getByRole("heading", { name: "UNDERSTAND YOUR RESULT." })).toBeVisible();
-  await expect(page.getByRole("link", { name: "How scoring works" })).toHaveAttribute("href", "/average-wpm");
+  await expect(page.getByRole("link", { name: "How scoring works" })).toHaveAttribute("href", "/how-wpm-is-calculated");
   const geometry = await page.evaluate(() => {
     const header = document.querySelector<HTMLElement>(".site-header")!.getBoundingClientRect();
     const logo = document.querySelector<HTMLElement>(".header-wordmark")!.getBoundingClientRect();
@@ -111,7 +112,14 @@ test("FAQ navigation opens a standalone page with answers", async ({ page }) => 
   await expect(page.getByText("the average was 52 WPM", { exact: false })).toBeVisible();
   await expect(page.getByRole("heading", { name: "How do mistakes and backspaces affect my WPM?" })).toBeVisible();
   await expect(page.getByText("Backspace removes the last character", { exact: false })).toBeVisible();
-  await expect(page.getByRole("link", { name: "See how WPM works." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Interpret your own WPM and accuracy." })).toHaveAttribute("href", "/good-typing-speed");
+  await expect(page.getByRole("link", { name: "More on average typing speed." })).toHaveAttribute("href", "/average-typing-speed");
+  await expect(page.getByRole("link", { name: "See how WPM is calculated." })).toHaveAttribute("href", "/how-wpm-is-calculated");
+  const faqJson = JSON.parse(await page.locator('.faq-page > script[type="application/ld+json"]').textContent() ?? "{}");
+  const faqIds = ["faq-good-speed", "faq-average-speed", "faq-wpm", "faq-improve", "faq-one-minute", "faq-accuracy", "faq-vary", "faq-mistakes"];
+  for (const [index, id] of faqIds.entries()) {
+    await expect(page.locator(`#${id}`).locator("..")).toContainText(faqJson.mainEntity[index].acceptedAnswer.text);
+  }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
@@ -305,7 +313,8 @@ for (const duration of durations) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${duration.seconds / 60}-Minute Typing Test`);
     await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
     await expect(page.getByRole("timer")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /how wpm works/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /how wpm works/i })).toHaveAttribute("href", "/how-wpm-is-calculated");
+    await expect(page.getByRole("link", { name: /see average typing speed/i })).toHaveAttribute("href", "/average-typing-speed");
 
     const input = page.getByRole("textbox", { name: "Type the passage here" });
     await expect(page.locator(".typing-passage")).toBeVisible();
@@ -536,7 +545,7 @@ test("Restart restores first-key start without keeping old text", async ({ page 
 });
 
 test("public routes expose unique titles and canonical URLs", async ({ page, request }) => {
-  for (const slug of [...durations.map((item) => item.slug), "faq", "average-wpm", "average-typing-speed", "good-typing-speed", "learn", "learn/practice", "learn/courses", "learn/paragraphs", "privacy"]) {
+  for (const slug of [...durations.map((item) => item.slug), "faq", "how-wpm-is-calculated", "average-typing-speed", "good-typing-speed", "learn", "learn/practice", "learn/courses", "learn/paragraphs", "privacy"]) {
     await page.goto(`/${slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${slug}$`));
@@ -555,9 +564,14 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
   expect(sitemapText).toContain("/10-minute-typing-test");
   expect(sitemapText).toContain("/privacy");
   expect(sitemapText).toContain("/faq");
+  expect(sitemapText).toContain("/how-wpm-is-calculated");
   expect(sitemapText).toContain("/good-typing-speed");
   expect(sitemapText).toContain("/learn/paragraphs");
   expect(sitemapText).not.toContain("/typing-test<");
+  expect(sitemapText).not.toContain("/average-wpm<");
+  const oldWpmPage = await request.get("/average-wpm", { maxRedirects: 0 });
+  expect(oldWpmPage.status()).toBe(308);
+  expect(oldWpmPage.headers().location).toBe("/average-typing-speed");
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBe(true);
   expect(await robots.text()).toContain("Sitemap:");
@@ -573,9 +587,10 @@ test("SEO explanation remains readable without JavaScript", async ({ browser }) 
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL: "http://127.0.0.1:3000" });
   try {
     const page = await context.newPage();
-    await page.goto("/average-wpm");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("YOUR WPM");
-    await expect(page.getByRole("heading", { name: "HOW IS WPM CALCULATED?" })).toBeVisible();
+    await page.goto("/how-wpm-is-calculated");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("HOW WPM IS CALCULATED");
+    await expect(page.getByRole("heading", { name: "CORRECT AND RAW WPM." })).toBeVisible();
+    await expect(page.getByText("240 ÷ 5 ÷ 1 = 48 correct WPM.")).toBeVisible();
     await expect(page.getByRole("link", { name: /test your wpm/i })).toBeVisible();
   } finally {
     await context.close();
@@ -709,7 +724,7 @@ test("top-level sections share one responsive page gutter", async ({ page }) => 
       ],
     },
     {
-      path: "/average-wpm",
+      path: "/how-wpm-is-calculated",
       checks: [
         [".content-hero", "margin"],
         [".content-article", "padding"],
