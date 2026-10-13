@@ -48,7 +48,7 @@ export default function FaqPage() {
         <div className="faq-list">
           <section className="faq-entry" aria-labelledby="faq-good-speed">
             <h2 id="faq-good-speed">What is a good typing speed?</h2>
-            <p>It depends on what you need to type. For practice, aim for a pace you can hold without frequent corrections. Compare a few attempts at the same duration and difficulty, and read accuracy alongside WPM.</p>
+            <p>It depends on what you need to type. Aim for a pace you can hold without frequent corrections, and compare attempts at the same duration. <Link href="/good-typing-speed">Interpret your own WPM and accuracy.</Link></p>
           </section>
           <section className="faq-entry" aria-labelledby="faq-average-speed">
             <h2 id="faq-average-speed">What is the average typing speed?</h2>
@@ -60,7 +60,7 @@ export default function FaqPage() {
           </section>
           <section className="faq-entry" aria-labelledby="faq-improve">
             <h2 id="faq-improve">How can I improve my typing speed and accuracy?</h2>
-            <p>Slow down enough to notice which words or keys trip you up. Practice with a fresh passage, and look at the text instead of your fingers when you can. Retest at the same duration to see whether your pace and accuracy are improving.</p>
+            <p>Slow down enough to notice which words or keys trip you up. Try <Link href="/learn/practice">adaptive key practice</Link> or <Link href="/learn/paragraphs">untimed paragraph practice</Link>, then retest at the same duration to see whether pace and accuracy improve.</p>
           </section>
           <section className="faq-entry" aria-labelledby="faq-one-minute">
             <h2 id="faq-one-minute">Is a one-minute typing test enough?</h2>

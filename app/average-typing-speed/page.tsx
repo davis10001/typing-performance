@@ -12,10 +12,10 @@ export const metadata: Metadata = buildPageMetadata({
 export default function AverageTypingSpeedPage() {
   return (
     <main className="content-page">
-      <section className="content-hero"><span className="eyebrow dark">SPEED / CONTEXT</span><h1>HOW FAST IS<br /><strong>FAST ENOUGH?</strong></h1><p>Average typing speed is useful only when the source, test length, and accuracy rule are clear. Your own repeat tests can tell you more about how your pace is changing.</p><Link className="button button-lilac" href="/3-minute-typing-test">CHECK YOUR PACE <span aria-hidden="true">↗</span></Link></section>
+      <section className="content-hero"><span className="eyebrow dark">SPEED / RESEARCH</span><h1>AVERAGE<br /><strong>TYPING SPEED.</strong></h1><p>One large study reported about 52 WPM among online volunteers. The sample and test conditions matter before you compare that number with your own.</p><Link className="button button-lilac" href="/">CHECK YOUR PACE <span aria-hidden="true">↗</span></Link></section>
       <section className="content-article">
         <div className="content-index">01 / A SOURCED AVERAGE</div>
-        <div><h2>WHAT IS THE AVERAGE TYPING SPEED?</h2><p>An <a href="https://www.aalto.fi/en/news/the-traits-of-fast-typists-discovered-by-analysing-136-million-keystrokes">Aalto University study</a> of about 168,000 online volunteers reported an average of 52 WPM, with most participants between 30 and 60 WPM. Because volunteers chose to take the online test, use 52 WPM as context for that sample, not as a universal target.</p></div>
+        <div><h2>WHAT IS THE AVERAGE TYPING SPEED?</h2><p>An <a href="https://www.aalto.fi/en/news/the-traits-of-fast-typists-discovered-by-analysing-136-million-keystrokes">Aalto University report</a> on a study of 168,960 online volunteers reported an average of about 52 WPM, with most participants between 30 and 60 WPM. The study recorded roughly 136.9 million keystrokes while participants transcribed randomized English sentences.</p><p>Participants volunteered online; they were mostly younger, had an interest in typing, and many had taken a typing course. The average describes that sample and task. It is not a population-wide norm, percentile table, or pass mark for your test.</p></div>
       </section>
       <section className="content-article">
         <div className="content-article-rail">
@@ -33,7 +33,7 @@ export default function AverageTypingSpeedPage() {
             <Image src="/images/typing-progress-line-art.png" alt="" fill sizes="(max-width: 900px) 24vw, 280px" unoptimized />
           </div>
         </div>
-        <div><h2>TRACK THE NEXT ATTEMPT.</h2><p>One result is a starting point. Take another test after a break or practice session and look for a steadier pace with fewer errors. Completed results stay in this browser until you clear them.</p></div>
+        <div><h2>TRACK THE NEXT ATTEMPT.</h2><p>One result is a starting point. Take another test after a break or practice session and look for a steadier pace with fewer errors. Completed results stay in this browser until you clear them. To read your own WPM, accuracy, and test length together, use the <Link href="/good-typing-speed">personal speed guide</Link>.</p></div>
       </section>
       <section className="content-cta"><h2>TAKE A<br /><strong>TYPING TEST.</strong></h2><p>Pick one, two, three, five, or ten minutes. Your result explains what was measured.</p><Link className="button button-primary" href="/5-minute-typing-test">TRY 5 MINUTES <span aria-hidden="true">↗</span></Link></section>
     </main>

@@ -133,8 +133,8 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
   const focusMistakes = completion && round.focusCharacter
     ? completion.result.histogram.get(round.focusCharacter.codePointAt(0) ?? 0)?.missCount
     : null;
-  const Heading = embedded ? "h2" : "h1";
-  const ResultHeading = embedded ? "h2" : "h1";
+  const Heading = "h2";
+  const ResultHeading = "h2";
   const content = (
     <>
       <header className="learning-toolbar">
@@ -183,7 +183,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
           <p>{completion.saved ? "Progress saved in this browser." : "Your result is shown here, but your progress could not be saved."}</p>
           <div className="learning-result-actions">
             <button className="button button-primary" type="button" onClick={() => startRound(lesson, history)}>Continue practice <span>↗</span></button>
-            {embedded ? <a className="text-button" href="#courses">Browse lessons</a> : <Link className="button button-secondary" href="/learn">Back to practice</Link>}
+            {embedded ? <a className="text-button" href="#courses">Browse lessons</a> : <Link className="button button-secondary" href="/learn">All practice options</Link>}
           </div>
         </section>
       ) : (

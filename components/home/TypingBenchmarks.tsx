@@ -15,7 +15,7 @@ function SchoolLevelIcon({ index }: { index: number }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[index]}</svg>;
 }
 
-export default function TypingBenchmarks() {
+export default function TypingBenchmarks({ showExtended = true }: { showExtended?: boolean }) {
   return (
     <section className="home-guide home-benchmark" aria-labelledby="typing-benchmark-title">
       <header className="benchmark-heading">
@@ -69,7 +69,7 @@ export default function TypingBenchmarks() {
           </div>
         </section>
 
-        <section className="benchmark-school" aria-labelledby="benchmark-school-title">
+        {showExtended && <section className="benchmark-school" aria-labelledby="benchmark-school-title">
           <div>
             <h3 id="benchmark-school-title">School-level planning guide</h3>
             <p>Useful targets, not fixed ability standards.</p>
@@ -89,10 +89,10 @@ export default function TypingBenchmarks() {
               ))}
             </tbody>
           </table>
-        </section>
+        </section>}
       </div>
 
-      <footer className="benchmark-footer">
+      {showExtended && <footer className="benchmark-footer">
         <p>Accuracy and steady progress matter alongside speed. The study used self-selected volunteers, so treat its results as a reference rather than a pass or fail line.</p>
         <nav aria-label="Typing speed resources">
           <a href={benchmark.adultStudy.sourceUrl} target="_blank" rel="noopener noreferrer">Study source</a>
@@ -100,7 +100,7 @@ export default function TypingBenchmarks() {
           <Link href="/average-typing-speed">More on typing speed</Link>
           <Link href="/average-wpm">How WPM works</Link>
         </nav>
-      </footer>
+      </footer>}
     </section>
   );
 }

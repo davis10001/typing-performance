@@ -7,7 +7,7 @@ import KeyboardGuide from "@/components/typing/KeyboardGuide";
 import ResultPaceChart, { type PaceSample, type TimedError } from "@/components/typing/ResultPaceChart";
 import { useTypingSound } from "@/components/typing/useTypingSound";
 import { composeTestPrompt, nextTextIndex, type Difficulty, type PromptText } from "@/lib/content/prompt-selection";
-import { durationOptions, type TestPageSlug } from "@/lib/content/test-pages";
+import { durationOptions, type TestPageConfig, type TestPageSlug } from "@/lib/content/test-pages";
 import { saveHistory } from "@/lib/history/repository";
 import { calculateResult } from "@/lib/scoring/calculate";
 import { accuracyBucket, telemetry, wpmBucket } from "@/lib/telemetry/adapter";
@@ -19,7 +19,7 @@ import { alignTypingInput } from "@/lib/typing-engine/alignment";
 import type { AnomalyFlag, TestResult, TestSession } from "@/lib/typing-engine/types";
 
 type Props = {
-  durationSeconds: 60 | 120 | 180 | 300 | 600;
+  durationSeconds: TestPageConfig["durationSeconds"];
   texts: PromptText[];
   entryPage: TestPageSlug;
 };
@@ -644,11 +644,15 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
           </div>
           <ResultPaceChart samples={paceSamples} errors={timedErrors} durationSeconds={result.durationSeconds} />
           <div className="result-actions">
-            <button type="button" className="button button-primary reset-button" onClick={() => prepareTest(true)}>
+            <Link className="button button-speed" href="/good-typing-speed" onClick={() => {
+              try { window.sessionStorage.setItem("typinglevel:result-handoff:v1", JSON.stringify({ wpm: result.wpm, accuracy: result.accuracy, durationSeconds: result.durationSeconds })); } catch { /* Recent local results remain available when session storage is blocked. */ }
+              telemetry.event({ name: "result_next_step", step: "understand_speed" });
+            }}>Understand my speed <span aria-hidden="true">↗</span></Link>
+            <button type="button" className="button button-primary reset-button" onClick={() => { telemetry.event({ name: "result_next_step", step: "retest" }); prepareTest(true); }}>
               <ResetIcon />
               Try again
             </button>
-            <Link className="button button-secondary" href="/learn">Practice typing</Link>
+            <Link className="button button-secondary" href="/learn" onClick={() => telemetry.event({ name: "result_next_step", step: "practice" })}>Practice typing</Link>
             <Link className="result-explainer" href="/average-wpm" onClick={() => telemetry.event({ name: "benchmark_click", target_page: "average-wpm" })}>How scoring works</Link>
           </div>
         </section>

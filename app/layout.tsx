@@ -4,6 +4,8 @@ import Link from "next/link";
 import WebVitals from "@/components/observability/WebVitals";
 import AnalyticsGate from "@/components/observability/AnalyticsGate";
 import JsonLd from "@/components/seo/JsonLd";
+import SiteNav from "@/components/navigation/SiteNav";
+import { supportEmail } from "@/lib/contact";
 import { siteDescription, siteName, siteUrl, socialImage } from "@/lib/seo";
 import "@fontsource-variable/inter-tight";
 import "./globals.css";
@@ -56,15 +58,7 @@ function SiteHeader() {
           priority
         />
       </Link>
-      <nav className="site-nav" aria-label="Main navigation">
-        <Link href="/">Test</Link>
-        <Link href="/learn">Practice</Link>
-        <span className="site-nav-disabled" role="link" aria-disabled="true" aria-label="Compete, coming soon" title="Coming soon">
-          Compete
-          <small aria-hidden="true">Soon</small>
-        </span>
-        <Link href="/faq">FAQ</Link>
-      </nav>
+      <SiteNav />
     </header>
   );
 }
@@ -94,9 +88,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </span>
             <nav aria-label="Footer navigation">
               <Link href="/learn">PRACTICE</Link>
-              <Link href="/average-typing-speed">TYPING SPEED</Link>
+              <Link href="/good-typing-speed">TYPING SPEED</Link>
               <Link href="/faq">FAQ</Link>
               <Link href="/privacy">PRIVACY</Link>
+              <a href={`mailto:${supportEmail}`}>CONTACT</a>
               <Link className="footer-action" href="/">START A TEST <span aria-hidden="true">↗</span></Link>
             </nav>
             <AnalyticsGate

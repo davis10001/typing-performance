@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ClearLocalResults from "@/components/privacy/ClearLocalResults";
 import ClearLearningProgress from "@/components/privacy/ClearLearningProgress";
+import { supportEmail } from "@/lib/contact";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -45,7 +46,7 @@ export default function PrivacyPage() {
         <div className="content-index">04 / CONTACT</div>
         <div>
           <h2>QUESTIONS?</h2>
-          <p>For privacy questions about TypingLevel, email <a href="mailto:tyyslj7927@gmail.com">tyyslj7927@gmail.com</a>.</p>
+          <p>For privacy questions about TypingLevel, email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
         </div>
       </section>
     </main>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import TypingBenchmarks from "@/components/home/TypingBenchmarks";
+import TypingBenchmarkSummary from "@/components/home/TypingBenchmarkSummary";
 import JsonLd from "@/components/seo/JsonLd";
 import TestShell from "@/components/typing/TestShell";
 import { testTexts } from "@/lib/content/test-texts";
@@ -42,7 +42,7 @@ export default function HomePage() {
         entryPage="typing-test"
       />
 
-      <TypingBenchmarks />
+      <TypingBenchmarkSummary />
 
       <section className="home-result-guide" aria-labelledby="home-result-guide-title">
         <header>
@@ -58,12 +58,12 @@ export default function HomePage() {
           <article>
             <h3>Is my typing speed good?</h3>
             <p>A one-minute test gives you a quick starting point. Compare a few runs at the same duration and difficulty, with accuracy beside your WPM.</p>
-            <Link href="/average-typing-speed">Understand typing speed</Link>
+            <Link href="/good-typing-speed">Understand your speed</Link>
           </article>
           <article>
             <h3>What should I practice next?</h3>
             <p>Slow down enough to notice mistakes, then try again with the same settings. If a minute feels rushed, choose a longer test.</p>
-            <Link href="/faq#faq-improve">Read practice advice</Link>
+            <Link href="/learn">Choose a practice method</Link>
           </article>
         </div>
       </section>

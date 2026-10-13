@@ -4,7 +4,8 @@ import { GoogleAnalytics, sendGAEvent } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useEffect, useState } from "react";
-import { setTelemetryTransport } from "@/lib/telemetry/adapter";
+import { usePathname } from "next/navigation";
+import { setTelemetryTransport, telemetry } from "@/lib/telemetry/adapter";
 import { analyticsConfigReady, readAnalyticsChoice, redactTelemetryUrl, saveAnalyticsChoice, type AnalyticsChoice } from "@/lib/telemetry/privacy";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function AnalyticsGate({ mode, gaId, privacyPolicyUrl }: Props) {
+  const pathname = usePathname();
   const [choice, setChoice] = useState<AnalyticsChoice>("pending");
   const [loaded, setLoaded] = useState(false);
   const [showChoices, setShowChoices] = useState(false);
@@ -41,8 +43,14 @@ export default function AnalyticsGate({ mode, gaId, privacyPolicyUrl }: Props) {
       error: () => {},
       vital: () => {},
     });
+    const landingPages = {
+      "/average-typing-speed": "average-typing-speed", "/average-wpm": "average-wpm", "/good-typing-speed": "good-typing-speed",
+      "/learn": "learn", "/learn/practice": "learn-practice", "/learn/courses": "learn-courses", "/learn/paragraphs": "learn-paragraphs", "/faq": "faq",
+    } as const;
+    const page = landingPages[pathname as keyof typeof landingPages];
+    if (page) telemetry.event({ name: "landing_view", page });
     return () => setTelemetryTransport(null);
-  }, [configured, choice]);
+  }, [configured, choice, pathname]);
 
   if (!configured || !loaded) return null;
 

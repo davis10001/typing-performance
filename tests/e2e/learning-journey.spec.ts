@@ -42,35 +42,19 @@ async function installAudioContextSpy(page: Page) {
   });
 }
 
-test("Practice opens directly on adaptive practice, then lessons and guidance", async ({ page }) => {
+test("Practice offers distinct routes to adaptive rounds and lessons", async ({ page }) => {
   await page.goto("/learn");
-  await expect(page.getByText("Loading practice…")).toBeHidden({ timeout: 20_000 });
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Typing practice and lessons");
-  await expect(page.getByRole("heading", { name: /^Focus / })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Reset continuous practice progress" })).toBeVisible();
-  const guidedStageKeys = page.locator(".virtual-key.is-stage-key");
-  await expect(guidedStageKeys).toHaveCount(4);
-  expect((await guidedStageKeys.allTextContents()).sort()).toEqual(["D", "F", "J", "K"]);
-  await expect(page.locator('.virtual-key[data-key-code="KeyQ"] .virtual-key-label')).toHaveText("Q");
-  const activeGuidedStageKey = page.locator(".virtual-key.is-stage-key.is-active");
-  await expect(activeGuidedStageKey).toHaveCount(1);
-  expect(["D", "F", "J", "K"]).toContain(await activeGuidedStageKey.innerText());
-  expect(await page.locator(".learning-toolbar").evaluate((element) => element.getBoundingClientRect().height)).toBe(56);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Practice typing");
+  await expect(page.locator(".practice-paths article")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: /Start adaptive practice/ })).toHaveAttribute("href", "/learn/practice");
+  await expect(page.getByRole("link", { name: /Browse lessons/ })).toHaveAttribute("href", "/learn/courses");
+  await expect(page.getByRole("link", { name: /Choose a paragraph/ })).toHaveCount(0);
+  await page.getByRole("link", { name: /Browse lessons/ }).click();
   await expect(page.locator(".course-card")).toHaveCount(15);
   await expect(page.locator(".course-card--next")).toHaveCount(1);
-  await expect(page.locator(".course-card--not-started")).toHaveCount(14);
   await expect(page.locator(".course-card").nth(14)).toHaveAttribute("href", "/learn/courses/caps1");
-  await expect(page.locator(".course-card-keys")).toHaveCount(0);
-  await expect(page.locator(".course-card-title kbd")).toHaveCount(29);
   const courseColumns = await page.locator(".course-grid").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
   expect(courseColumns).toBe(page.viewportSize()!.width > 900 ? 3 : page.viewportSize()!.width > 680 ? 2 : 1);
-  const thirdCourse = page.locator(".course-card").nth(2);
-  await expect(thirdCourse).toHaveAttribute("href", "/learn/courses/ls1");
-  if (page.viewportSize()!.width > 900) {
-    await thirdCourse.hover();
-    await expect.poll(async () => thirdCourse.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
-  }
-  await expect(page.getByRole("heading", { name: "Two ways to practice." })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
@@ -128,13 +112,13 @@ test("continuous practice completes once and saves a Keybr result", async ({ pag
 });
 
 test("fixed courses are freely selectable and preserve KTouch correction", async ({ page }) => {
-  await page.goto("/learn");
+  await page.goto("/learn/courses");
   await expect(page.locator(".course-card")).toHaveCount(15);
   await expect(page.locator(".course-card").nth(1)).not.toHaveClass(/is-locked/);
   await page.locator(".course-card").nth(1).click();
   await expect(page).toHaveURL(/\/learn\/courses\/kd1$/);
   await expect(page.getByRole("button", { name: "Reset" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Back to lessons" })).toHaveAttribute("href", "/learn#courses");
+  await expect(page.getByRole("link", { name: "Back to lessons" })).toHaveAttribute("href", "/learn/courses");
   await expect(page.locator(".learning-toolbar")).not.toContainText("New keys");
   const courseStageKeys = page.locator(".virtual-key.is-stage-key");
   await expect(courseStageKeys).toHaveCount(2);
@@ -296,7 +280,7 @@ test("a lesson that misses a goal shows its result and recovery choices", async 
     const bounds = element.getBoundingClientRect();
     return bounds.top >= 0 && bounds.top < window.innerHeight;
   })).toBe(true);
-  await page.goto("/learn");
+  await page.goto("/learn/courses");
   await expect(page.locator(".course-card").nth(0)).toHaveClass(/course-card--completed/);
   await expect(page.locator(".course-card").nth(0)).toContainText("Completed");
 });

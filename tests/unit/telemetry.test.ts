@@ -6,11 +6,15 @@ describe("privacy-limited telemetry", () => {
   it("rejects free text and identity fields at runtime", () => {
     expect(eventSchema.safeParse({ name: "test_start", duration: 60, entry_page: "typing-test", typed_text: "secret" }).success).toBe(false);
     expect(eventSchema.safeParse({ name: "test_complete", duration: 60, wpm_bucket: "20-39", accuracy_bucket: "90-94", anomaly_flags: [], email: "name@example.com" }).success).toBe(false);
+    expect(eventSchema.safeParse({ name: "speed_interpretation", source: "manual", wpm: 42 }).success).toBe(false);
+    expect(eventSchema.safeParse({ name: "paragraph_complete", accuracy_bucket: "90-94", typed_text: "secret" }).success).toBe(false);
   });
 
   it("accepts the added durations without changing the privacy-limited payload", () => {
     expect(eventSchema.safeParse({ name: "test_start", duration: 120, entry_page: "2-minute-typing-test" }).success).toBe(true);
     expect(eventSchema.safeParse({ name: "test_start", duration: 600, entry_page: "10-minute-typing-test" }).success).toBe(true);
+    expect(eventSchema.safeParse({ name: "landing_view", page: "learn-paragraphs" }).success).toBe(true);
+    expect(eventSchema.safeParse({ name: "result_next_step", step: "understand_speed" }).success).toBe(true);
   });
 
   it("accepts only buckets and survives a broken provider", () => {

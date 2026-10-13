@@ -10,6 +10,10 @@ export const eventSchema = z.discriminatedUnion("name", [
   z.strictObject({ name: z.literal("test_complete"), duration, wpm_bucket: z.enum(["none", "0-19", "20-39", "40-59", "60-79", "80+"]), accuracy_bucket: z.enum(["none", "0-59", "60-79", "80-89", "90-94", "95-100"]), anomaly_flags: z.array(anomaly) }),
   z.strictObject({ name: z.literal("result_retest"), from_duration: duration, to_duration: duration }),
   z.strictObject({ name: z.literal("benchmark_click"), target_page: z.enum(["average-wpm", "average-typing-speed"]) }),
+  z.strictObject({ name: z.literal("landing_view"), page: z.enum(["average-typing-speed", "average-wpm", "good-typing-speed", "learn", "learn-practice", "learn-courses", "learn-paragraphs", "faq"]) }),
+  z.strictObject({ name: z.literal("result_next_step"), step: z.enum(["understand_speed", "practice", "retest"]) }),
+  z.strictObject({ name: z.literal("speed_interpretation"), source: z.enum(["test", "history", "manual"]) }),
+  z.strictObject({ name: z.literal("paragraph_complete"), accuracy_bucket: z.enum(["0-59", "60-79", "80-89", "90-94", "95-100"]) }),
   z.strictObject({ name: z.literal("history_clear"), count_bucket: z.enum(["0", "1", "2-5", "6-20"]) }),
 ]);
 

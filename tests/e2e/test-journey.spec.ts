@@ -16,12 +16,11 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(homeLink.locator("img")).toHaveAttribute("src", /typing-level-logo/);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/images/typing-level-icon.png");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
-  await expect(navigation).toHaveText("TestPracticeCompeteSoonFAQ");
-  await expect(navigation.locator("a")).toHaveCount(3);
+  await expect(navigation).toHaveText("TestPracticeTyping SpeedFAQ");
+  await expect(navigation.locator("a")).toHaveCount(4);
   await expect(navigation.getByRole("link", { name: "Test" })).toHaveAttribute("href", "/");
   await expect(navigation.getByRole("link", { name: "Practice" })).toHaveAttribute("href", "/learn");
-  await expect(navigation.getByRole("link", { name: "Compete, coming soon" })).toHaveAttribute("aria-disabled", "true");
-  await expect(navigation.getByRole("link", { name: "Compete, coming soon" })).not.toHaveAttribute("href");
+  await expect(navigation.getByRole("link", { name: "Typing Speed" })).toHaveAttribute("href", "/good-typing-speed");
   await expect(navigation.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/faq");
   await expect(navigation.locator("button, svg, img")).toHaveCount(0);
   const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });
@@ -35,11 +34,9 @@ test("home opens on the typing test with one row of text navigation", async ({ p
   await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Type the passage here" })).toBeFocused();
   await expect(page.locator(".home-stats")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "WHAT IS A GOOD TYPING SPEED?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What does your speed mean?" })).toBeVisible();
   await expect(page.getByText("the average was 52 WPM", { exact: false })).toBeVisible();
-  await expect(page.getByRole("img", { name: /Most study participants typed between 30 and 60 WPM/ })).toBeVisible();
-  await expect(page.locator(".benchmark-school tbody tr")).toHaveCount(4);
-  await expect(page.getByRole("link", { name: "Study source" })).toHaveAttribute("href", /aalto\.fi/);
+  await expect(page.getByRole("link", { name: /Understand my speed/ })).toHaveAttribute("href", "/good-typing-speed");
   await expect(page.getByRole("heading", { name: "UNDERSTAND YOUR RESULT." })).toBeVisible();
   await expect(page.getByRole("link", { name: "How scoring works" })).toHaveAttribute("href", "/average-wpm");
   const geometry = await page.evaluate(() => {
@@ -56,8 +53,12 @@ test("home opens on the typing test with one row of text navigation", async ({ p
       headerRight: header.right,
     };
   });
-  expect(Math.abs(geometry.logoTop - geometry.navTop)).toBeLessThan(20);
-  expect(geometry.navLeft).toBeGreaterThan(geometry.logoRight);
+  if (page.viewportSize()!.width > 680) {
+    expect(Math.abs(geometry.logoTop - geometry.navTop)).toBeLessThan(20);
+    expect(geometry.navLeft).toBeGreaterThan(geometry.logoRight);
+  } else {
+    expect(geometry.navTop).toBeGreaterThan(geometry.logoTop);
+  }
   expect(geometry.navRight).toBeLessThan(geometry.headerRight);
   expect(geometry.navTop).toBeLessThan(geometry.headerBottom);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
@@ -72,7 +73,7 @@ test("FAQ navigation opens a standalone page with answers", async ({ page }) => 
   await expect(page.locator(".site-header")).toHaveCSS("border-bottom-width", "0px");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("TYPING FAQ.");
   const footerNavigation = page.getByRole("navigation", { name: "Footer navigation" });
-  await expect(footerNavigation.getByRole("link")).toHaveCount(2);
+  await expect(footerNavigation.getByRole("link")).toHaveCount(6);
   await expect(footerNavigation.getByRole("link", { name: "START A TEST" })).toBeVisible();
   await expect(page.locator(".faq-entry")).toHaveCount(8);
   await expect(page.locator(".faq-list details, .faq-list summary")).toHaveCount(0);
@@ -301,7 +302,7 @@ for (const duration of durations) {
   test(`${duration.seconds / 60}-minute test completes, saves locally, and retests`, async ({ page }) => {
     await page.clock.install();
     await page.goto(`/${duration.slug}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${duration.seconds / 60} Minute Typing Test`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${duration.seconds / 60}-Minute Typing Test`);
     await expect(page.getByRole("group", { name: "Choose test duration" })).toBeVisible();
     await expect(page.getByRole("timer")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /how wpm works/i })).toBeVisible();
@@ -535,7 +536,7 @@ test("Restart restores first-key start without keeping old text", async ({ page 
 });
 
 test("public routes expose unique titles and canonical URLs", async ({ page, request }) => {
-  for (const slug of [...durations.map((item) => item.slug), "faq", "average-wpm", "average-typing-speed", "privacy"]) {
+  for (const slug of [...durations.map((item) => item.slug), "faq", "average-wpm", "average-typing-speed", "good-typing-speed", "learn", "learn/practice", "learn/courses", "learn/paragraphs", "privacy"]) {
     await page.goto(`/${slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${slug}$`));
@@ -554,6 +555,8 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
   expect(sitemapText).toContain("/10-minute-typing-test");
   expect(sitemapText).toContain("/privacy");
   expect(sitemapText).toContain("/faq");
+  expect(sitemapText).toContain("/good-typing-speed");
+  expect(sitemapText).toContain("/learn/paragraphs");
   expect(sitemapText).not.toContain("/typing-test<");
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBe(true);

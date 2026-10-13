@@ -163,7 +163,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
     <main className="learning-page learning-practice-page">
       <header className="learning-toolbar">
         <div className="lesson-toolbar-main">
-          <Link className="lesson-toolbar-back" href="/learn#courses" aria-label="Back to lessons" title="Back to lessons">
+          <Link className="lesson-toolbar-back" href="/learn/courses" aria-label="Back to lessons" title="Back to lessons">
             <BackIcon />
           </Link>
           <div className="lesson-toolbar-copy">
@@ -247,7 +247,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
                   <ResetIcon />
                   Try again
                 </button>
-                <Link className="text-button" href="/learn#courses">All lessons</Link>
+                <Link className="text-button" href="/learn/courses">All lessons</Link>
               </div>
             </footer>
           </section>
