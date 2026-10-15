@@ -5,6 +5,7 @@ import { Result, TextType } from "@keybr/result";
 import { Histogram } from "@keybr/textinput";
 import { createEnglishGuidedLesson, createGuidedMilestones, createGuidedRound } from "@/lib/learning/guided-engine";
 import {
+  advanceGuidedState,
   createGuidedState,
   guidedStateSchema,
   recordGuidedResult,
@@ -59,5 +60,16 @@ describe("Guided learning state", () => {
 
   it("resets progress saved by the previous letter-order strategy", () => {
     expect(guidedStateSchema.parse({ results: [] })).toEqual(createGuidedState());
+    expect(guidedStateSchema.parse({ strategyRevision: 2, results: [] })).toEqual(createGuidedState());
+  });
+
+  it("lets the learner unlock one more key without meeting the speed target", () => {
+    const initial = createGuidedState();
+    const advanced = advanceGuidedState(initial, 7);
+
+    expect(advanced.minimumKeyCount).toBe(8);
+    expect(advanceGuidedState(advanced, 7)).toEqual(advanced);
+    expect(rewindGuidedState(advanced, 0, 7).minimumKeyCount).toBe(7);
+    expect(rewindGuidedState(advanced, 0).minimumKeyCount).toBe(4);
   });
 });

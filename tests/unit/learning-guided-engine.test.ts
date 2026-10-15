@@ -51,6 +51,31 @@ describe("English Keybr Guided adapter", () => {
     expect(words.some((word, index) => index % 2 === 1 && word !== words[index - 1])).toBe(true);
   });
 
+  it("can include the next course key even when the current focus misses the speed target", () => {
+    const lesson = createEnglishGuidedLesson(model);
+    const results: Result[] = [];
+    let round = createGuidedRound(lesson, results, LCG(1));
+
+    for (let index = 0; index < 3; index += 1) {
+      const histogram = new Histogram(round.availableCharacters.map((character) => ({
+        codePoint: character.codePointAt(0)!, hitCount: 20, missCount: 0, timeToType: 300,
+      })));
+      results.push(new Result(Layout.EN_US, TextType.GENERATED, index + 1, 120, 20_000, 0, histogram));
+      round = createGuidedRound(lesson, results, LCG(index + 2));
+    }
+
+    expect(round.focusCharacter).toBe("c");
+    const slowHistogram = new Histogram(round.availableCharacters.map((character) => ({
+      codePoint: character.codePointAt(0)!, hitCount: 20, missCount: 0, timeToType: character === "c" ? 500 : 300,
+    })));
+    results.push(new Result(Layout.EN_US, TextType.GENERATED, 4, 120, 30_000, 0, slowHistogram));
+
+    expect(createGuidedRound(lesson, results, LCG(5)).focusCharacter).toBe("c");
+    const advanced = createGuidedRound(lesson, results, LCG(5), 8);
+    expect(advanced.availableCharacters).toEqual(["j", "f", "k", "d", "l", "s", "c", "a"]);
+    expect(advanced.focusCharacter).toBe("a");
+  });
+
   it("does not disguise a missing model as an empty lesson", async () => {
     await expect(loadEnglishGuidedLesson(async () => new Response(null, { status: 404 })))
       .rejects.toThrow("Unable to load the Keybr English model (404)");

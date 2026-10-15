@@ -34,16 +34,20 @@ export async function loadEnglishGuidedLesson(
   return createEnglishGuidedLesson(new Uint8Array(await response.arrayBuffer()));
 }
 
-function updateGuidedLesson(lesson: GuidedLesson, results: readonly Result[]) {
-  return lesson.update(makeKeyStatsMap(lesson.letters, lesson.filter(results)));
+function updateGuidedLesson(lesson: GuidedLesson, results: readonly Result[], minimumKeyCount = 4) {
+  const keyStatsMap = makeKeyStatsMap(lesson.letters, lesson.filter(results));
+  return lesson instanceof CourseOrderedGuidedLesson
+    ? lesson.updateWithMinimum(keyStatsMap, minimumKeyCount)
+    : lesson.update(keyStatsMap);
 }
 
 export function createGuidedRound(
   lesson: GuidedLesson,
   results: readonly Result[],
   rng: RNGStream = Lesson.rng,
+  minimumKeyCount = 4,
 ): GuidedRound {
-  const lessonKeys = updateGuidedLesson(lesson, results);
+  const lessonKeys = updateGuidedLesson(lesson, results, minimumKeyCount);
   const focusedKey = lessonKeys.findFocusedKey();
   return {
     text: lesson.generate(lessonKeys, rng),

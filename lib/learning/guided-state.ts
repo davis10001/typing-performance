@@ -22,21 +22,35 @@ const resultSchema = z.strictObject({
 });
 
 const guidedResultsSchema = z.array(resultSchema);
-const guidedStateV2Schema = z.strictObject({ strategyRevision: z.literal(2), results: guidedResultsSchema });
+const guidedStateV2Schema = z.strictObject({
+  strategyRevision: z.literal(2),
+  minimumKeyCount: z.number().int().min(4).max(26).default(4),
+  results: guidedResultsSchema,
+});
 const legacyGuidedStateSchema = z.strictObject({ results: guidedResultsSchema })
-  .transform(() => ({ strategyRevision: 2 as const, results: [] }));
+  .transform(() => ({ strategyRevision: 2 as const, minimumKeyCount: 4, results: [] }));
 
 export const guidedStateSchema = z.union([guidedStateV2Schema, legacyGuidedStateSchema]);
 export type GuidedState = z.infer<typeof guidedStateSchema>;
 
 export function createGuidedState(): GuidedState {
-  return { strategyRevision: 2, results: [] };
+  return { strategyRevision: 2, minimumKeyCount: 4, results: [] };
 }
 
-export function rewindGuidedState(state: GuidedState, resultCount: number): GuidedState {
+export function advanceGuidedState(state: GuidedState, currentKeyCount: number): GuidedState {
+  const parsed = guidedStateSchema.parse(state);
+  const minimumKeyCount = Math.min(26, Math.max(parsed.minimumKeyCount, Math.trunc(currentKeyCount) + 1));
+  return { ...parsed, minimumKeyCount };
+}
+
+export function rewindGuidedState(state: GuidedState, resultCount: number, minimumKeyCount = 4): GuidedState {
   const parsed = guidedStateSchema.parse(state);
   const end = Math.max(0, Math.min(Math.trunc(resultCount), parsed.results.length));
-  return { ...parsed, results: parsed.results.slice(0, end) };
+  return {
+    ...parsed,
+    minimumKeyCount: Math.max(4, Math.min(26, Math.trunc(minimumKeyCount))),
+    results: parsed.results.slice(0, end),
+  };
 }
 
 export function recordGuidedResult(

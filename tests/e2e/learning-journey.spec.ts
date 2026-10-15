@@ -111,6 +111,32 @@ test("continuous practice completes once and saves a Keybr result", async ({ pag
   await expect(page.locator(".learning-practice-surface")).toBeVisible();
 });
 
+test("continuous practice lets a learner continue after missing the recommended speed", async ({ page }) => {
+  await page.goto("/learn/practice");
+  await expect(page.getByText("Loading practice…")).toBeHidden({ timeout: 20_000 });
+  const prompt = await page.locator(".learning-passage").textContent();
+  expect(prompt).toBeTruthy();
+
+  await page.getByRole("textbox", { name: "Type the exercise here" }).evaluate((element, text) => {
+    [...text].forEach((character, index) => {
+      const event = new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: character === "\n" ? "Enter" : character,
+      });
+      Object.defineProperty(event, "timeStamp", { value: (index + 1) * 400 });
+      element.dispatchEvent(event);
+    });
+  }, prompt!);
+
+  await expect(page.getByRole("heading", { name: "Here's how you did." })).toBeVisible();
+  await expect(page.getByText(/practice F again, or continue to L now/i)).toBeVisible();
+  const continueButton = page.getByRole("button", { name: /Continue to L/ });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
+  await expect(page.getByRole("heading", { name: "Focus L" })).toBeVisible();
+});
+
 test("fixed courses are freely selectable and preserve KTouch correction", async ({ page }) => {
   await page.goto("/learn/courses");
   await expect(page.locator(".course-card")).toHaveCount(15);

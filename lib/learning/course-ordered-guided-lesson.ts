@@ -71,9 +71,14 @@ export class CourseOrderedGuidedLesson extends GuidedLesson {
   }
 
   override update(keyStatsMap: KeyStatsMap): LessonKeys {
+    return this.updateWithMinimum(keyStatsMap, INITIAL_KEY_COUNT);
+  }
+
+  updateWithMinimum(keyStatsMap: KeyStatsMap, minimumKeyCount: number): LessonKeys {
     const alphabetSize = this.settings.get(lessonProps.guided.alphabetSize);
     const recoverKeys = this.settings.get(lessonProps.guided.recoverKeys);
-    const maxSize = INITIAL_KEY_COUNT + Math.round((this.letters.length - INITIAL_KEY_COUNT) * alphabetSize);
+    const configuredSize = INITIAL_KEY_COUNT + Math.round((this.letters.length - INITIAL_KEY_COUNT) * alphabetSize);
+    const maxSize = Math.min(this.letters.length, Math.max(configuredSize, Math.trunc(minimumKeyCount)));
     const target = new Target(this.settings);
     const lessonKeys = new LessonKeys(
       this.letters.map((letter) => LessonKey.from(keyStatsMap.get(letter), target)),
