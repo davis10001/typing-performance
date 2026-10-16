@@ -98,6 +98,9 @@ test("continuous practice completes once and saves a Keybr result", async ({ pag
   await page.getByRole("textbox", { name: "Type the exercise here" }).pressSequentially(prompt!, { delay: 60 });
   await expect(page.getByRole("heading", { name: "Here's how you did." })).toBeVisible();
   await expect(page.locator(".guided-result-note")).toContainText("Focus key");
+  await expect(page.locator(".learning-result-metrics")).toContainText(/\d+\.\d%/);
+  await expect(page.locator(".learning-result-metrics")).toContainText(/accuracy · \d+ \/ \d+ correct/);
+  await expect(page.locator(".learning-result-metrics")).toContainText("mistyped positions");
   await expect.poll(async () => page.evaluate(() => localStorage.getItem("typing-performance:learning:v1:guided"))).not.toBeNull();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("typing-performance:learning:v1:guided") ?? "{}"));
   expect(saved.state.results).toHaveLength(1);

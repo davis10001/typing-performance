@@ -157,6 +157,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
   const focusMistakes = completion && round.focusCharacter
     ? completion.result.histogram.get(round.focusCharacter.codePointAt(0) ?? 0)?.missCount
     : null;
+  const correctCharacters = completion == null ? 0 : Math.max(0, completion.result.length - completion.result.errors);
   const nextCharacter = round.availableCharacters.length < lesson.letters.length
     ? String.fromCodePoint(lesson.letters[round.availableCharacters.length].codePoint).toUpperCase()
     : null;
@@ -204,8 +205,8 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
           <ResultHeading id="guided-result-title">Here&apos;s how you did.</ResultHeading>
           <div className="learning-result-metrics">
             <p><strong>{Math.round(completion.result.speed)}</strong><span>characters/min</span></p>
-            <p><strong>{Math.round(completion.result.accuracy * 100)}%</strong><span>accuracy</span></p>
-            <p><strong>{completion.result.errors}</strong><span>errors</span></p>
+            <p><strong>{(completion.result.accuracy * 100).toFixed(1)}%</strong><span>accuracy · {correctCharacters} / {completion.result.length} correct</span></p>
+            <p><strong>{completion.result.errors}</strong><span>mistyped positions</span></p>
           </div>
           {focusMistakes != null && <p className="guided-result-note">Focus key {round.focusCharacter!.toUpperCase()}: {focusMistakes === 0 ? "no mistakes this round" : `${focusMistakes} ${focusMistakes === 1 ? "mistake" : "mistakes"} this round`}.</p>}
           {reachedRecommendedLevel ? (

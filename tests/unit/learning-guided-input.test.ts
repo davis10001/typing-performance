@@ -61,4 +61,20 @@ describe("GuidedInputSession", () => {
     expect(() => append(session, "z", 3000)).not.toThrow();
     expect(session.takeResult()).toBeNull();
   });
+
+  it("reports accuracy from the exact number of prompt positions completed with mistakes", () => {
+    const session = new GuidedInputSession("abcdefghijk");
+    append(session, "a", 100);
+    append(session, "x", 200);
+    append(session, "b", 300);
+    append(session, "x", 400);
+    append(session, "c", 500);
+    for (let index = 3; index < session.text.length; index += 1) {
+      append(session, session.text[index], (index + 3) * 100);
+    }
+
+    const result = session.takeResult();
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({ length: 11, errors: 2, accuracy: 9 / 11 });
+  });
 });
