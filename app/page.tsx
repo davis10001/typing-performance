@@ -7,7 +7,7 @@ import { testTexts } from "@/lib/content/test-texts";
 import { buildPageMetadata, siteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Free Typing Test: Check Your WPM & Accuracy",
+  title: "TypingLevel: Free Typing Test for WPM & Accuracy",
   description: "Take a free typing test and see your WPM, accuracy, and mistakes immediately. Compare your result with sourced typing speed benchmarks. No account needed.",
   path: "/",
 });
@@ -24,6 +24,7 @@ export default function HomePage() {
     operatingSystem: "Any",
     browserRequirements: "Requires JavaScript",
     isAccessibleForFree: true,
+    publisher: { "@id": `${siteUrl}/#organization` },
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     featureList: ["Timed typing tests", "WPM and accuracy results", "Browser-local result history", "Guided typing practice"],
   };
@@ -32,8 +33,8 @@ export default function HomePage() {
     <main className="home-page">
       <JsonLd data={applicationJsonLd} />
       <section className="home-hero" aria-labelledby="home-title">
-        <h1 className="sr-only" id="home-title">Free typing test</h1>
-        <p>See your speed and accuracy in one minute. No account, no setup.</p>
+        <h1 id="home-title">TypingLevel free typing test</h1>
+        <p>Measure your WPM and accuracy in one minute. No account, no setup.</p>
       </section>
 
       <TestShell

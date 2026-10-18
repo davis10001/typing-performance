@@ -1,6 +1,19 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+test("about and contact pages provide visible trust and support information", async ({ page }) => {
+  await page.goto("/about");
+  await expect(page.getByRole("heading", { level: 1, name: "ABOUT TYPINGLEVEL." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "How does TypingLevel calculate results?" })).toBeVisible();
+  await expect(page.getByText("support@how-type.com")).toHaveAttribute("href", "mailto:support@how-type.com");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+
+  await page.goto("/contact");
+  await expect(page.getByRole("heading", { level: 1, name: "CONTACT TYPINGLEVEL." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "support@how-type.com" })).toHaveAttribute("href", "mailto:support@how-type.com");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
 test("speed guide shows the benchmark and invites a first test by default", async ({ page }) => {
   await page.goto("/good-typing-speed");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });

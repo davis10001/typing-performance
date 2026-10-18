@@ -545,7 +545,7 @@ test("Restart restores first-key start without keeping old text", async ({ page 
 });
 
 test("public routes expose unique titles and canonical URLs", async ({ page, request }) => {
-  for (const slug of [...durations.map((item) => item.slug), "faq", "how-wpm-is-calculated", "average-typing-speed", "good-typing-speed", "learn", "learn/practice", "learn/courses", "learn/paragraphs", "privacy"]) {
+  for (const slug of [...durations.map((item) => item.slug), "faq", "how-wpm-is-calculated", "average-typing-speed", "good-typing-speed", "learn", "learn/practice", "learn/courses", "learn/paragraphs", "about", "contact", "privacy"]) {
     await page.goto(`/${slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${slug}$`));
@@ -553,6 +553,8 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   }
   await page.goto("/");
+  await expect(page).toHaveTitle(/^TypingLevel:/);
+  await expect(page.getByRole("heading", { level: 1, name: "TypingLevel free typing test" })).toBeVisible();
   const homeCanonical = await page.locator('link[rel="canonical"]').getAttribute("href");
   expect(new URL(homeCanonical!).pathname).toBe("/");
   await page.goto("/typing-test");
@@ -567,6 +569,8 @@ test("public routes expose unique titles and canonical URLs", async ({ page, req
   expect(sitemapText).toContain("/how-wpm-is-calculated");
   expect(sitemapText).toContain("/good-typing-speed");
   expect(sitemapText).toContain("/learn/paragraphs");
+  expect(sitemapText).toContain("/about");
+  expect(sitemapText).toContain("/contact");
   expect(sitemapText).not.toContain("/typing-test<");
   expect(sitemapText).not.toContain("/average-wpm<");
   const oldWpmPage = await request.get("/average-wpm", { maxRedirects: 0 });

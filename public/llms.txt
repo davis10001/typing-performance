@@ -21,6 +21,8 @@
 - No account is required.
 - Completed results and learning progress stay in the user's browser.
 - Typed passages and individual keystrokes are not uploaded by the application.
+- [About TypingLevel](https://how-type.com/about): Product purpose, scoring approach, sources, and privacy principles.
+- [Contact TypingLevel](https://how-type.com/contact): Support email and useful details for reporting an issue.
 - [Privacy notice](https://how-type.com/privacy)
 - [XML sitemap](https://how-type.com/sitemap.xml)
 - [Full agent-readable overview](https://how-type.com/llms-full.txt)

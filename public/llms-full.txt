@@ -45,3 +45,7 @@ Learning starts at https://how-type.com/learn.
 ## Privacy and storage
 
 TypingLevel requires no account. Completed test results, preferences, and learning progress are stored locally in the browser. The application does not upload the passage a user typed or their individual keystrokes. The current privacy notice is at https://how-type.com/privacy.
+
+## About and contact
+
+TypingLevel publishes its product purpose, scoring approach, content sourcing principles, and privacy commitments at https://how-type.com/about. Product, accessibility, and privacy questions can be sent through the support details at https://how-type.com/contact.

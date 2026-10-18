@@ -66,12 +66,31 @@ function SiteHeader() {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const websiteJsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${siteUrl}/#website`,
-    url: siteUrl,
-    name: siteName,
-    description: siteDescription,
-    inLanguage: "en",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: siteName,
+        url: siteUrl,
+        logo: `${siteUrl}/images/typing-level-logo.png`,
+        email: supportEmail,
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          email: supportEmail,
+          availableLanguage: "English",
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        url: siteUrl,
+        name: siteName,
+        description: siteDescription,
+        inLanguage: "en",
+        publisher: { "@id": `${siteUrl}/#organization` },
+      },
+    ],
   };
 
   return (
@@ -90,8 +109,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/learn">PRACTICE</Link>
               <Link href="/good-typing-speed">TYPING SPEED</Link>
               <Link href="/faq">FAQ</Link>
+              <Link href="/about">ABOUT</Link>
               <Link href="/privacy">PRIVACY</Link>
-              <a href={`mailto:${supportEmail}`}>CONTACT</a>
+              <Link href="/contact">CONTACT</Link>
               <Link className="footer-action" href="/">START A TEST <span aria-hidden="true">↗</span></Link>
             </nav>
             <AnalyticsGate
