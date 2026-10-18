@@ -74,7 +74,11 @@ export class CourseOrderedGuidedLesson extends GuidedLesson {
     return this.updateWithMinimum(keyStatsMap, INITIAL_KEY_COUNT);
   }
 
-  updateWithMinimum(keyStatsMap: KeyStatsMap, minimumKeyCount: number): LessonKeys {
+  updateWithMinimum(
+    keyStatsMap: KeyStatsMap,
+    minimumKeyCount: number,
+    preferredFocusCharacters: readonly string[] = [],
+  ): LessonKeys {
     const alphabetSize = this.settings.get(lessonProps.guided.alphabetSize);
     const recoverKeys = this.settings.get(lessonProps.guided.recoverKeys);
     const configuredSize = INITIAL_KEY_COUNT + Math.round((this.letters.length - INITIAL_KEY_COUNT) * alphabetSize);
@@ -99,13 +103,23 @@ export class CourseOrderedGuidedLesson extends GuidedLesson {
       }
     }
 
+    const preferredKeys = preferredFocusCharacters
+      .map((character) => lessonKeys.find(character.toLowerCase().codePointAt(0) ?? -1))
+      .filter((key): key is LessonKey => key != null);
+    for (const key of preferredKeys) lessonKeys.include(key.letter);
+
     const confidenceOf = (key: LessonKey): number =>
       recoverKeys ? (key.confidence ?? 0) : (key.bestConfidence ?? 0);
     const includedKeys = lessonKeys.findIncludedKeys();
     const weakestKeys = includedKeys
       .filter((key) => confidenceOf(key) < 1)
       .sort((a, b) => confidenceOf(a) - confidenceOf(b));
-    if (weakestKeys.length > 0) {
+    const weakestPreferredKey = preferredKeys
+      .map((key, order) => ({ key, order }))
+      .sort((a, b) => confidenceOf(a.key) - confidenceOf(b.key) || a.order - b.order)[0]?.key;
+    if (weakestPreferredKey != null) {
+      lessonKeys.focus(weakestPreferredKey.letter);
+    } else if (weakestKeys.length > 0) {
       const initialFocus = includedKeys.every(({ samples }) => samples.length === 0)
         ? lessonKeys.find(INITIAL_FOCUS.codePointAt(0)!)
         : null;

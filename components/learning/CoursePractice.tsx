@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import BackIcon from "@/components/BackIcon";
 import ResetIcon from "@/components/ResetIcon";
 import type { LearningCourse } from "@/lib/learning/course-content";
 import { englishQwertyCourse } from "@/lib/learning/course-content";
@@ -51,10 +52,6 @@ function StatusIcon({ met }: { met: boolean }) {
 
 function ArrowIcon() {
   return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M7 5h8v8" /></svg>;
-}
-
-function BackIcon() {
-  return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5M7.5 10h7" /></svg>;
 }
 
 export default function CoursePractice({ lesson }: { lesson: Lesson }) {
@@ -163,7 +160,7 @@ export default function CoursePractice({ lesson }: { lesson: Lesson }) {
     <main className="learning-page learning-practice-page">
       <header className="learning-toolbar">
         <div className="lesson-toolbar-main">
-          <Link className="lesson-toolbar-back" href="/learn/courses" aria-label="Back to lessons" title="Back to lessons">
+          <Link className="toolbar-back" href="/learn/courses" aria-label="Back to lessons" title="Back to lessons">
             <BackIcon />
           </Link>
           <div className="lesson-toolbar-copy">

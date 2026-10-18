@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import BackIcon from "@/components/BackIcon";
 import ResetIcon from "@/components/ResetIcon";
 import KeyboardGuide from "@/components/typing/KeyboardGuide";
 import ResultPaceChart, { type PaceSample, type TimedError } from "@/components/typing/ResultPaceChart";
@@ -88,10 +89,6 @@ function DifficultyIcon() {
       <circle cx="11" cy="17" r="1.7" />
     </svg>
   );
-}
-
-function BackIcon() {
-  return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5M7.5 10h7" /></svg>;
 }
 
 function SoundIcon({ enabled }: { enabled: boolean }) {
@@ -483,7 +480,7 @@ export default function TestShell({ durationSeconds, texts, entryPage }: Props) 
     <div className="test-shell" data-phase={session.phase} data-font-size={fontSize}>
       <div className={`test-toolbar ${entryPage !== "typing-test" ? "has-back" : ""}`}>
         {entryPage !== "typing-test" && (
-          <Link className="test-toolbar-back" href="/" aria-label="Back to typing test" title="Back to typing test">
+          <Link className="toolbar-back" href="/" aria-label="Back to typing test" title="Back to typing test">
             <BackIcon />
           </Link>
         )}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import PracticeBreadcrumb from "@/components/PracticeBreadcrumb";
 import { englishQwertyCourse } from "@/lib/learning/course-content";
 import { createCourseState, courseStateSchema, type CourseState } from "@/lib/learning/course-state";
 import { courseLearningScope } from "@/lib/learning/scopes";
@@ -37,6 +38,7 @@ export default function CourseCatalog({ embedded = false }: CourseCatalogProps) 
     </header>
   ) : (
     <header className="learning-hero">
+      <PracticeBreadcrumb />
       <h1 id="courses-title">Typing lessons.<br /><strong>Start anywhere.</strong></h1>
       <p>Explore 15 English QWERTY lessons, from letter keys to capitals. You can repeat any lesson, and your completed lessons stay marked in this browser.</p>
       {message && <p className="learning-message" role="status">{message}</p>}

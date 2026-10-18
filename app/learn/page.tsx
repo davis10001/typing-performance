@@ -4,7 +4,7 @@ import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Typing Practice: Choose Your Next Exercise",
-  description: "Choose adaptive key practice or a complete English QWERTY lesson. Your lesson progress stays in this browser.",
+  description: "Choose adaptive key practice, complete English QWERTY lessons, or paragraph practice. Your learning progress stays in this browser.",
   path: "/learn",
 });
 
@@ -34,6 +34,15 @@ export default function LearnPage() {
           <Link className="button button-secondary" href="/learn/courses">Browse lessons <ArrowIcon /></Link>
         </div>
         <LessonPracticeVisual />
+      </article>
+      <article className="practice-path practice-path-paragraphs">
+        <div className="practice-path-copy">
+          <span className="practice-path-label">Paragraph practice</span>
+          <h2>Build real rhythm</h2>
+          <p>Type complete English paragraphs with capitals, punctuation, numbers, and natural sentence flow. Review the keys that slowed you down after each set.</p>
+          <Link className="button button-secondary" href="/learn/paragraphs">Choose a paragraph <ArrowIcon /></Link>
+        </div>
+        <ParagraphPracticeVisual />
       </article>
     </div>
     <p className="practice-paths-note">Lesson progress stays in this browser, separate from timed test results. <Link href="/privacy">How local storage works</Link> · <Link href="/">Take a typing test</Link></p>
@@ -65,5 +74,13 @@ function LessonPracticeVisual() {
       <li className="is-current"><span>02</span><strong><kbd>K</kbd><kbd>D</kbd></strong><i /></li>
       <li><span>03</span><strong><kbd>L</kbd><kbd>S</kbd></strong><i /></li>
     </ol>
+  </div>;
+}
+
+function ParagraphPracticeVisual() {
+  return <div className="practice-path-visual paragraph-visual" aria-hidden="true">
+    <div className="paragraph-visual-heading"><span>3 PARAGRAPHS</span><strong>Practice complete text</strong></div>
+    <p>“A clear morning gives the city a different rhythm. Shops open, buses arrive, and people begin the day with purpose.”</p>
+    <div className="paragraph-visual-footer"><span>KEY REVIEW</span><strong>E</strong><strong>R</strong><strong>T</strong></div>
   </div>;
 }

@@ -33,6 +33,24 @@ describe("English Keybr Guided adapter", () => {
     expect(words.every((word, index) => index % 2 === 0 || word === words[index - 1])).toBe(true);
   });
 
+  it("adds and focuses a problem key without advancing the saved course stage", () => {
+    const round = createGuidedRound(createEnglishGuidedLesson(model), [], LCG(1), 4, ["E"]);
+    expect(round.progressionCharacters).toEqual(["j", "f", "k", "d"]);
+    expect(round.availableCharacters).toEqual(["j", "f", "k", "d", "e"]);
+    expect(round.focusCharacter).toBe("e");
+    expect(round.text).toContain("e");
+  });
+
+  it("moves focus to the weaker recommended paragraph key", () => {
+    const lesson = createEnglishGuidedLesson(model);
+    const histogram = new Histogram(["j", "f", "k", "d", "e"].map((character) => ({
+      codePoint: character.codePointAt(0)!, hitCount: 20, missCount: 0, timeToType: 300,
+    })));
+    const result = new Result(Layout.EN_US, TextType.GENERATED, 1, 120, 20_000, 0, histogram);
+    const round = createGuidedRound(lesson, [result], LCG(2), 4, ["e", "r"]);
+    expect(round.focusCharacter).toBe("r");
+  });
+
   it("returns to varied words when the active key set has enough vocabulary", () => {
     const lesson = createEnglishGuidedLesson(model);
     const results: Result[] = [];

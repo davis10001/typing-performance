@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const LEARNING_STORAGE_PREFIX = "typing-performance:learning:v1";
-export type LearningMode = "guided" | "course";
+export type LearningMode = "guided" | "course" | "paragraph";
 export type LearningScope = {
   mode: LearningMode;
   engineRevision: string;
@@ -12,7 +12,7 @@ type LearningStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 const envelopeSchema = z.strictObject({
   schemaVersion: z.literal(1),
-  mode: z.enum(["guided", "course"]),
+  mode: z.enum(["guided", "course", "paragraph"]),
   engineRevision: z.string().min(1),
   contentRevision: z.string().min(1),
   layout: z.string().min(1),

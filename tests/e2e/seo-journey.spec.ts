@@ -31,23 +31,29 @@ test("speed guide shows the benchmark and invites a first test by default", asyn
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test("paragraph practice uses server-readable original text and counts corrected errors", async ({ page, request }) => {
+test("paragraph practice offers sets, uses the shared typing surface, and saves progress", async ({ page, request }) => {
+  test.setTimeout(90_000);
   const response = await request.get("/learn/paragraphs");
   expect(response.ok()).toBe(true);
   expect(await response.text()).toContain("A clear morning gives the city a different rhythm");
   await page.goto("/learn/paragraphs");
-  const prompt = await page.locator(".paragraph-prompt").textContent();
+  await page.getByRole("button", { name: "beginner" }).click();
+  const everydaySet = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Everyday English" }) });
+  await everydaySet.getByRole("button", { name: "Start practice" }).click();
+  const prompt = await page.locator(".learning-passage").textContent();
   expect(prompt?.length).toBeGreaterThan(100);
-  const input = page.getByRole("textbox", { name: "Type the paragraph here" });
-  await input.fill("z");
-  await input.fill("");
-  await input.fill(prompt!);
-  await expect(page.getByRole("heading", { name: "Paragraph complete" })).toBeVisible();
-  await expect(page.locator(".paragraph-result")).toContainText("1 mistaken character");
-  await expect(page.locator(".paragraph-result")).toContainText("0 still in the final text");
-  await expect(page.getByRole("link", { name: "Take a timed test" })).toHaveAttribute("href", "/");
-  await page.getByRole("button", { name: "Practice this again" }).click();
-  await expect(input).toHaveValue("");
+  const input = page.getByRole("textbox", { name: "Type the exercise here" });
+  await input.press("z");
+  await input.press("Backspace");
+  await input.pressSequentially(prompt!);
+  await expect(page.getByRole("heading", { name: "Paragraph 01 complete." })).toBeVisible();
+  await expect(page.locator(".paragraph-result-card")).toContainText("1");
+  await expect(page.locator(".paragraph-result-card")).toContainText("Key review");
+  await expect(page.getByRole("button", { name: /Start next paragraph/ })).toBeVisible();
+  const saved = await page.evaluate(() => localStorage.getItem("typing-performance:learning:v1:paragraph"));
+  expect(saved).toContain("everyday-morning");
+  await page.getByRole("button", { name: /Try again/ }).click();
+  await expect(page.locator(".learning-practice-surface")).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 

@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import BackIcon from "@/components/BackIcon";
 import ResetIcon from "@/components/ResetIcon";
 import { createGuidedMilestones, loadEnglishGuidedLesson, createGuidedRound, type GuidedRound } from "@/lib/learning/guided-engine";
 import { GuidedInputSession } from "@/lib/learning/guided-input";
 import { advanceGuidedState, createGuidedState, guidedStateSchema, recordGuidedResult, restoreGuidedResults, rewindGuidedState, type GuidedState } from "@/lib/learning/guided-state";
 import { loadLearning } from "@/lib/learning/repository";
 import { updateLearning } from "@/lib/learning/browser-repository";
-import { guidedLearningScope } from "@/lib/learning/scopes";
+import { paragraphStateSchema, rankParagraphProblemKeys, type ParagraphProblemKey } from "@/lib/learning/paragraph-state";
+import { guidedLearningScope, paragraphLearningScope } from "@/lib/learning/scopes";
 import type { GuidedLesson } from "@/vendor/keybr/packages/keybr-lesson/lib/guided";
 import type { Result } from "@keybr/result";
 import LearningPracticeSurface from "./LearningPracticeSurface";
@@ -30,11 +32,19 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
   const [message, setMessage] = useState<string | null>(null);
   const [isRewinding, setIsRewinding] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [paragraphProblemKeys, setParagraphProblemKeys] = useState<ParagraphProblemKey[]>([]);
+  const paragraphFocusRef = useRef<string[]>([]);
   const sessionRef = useRef<GuidedInputSession | null>(null);
   const lastInputAt = useRef(0);
 
   const startRound = useCallback((engine: GuidedLesson, state: GuidedState) => {
-    const next = createGuidedRound(engine, restoreGuidedResults(state), undefined, state.minimumKeyCount);
+    const next = createGuidedRound(
+      engine,
+      restoreGuidedResults(state),
+      undefined,
+      state.minimumKeyCount,
+      paragraphFocusRef.current,
+    );
     sessionRef.current = new GuidedInputSession(next.text);
     lastInputAt.current = 0;
     setRound(next);
@@ -52,6 +62,18 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
       else if (stored.status === "invalid" || stored.status === "incompatible") {
         setMessage("Saved continuous-practice progress belongs to another version or is damaged. It was kept unchanged.");
       } else if (stored.status === "unavailable") setMessage("Progress could not be read or saved in this browser.");
+      const fromParagraphs = new URLSearchParams(window.location.search).get("source") === "paragraphs";
+      if (fromParagraphs) {
+        const paragraphStored = loadLearning(localStorage, paragraphLearningScope, paragraphStateSchema);
+        if (paragraphStored.status === "ready") {
+          const problemKeys = rankParagraphProblemKeys(paragraphStored.state);
+          paragraphFocusRef.current = problemKeys.map(({ character }) => character);
+          setParagraphProblemKeys(problemKeys);
+          if (problemKeys.length === 0) setMessage("No saved letter mistakes were found. Adaptive practice will use your existing progress.");
+        } else {
+          setMessage("No compatible paragraph results were found. Adaptive practice will use your existing progress.");
+        }
+      }
       try {
         const engine = await loadEnglishGuidedLesson();
         if (cancelled) return;
@@ -113,7 +135,13 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
       setMessage("That round was too short or too fast to count toward your progress. Try another round.");
       return;
     }
-    const nextRound = createGuidedRound(lesson, restoreGuidedResults(recorded.state), undefined, recorded.state.minimumKeyCount);
+    const nextRound = createGuidedRound(
+      lesson,
+      restoreGuidedResults(recorded.state),
+      undefined,
+      recorded.state.minimumKeyCount,
+      paragraphFocusRef.current,
+    );
     setHistory(recorded.state);
     setCompletion({ result, saved: false, nextRound });
     const locks = "locks" in navigator ? navigator.locks : undefined;
@@ -140,7 +168,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
       scope: guidedLearningScope,
       stateSchema: guidedStateSchema,
       initialState: createGuidedState,
-      update: (state) => advanceGuidedState(state, round.availableCharacters.length),
+      update: (state) => advanceGuidedState(state, round.progressionCharacters.length),
       locks,
     }).then((saved) => {
       if (saved.status === "saved") {
@@ -158,10 +186,10 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
     ? completion.result.histogram.get(round.focusCharacter.codePointAt(0) ?? 0)?.missCount
     : null;
   const correctCharacters = completion == null ? 0 : Math.max(0, completion.result.length - completion.result.errors);
-  const nextCharacter = round.availableCharacters.length < lesson.letters.length
-    ? String.fromCodePoint(lesson.letters[round.availableCharacters.length].codePoint).toUpperCase()
+  const nextCharacter = round.progressionCharacters.length < lesson.letters.length
+    ? String.fromCodePoint(lesson.letters[round.progressionCharacters.length].codePoint).toUpperCase()
     : null;
-  const reachedRecommendedLevel = completion != null && completion.nextRound.availableCharacters.length > round.availableCharacters.length;
+  const reachedRecommendedLevel = completion != null && completion.nextRound.progressionCharacters.length > round.progressionCharacters.length;
   const Heading = "h2";
   const ResultHeading = "h2";
   const content = (
@@ -170,7 +198,7 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
         <div>
           <Heading id="guided-practice-title">Focus {round.focusCharacter?.toUpperCase() ?? "review"}</Heading>
           <div className="learning-stage-list" aria-label="Restart continuous practice from a learned stage">
-            {round.availableCharacters.map((character, index) => {
+            {round.progressionCharacters.map((character, index) => {
               const milestone = milestones.find((item) => item.character === character);
               const tooltipId = `restart-stage-${character.codePointAt(0)}`;
               return (
@@ -198,6 +226,16 @@ export default function GuidedPractice({ embedded = false }: GuidedPracticeProps
           <span>Reset</span>
         </button>
       </header>
+      {paragraphProblemKeys.length > 0 && (
+        <aside className="paragraph-focus-message" aria-label="Paragraph practice recommendation">
+          <strong>From paragraph practice</strong>
+          <span>
+            Prioritizing {paragraphProblemKeys.map(({ character }) => character.toUpperCase()).join(", ")} from your saved mistakes.
+            {round.focusCharacter ? ` This round focuses ${round.focusCharacter.toUpperCase()}.` : ""}
+          </span>
+          <Link className="inline-back-link" href="/learn/paragraphs"><BackIcon />Back to paragraphs</Link>
+        </aside>
+      )}
       {message && <p className="learning-message" role="status">{message}</p>}
       {completion ? (
         <section className="learning-result-card" aria-labelledby="guided-result-title">

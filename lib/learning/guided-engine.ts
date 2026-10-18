@@ -13,6 +13,7 @@ export const KEYBR_MODEL_URL = "/learning/keybr/model-en.data";
 export type GuidedRound = {
   text: string;
   availableCharacters: string[];
+  progressionCharacters: string[];
   focusCharacter: string | null;
 };
 
@@ -34,10 +35,15 @@ export async function loadEnglishGuidedLesson(
   return createEnglishGuidedLesson(new Uint8Array(await response.arrayBuffer()));
 }
 
-function updateGuidedLesson(lesson: GuidedLesson, results: readonly Result[], minimumKeyCount = 4) {
+function updateGuidedLesson(
+  lesson: GuidedLesson,
+  results: readonly Result[],
+  minimumKeyCount = 4,
+  preferredFocusCharacters: readonly string[] = [],
+) {
   const keyStatsMap = makeKeyStatsMap(lesson.letters, lesson.filter(results));
   return lesson instanceof CourseOrderedGuidedLesson
-    ? lesson.updateWithMinimum(keyStatsMap, minimumKeyCount)
+    ? lesson.updateWithMinimum(keyStatsMap, minimumKeyCount, preferredFocusCharacters)
     : lesson.update(keyStatsMap);
 }
 
@@ -46,12 +52,17 @@ export function createGuidedRound(
   results: readonly Result[],
   rng: RNGStream = Lesson.rng,
   minimumKeyCount = 4,
+  preferredFocusCharacters: readonly string[] = [],
 ): GuidedRound {
-  const lessonKeys = updateGuidedLesson(lesson, results, minimumKeyCount);
+  const progressionKeys = updateGuidedLesson(lesson, results, minimumKeyCount);
+  const lessonKeys = preferredFocusCharacters.length === 0
+    ? progressionKeys
+    : updateGuidedLesson(lesson, results, minimumKeyCount, preferredFocusCharacters);
   const focusedKey = lessonKeys.findFocusedKey();
   return {
     text: lesson.generate(lessonKeys, rng),
     availableCharacters: lessonKeys.findIncludedKeys().map(({ letter }) => String.fromCodePoint(letter.codePoint)),
+    progressionCharacters: progressionKeys.findIncludedKeys().map(({ letter }) => String.fromCodePoint(letter.codePoint)),
     focusCharacter: focusedKey == null ? null : String.fromCodePoint(focusedKey.letter.codePoint),
   };
 }

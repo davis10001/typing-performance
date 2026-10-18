@@ -42,13 +42,18 @@ async function installAudioContextSpy(page: Page) {
   });
 }
 
-test("Practice offers distinct routes to adaptive rounds and lessons", async ({ page }) => {
+test("Practice offers distinct routes to adaptive rounds, lessons, and paragraphs", async ({ page }) => {
   await page.goto("/learn");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Practice typing");
-  await expect(page.locator(".practice-paths article")).toHaveCount(2);
+  await expect(page.locator(".practice-paths article")).toHaveCount(3);
   await expect(page.getByRole("link", { name: /Start adaptive practice/ })).toHaveAttribute("href", "/learn/practice");
   await expect(page.getByRole("link", { name: /Browse lessons/ })).toHaveAttribute("href", "/learn/courses");
-  await expect(page.getByRole("link", { name: /Choose a paragraph/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Choose a paragraph/ })).toHaveAttribute("href", "/learn/paragraphs");
+  await page.getByRole("link", { name: /Choose a paragraph/ }).click();
+  await expect(page.getByRole("heading", { level: 2, name: /Paragraph practice/ })).toBeVisible();
+  await expect(page.getByText("Choose a paragraph set by level")).toBeVisible();
+  await expect(page.getByRole("region", { name: "About paragraph practice" })).toHaveCount(0);
+  await page.goBack();
   await page.getByRole("link", { name: /Browse lessons/ }).click();
   await expect(page.locator(".course-card")).toHaveCount(15);
   await expect(page.locator(".course-card--next")).toHaveCount(1);
@@ -71,6 +76,46 @@ test("continuous practice loads the locked Keybr engine and rejects paste", asyn
   });
   await expect(page.locator(".learning-passage .typed-current")).toHaveText(before ?? "");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test("continuous practice prioritizes saved paragraph problem keys", async ({ page }) => {
+  const envelope = {
+    schemaVersion: 1,
+    mode: "paragraph",
+    engineRevision: "a3f57d03e6c14956378af1176eef3404430c773e",
+    contentRevision: "paragraphs-2026-10-17-v1",
+    layout: "en-us",
+    sequence: 0,
+    state: {
+      activeRun: null,
+      lastCompletedRunId: "run-1",
+      attempts: [{
+        attemptId: "attempt-1",
+        runId: "run-1",
+        setId: "everyday-english",
+        paragraphId: "everyday-morning",
+        correctCharacters: 120,
+        errorCount: 8,
+        elapsedMilliseconds: 30_000,
+        errorsByExpectedKey: { E: 3, e: 2, r: 2, ",": 1 },
+        completedAt: 1,
+      }],
+    },
+  };
+  await page.addInitScript((saved) => {
+    localStorage.setItem("typing-performance:learning:v1:paragraph", JSON.stringify(saved));
+  }, envelope);
+
+  await page.goto("/learn/practice?source=paragraphs");
+  await expect(page.getByText("Loading practice…")).toBeHidden({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Focus E" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Paragraph practice recommendation" }))
+    .toContainText("Prioritizing E, R");
+  const stages = page.locator(".learning-stage-button");
+  await expect(stages).toHaveCount(4);
+  expect(await stages.evaluateAll((buttons) => buttons.map((button) => button.firstChild?.textContent?.trim())))
+    .toEqual(["J", "F", "K", "D"]);
+  await expect(page.locator(".learning-passage")).toContainText("e");
 });
 
 test("Practice plays typing sounds and respects the shared Tester preference", async ({ page }) => {
